@@ -7,9 +7,11 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ['ADMIN', 'HR'], default: 'HR' },
   orgName: String,
-  name: String
+  address : {type: String, required:true },
+  isActive: { 
+    type: Boolean, 
+    default: true 
+  },
 }, { timestamps: true });
-
-userSchema.index({ email: 1 });
 
 export const User = mongoose.model('User', userSchema);
