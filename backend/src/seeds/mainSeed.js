@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { connectDB } from '../config/db.js';
+import connectDB from '../config/db.js';
 import { Platform } from '../models/Platform.js';
 import { User } from '../models/User.js';
 import { env } from '../config/env.js';
@@ -36,6 +36,8 @@ const seedDatabase = async () => {
       await User.create({
         email: env.ADMIN_EMAIL,
         password: hashedPassword,
+        fullName: 'Admin',
+        phone: '9323239999',
         role: 'ADMIN',
         name: 'Master Admin'
       });
