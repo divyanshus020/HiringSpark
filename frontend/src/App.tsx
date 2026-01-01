@@ -14,6 +14,9 @@ import NotFound from "./pages/NotFound";
 import HRDetail from "./pages/HRDetail";
 import JobPostingDetail from "./pages/JobPostingDetail";
 
+// Import Admin App
+import AdminApp from "./admin/AdminApp";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -23,6 +26,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Main Frontend Routes */}
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
@@ -32,6 +36,11 @@ const App = () => (
           <Route path="/job-postings" element={<JobPostings />} />
           <Route path="/job-postings/:id" element={<JobPostingDetail />} />
           <Route path="/settings" element={<Settings />} />
+
+          {/* Admin Routes - All routes starting with /admin */}
+          <Route path="/admin/*" element={<AdminApp />} />
+
+          {/* 404 Not Found */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
