@@ -11,7 +11,8 @@ import platformRoutes from './routes/platformRoutes.js';
 import jobRoutes from './routes/jobRoutes.js';
 import candidateRoutes from './routes/candidateRoutes.js';
 import planRoutes from './routes/planRoutes.js';
-import dashboardRoutes from './routes/dashboardRoutes.js'
+import dashboardRoutes from './routes/dashboardRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import { env } from 'process';
 
 const app = express();
@@ -50,6 +51,7 @@ app.use('/api/platforms', platformRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/candidates', candidateRoutes);
 app.use('/api/plans', planRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 handler
 app.use((req, res) => {
