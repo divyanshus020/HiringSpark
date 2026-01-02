@@ -111,10 +111,51 @@
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Custom button enhancements */
+  button {
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  button:active {
+    @apply scale-95;
+  }
+
+  /* Improved focus states */
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible {
+    @apply ring-2 ring-primary ring-offset-2 outline-none;
+  }
+
+  /* Smooth transitions for interactive elements */
+  a, button, [role="button"] {
+    @apply transition-colors duration-150;
+  }
+
+  /* Card hover effects */
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
+  }
+
+  /* Gradient backgrounds */
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+  }
+
+  /* Better table row hover */
+  tbody tr {
+    @apply transition-colors duration-150;
   }
 }

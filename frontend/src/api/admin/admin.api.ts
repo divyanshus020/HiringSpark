@@ -7,3 +7,4 @@ export const getAllJobPostings = () => api.get("/admin/jobs");
 export const getJobPostingDetail = (id: string) => api.get(`/admin/jobs/${id}`);
 export const getAllCandidates = () => api.get("/admin/candidates");
 export const getAllPlatforms = () => api.get("/platforms");
+export const deleteHR = (id: string) => api.delete(`/admin/hrs/${id}`);

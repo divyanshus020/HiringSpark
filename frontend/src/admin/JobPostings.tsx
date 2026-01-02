@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getAllJobPostings } from "../api/admin/admin.api";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
-import { JobPostingModal } from "../components/JobPostingModal";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -13,23 +13,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Briefcase, MoreVertical, Eye, MapPin, Building2 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { motion } from "framer-motion";
+import { Search, MapPin, Building2 } from "lucide-react";
 
 export default function JobPostings() {
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedJob, setSelectedJob] = useState<any>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const fetchJobs = async () => {
     setIsLoading(true);
@@ -54,18 +44,7 @@ export default function JobPostings() {
   );
 
   const handleViewDetails = (job: any) => {
-    // Transform API data to match JobPostingModal expectations
-    const transformedJob = {
-      ...job,
-      position: job.jobTitle,
-      hrCompany: job.companyName,
-      status: job.status.charAt(0).toUpperCase() + job.status.slice(1), // capitalize
-      candidatesCount: 0, // Placeholder
-      createdAt: new Date(job.createdAt).toLocaleDateString(),
-      plan: job.plan || 'Basic'
-    };
-    setSelectedJob(transformedJob);
-    setIsDetailModalOpen(true);
+    navigate(`/admin/job-postings/${job._id}`);
   };
 
   return (
@@ -83,11 +62,7 @@ export default function JobPostings() {
           </div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-lg border border-border overflow-hidden"
-        >
+        <div className="bg-card rounded-lg border border-border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
@@ -150,40 +125,21 @@ export default function JobPostings() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => handleViewDetails(job)}>
-                            <Eye className="mr-2 h-4 w-4" /> View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Briefcase className="mr-2 h-4 w-4" /> Manage Posting
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive">
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete Posting
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <Button
+                        size="sm"
+                        className="bg-blue-500 hover:bg-blue-600 text-white"
+                        onClick={() => handleViewDetails(job)}
+                      >
+                        View
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
               )}
             </TableBody>
           </Table>
-        </motion.div>
+        </div>
       </div>
-
-      <JobPostingModal
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
-        job={selectedJob}
-      />
     </DashboardLayout>
   );
 }

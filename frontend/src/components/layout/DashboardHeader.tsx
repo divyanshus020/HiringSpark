@@ -1,4 +1,4 @@
-import { Menu, Bell, User } from "lucide-react";
+import { Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
@@ -16,7 +16,7 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ title }: DashboardHeaderProps) {
   return (
-    <header className="h-16 border-b border-border bg-card flex items-center justify-between px-4 lg:px-6">
+    <header className="h-16 border-b border-border bg-card flex items-center justify-between px-4 lg:px-6 sticky top-0 z-10 backdrop-blur-sm bg-card/95">
       <div className="flex items-center gap-4">
         <SidebarTrigger className="lg:hidden">
           <Menu className="h-5 w-5" />
@@ -25,27 +25,30 @@ export function DashboardHeader({ title }: DashboardHeaderProps) {
       </div>
 
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5 text-muted-foreground" />
-          <span className="absolute top-1 right-1 h-2 w-2 bg-destructive rounded-full" />
-        </Button>
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="h-4 w-4 text-primary" />
+            <Button variant="ghost" className="flex items-center gap-2 hover:bg-accent">
+              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-sm">
+                <User className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="hidden md:block text-sm font-medium">Admin</span>
+              <div className="hidden md:flex flex-col items-start">
+                <span className="text-sm font-medium text-foreground">Admin</span>
+                <span className="text-xs text-muted-foreground">admin@hirespark.com</span>
+              </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium">Admin</p>
+                <p className="text-xs text-muted-foreground">admin@hirespark.com</p>
+              </div>
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => window.location.href = '/auth'}>
+            <DropdownMenuItem onClick={() => window.location.href = '/auth'} className="text-destructive focus:text-destructive">
               Logout
             </DropdownMenuItem>
           </DropdownMenuContent>

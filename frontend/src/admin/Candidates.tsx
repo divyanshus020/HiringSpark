@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getAllCandidates } from "../api/admin/admin.api";
+import { updateCandidateStatus } from "../api/hr/candidates.api";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import {
   Table,
@@ -9,12 +10,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, UserCheck, FileText, Mail, Phone, ExternalLink, Download } from "lucide-react";
+import { Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Candidates() {
   const [candidates, setCandidates] = useState<any[]>([]);
@@ -37,17 +44,43 @@ export default function Candidates() {
     fetchCandidates();
   }, []);
 
+  const handleStatusChange = async (candidateId: string, newStatus: string) => {
+    try {
+      await updateCandidateStatus(candidateId, newStatus);
+      toast.success("Candidate status updated");
+      // Optimistic update
+      setCandidates(candidates.map(c =>
+        c._id === candidateId ? { ...c, status: newStatus } : c
+      ));
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Failed to update status");
+    }
+  };
+
   const filteredCandidates = candidates.filter(candidate =>
     candidate.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     candidate.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     candidate.jobId?.jobTitle?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleViewCV = (url: string) => {
-    if (url) {
-      window.open(url, '_blank');
-    } else {
-      toast.error('CV not available');
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'Shortlisted by HB': return 'secondary'; // using secondary for clean blue look
+      case 'Engaged': return 'outline'; // or a custom class
+      case 'Taken': return 'default';
+      case 'Pending Review': return 'outline';
+      default: return 'outline';
+    }
+  };
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'Shortlisted by HB': return 'bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200';
+      case 'Engaged': return 'bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200';
+      case 'Taken': return 'bg-green-50 text-green-700 hover:bg-green-100 border-green-200';
+      case 'Pending Review': return 'bg-gray-50 text-gray-700 hover:bg-gray-100 border-gray-200';
+      default: return '';
     }
   };
 
@@ -58,16 +91,12 @@ export default function Candidates() {
           <div className="relative w-full sm:w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search candidate name, email or job..."
+              placeholder="Search candidates..."
               className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button variant="outline" className="gap-2 w-full sm:w-auto">
-            <Download className="h-4 w-4" />
-            Export Data
-          </Button>
         </div>
 
         <motion.div
@@ -78,12 +107,12 @@ export default function Candidates() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Candidate</TableHead>
-                <TableHead>Applied For</TableHead>
-                <TableHead>Contact Info</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Job</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Applied Date</TableHead>
-                <TableHead className="text-right">Resume</TableHead>
+                <TableHead>HR Company</TableHead>
+                <TableHead className="w-[200px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -102,57 +131,35 @@ export default function Candidates() {
               ) : (
                 filteredCandidates.map((candidate) => (
                   <TableRow key={candidate._id} className="hover:bg-muted/50 transition-colors">
+                    <TableCell className="font-medium text-foreground">{candidate.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{candidate.email}</TableCell>
+                    <TableCell className="text-muted-foreground">{candidate.jobId?.jobTitle || 'N/A'}</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                          {candidate.name?.charAt(0)}
-                        </div>
-                        <span className="font-medium text-foreground">{candidate.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-foreground">
-                          {candidate.jobId?.jobTitle || 'General Application'}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {candidate.addedBy?.fullName || 'Self Applied'}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Mail className="h-3 w-3" /> {candidate.email}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Phone className="h-3 w-3" /> {candidate.phone || 'N/A'}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        {candidate.status || 'Received'}
+                      <Badge
+                        variant="secondary"
+                        className={getStatusBadgeClass(candidate.status)}
+                      >
+                        {candidate.status || 'Pending Review'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {new Date(candidate.createdAt).toLocaleDateString()}
+                    <TableCell className="text-muted-foreground">
+                      {candidate.jobId?.companyName || candidate.addedBy?.orgName || 'N/A'}
                     </TableCell>
-                    <TableCell className="text-right">
-                      {candidate.resumeUrl ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-primary hover:text-primary hover:bg-primary/10"
-                          onClick={() => handleViewCV(candidate.resumeUrl)}
-                        >
-                          <FileText className="h-4 w-4 mr-1.5" />
-                          View
-                          <ExternalLink className="h-3 w-3 ml-1" />
-                        </Button>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">No File</span>
-                      )}
+                    <TableCell>
+                      <Select
+                        onValueChange={(val) => handleStatusChange(candidate._id, val)}
+                        defaultValue={candidate.status}
+                      >
+                        <SelectTrigger className="w-full h-8">
+                          <SelectValue placeholder="Change Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Pending Review">Pending Review</SelectItem>
+                          <SelectItem value="Shortlisted by HB">Shortlisted by HB</SelectItem>
+                          <SelectItem value="Engaged">Engaged</SelectItem>
+                          <SelectItem value="Taken">Taken</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                   </TableRow>
                 ))

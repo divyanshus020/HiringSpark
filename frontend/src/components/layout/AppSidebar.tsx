@@ -36,7 +36,7 @@ export function AppSidebar() {
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-sm">HS</span>
             </div>
-            <span className="font-semibold text-sidebar-foreground">HireSpark</span>
+            <span className="font-semibold text-sidebar-foreground">Hiring Spark</span>
           </div>
         )}
         {collapsed && (
@@ -81,11 +81,7 @@ export function AppSidebar() {
         <Button
           variant="ghost"
           className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
-          onClick={() => {
-            localStorage.clear();
-            sessionStorage.clear();
-            window.location.href = '/admin/auth';
-          }}
+          onClick={() => window.location.href = '/admin/auth'}
         >
           <LogOut className="h-5 w-5" />
           {!collapsed && <span>Logout</span>}

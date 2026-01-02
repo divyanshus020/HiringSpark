@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { getAllHRs } from "../api/admin/admin.api";
+import { useNavigate } from "react-router-dom";
+import { getAllHRs, deleteHR } from "../api/admin/admin.api";
+import { toast } from "react-toastify";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { AddHRForm } from "../components/AddHRForm";
 import { HRAccountModal } from "../components/HRAccountModal";
@@ -26,6 +28,7 @@ import {
 import { motion } from "framer-motion";
 
 export default function HRAccounts() {
+  const navigate = useNavigate();
   const [hrs, setHrs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -56,17 +59,18 @@ export default function HRAccounts() {
   );
 
   const handleViewDetails = (hr: any) => {
-    // Transform API data to match component expectations if needed
-    const transformedHR = {
-      ...hr,
-      name: hr.fullName,
-      company: hr.orgName,
-      status: hr.isActive ? "Active" : "Inactive",
-      jobsPosted: 0, // Placeholder
-      createdAt: new Date(hr.createdAt).toLocaleDateString()
-    };
-    setSelectedHR(transformedHR);
-    setIsDetailModalOpen(true);
+    navigate(`/admin/hr-accounts/${hr._id}`);
+  };
+
+  const handleDeleteHR = async (id: string) => {
+    try {
+      await deleteHR(id);
+      toast.success("HR Account deleted successfully");
+      fetchHRs(); // Refresh list
+    } catch (error) {
+      console.error("Error deleting HR:", error);
+      toast.error("Failed to delete HR account");
+    }
   };
 
   return (
@@ -82,10 +86,6 @@ export default function HRAccounts() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button onClick={() => setIsAddFormOpen(true)} className="gap-2 w-full sm:w-auto">
-            <UserPlus className="h-4 w-4" />
-            Add HR Account
-          </Button>
         </div>
 
         <motion.div
@@ -150,7 +150,21 @@ export default function HRAccounts() {
                             <Mail className="mr-2 h-4 w-4" /> Send Email
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive">
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => {
+                              if (confirm('Are you sure you want to delete this HR account?')) {
+                                // Assuming handleDelete is defined or defining it inline for brevity if simple,
+                                // but better to make a handler.
+                                // Since I can't easily insert a new function handler in this replace block effectively without context, 
+                                // I will use a direct async call or assume I can add the handler in another block.
+                                // Actually, I need to add the handler function first. 
+                                // Let's replace the whole TableBody section to be safe or add the handler in a previous step?
+                                // Better: Use this block to JUST add the onClick, and a separate block to add the function.
+                                handleDeleteHR(hr._id);
+                              }
+                            }}
+                          >
                             <Trash2 className="mr-2 h-4 w-4" /> Delete Account
                           </DropdownMenuItem>
                         </DropdownMenuContent>
