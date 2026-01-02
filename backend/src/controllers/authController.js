@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
+import crypto from 'crypto';
+import { transporter } from '../config/mail.js';
 
 // @desc    Register HR
 // @route   POST /api/auth/register
@@ -128,4 +130,57 @@ export const getMe = async (req, res) => {
       message: error.message 
     });
   }
+};
+
+// @desc    Forgot Password - Send Token Only
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+
+  if (!user) return res.status(404).json({ success: false, message: "Email not found" });
+
+  const resetToken = crypto.randomBytes(20).toString('hex');
+
+  user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; 
+
+  await user.save();
+
+  const message = `Your password reset token is: ${resetToken}. 
+                  Please enter this on the reset page.`;
+
+  try {
+    await transporter.sendMail({
+      to: user.email,
+      subject: 'Password Reset Token',
+      text: message,
+    });
+    res.json({ success: true, message: "Token sent to email" });
+  } catch (err) {
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    await user.save();
+    res.status(500).json({ success: false, message: "Email error" });
+  }
+};
+
+
+export const resetPassword = async (req, res) => {
+  const resetPasswordToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+  const user = await User.findOne({
+    resetPasswordToken,
+    resetPasswordExpire: { $gt: Date.now() },
+  });
+
+  if (!user) return res.status(400).json({ success: false, message: "Invalid/Expired Token" });
+
+  const salt = await bcrypt.genSalt(10);
+  user.password = await bcrypt.hash(req.body.password, salt);
+  
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+  
+  await user.save();
+  res.json({ success: true, message: "Password updated successfully" });
 };
