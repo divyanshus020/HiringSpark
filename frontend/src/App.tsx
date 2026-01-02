@@ -20,7 +20,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           {/* Root redirect to admin */}
-          <Route path="/" element={<Navigate to="/admin" replace />} />
+          <Route path="/" element={<Navigate to="/hr" replace />} />
 
           {/* Admin Routes - All routes starting with /admin */}
           <Route path="/admin/*" element={<AdminApp />} />
