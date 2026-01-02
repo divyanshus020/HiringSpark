@@ -9,7 +9,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(1, "JWT Secret is required"),
   
   // Admin Credentials from .env
-  ADMIN_EMAIL: z.string().email("Invalid Admin Email"),
+  ADMIN_EMAIL: z.email("Invalid Admin Email"),
   ADMIN_PASSWORD: z.string().min(6, "Admin Password must be at least 6 characters"),
   
 });

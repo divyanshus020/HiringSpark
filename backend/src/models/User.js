@@ -12,6 +12,8 @@ const userSchema = new mongoose.Schema({
     type: Boolean, 
     default: true 
   },
+  resetPasswordToken: String,
+  resetPasswordExpire: Date
 }, { timestamps: true });
 
 export const User = mongoose.model('User', userSchema);
