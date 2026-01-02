@@ -4,41 +4,44 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Helmet } from "react-helmet-async";
 import { Briefcase, Mail, Lock, Github, Linkedin, Loader2 } from "lucide-react";
+import { loginAPI } from "../../api/auth/auth.api";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
 
-    // Simulate a brief loading delay for better UX
-    setTimeout(() => {
-      const savedUser = localStorage.getItem("hrUser");
-      if (!savedUser) {
-        setError("No HR registered. Please register first.");
-        setIsLoading(false);
-        return;
-      }
+    try {
+      const response = await loginAPI({ email, password });
 
-      const user = JSON.parse(savedUser);
-
-      if (user.email === email && user.password === password) {
+      if (response.data.success) {
+        // Store token and user data
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
         sessionStorage.setItem("isAuth", "true");
-        // Keep loading state while navigating
+
+        toast.success(`Welcome back, ${response.data.user.fullName}!`);
+
+        // Navigate based on role
         setTimeout(() => {
-          navigate("/hr/dashboard");
-        }, 500);
-      } else {
-        setError("Invalid email or password");
-        setIsLoading(false);
+          if (response.data.user.role === "Admin") {
+            navigate("/admin/dashboard");
+          } else {
+            navigate("/hr/dashboard");
+          }
+        }, 1000);
       }
-    }, 800);
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || "Login failed. Please check your credentials.";
+      toast.error(errorMessage);
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -74,12 +77,8 @@ const Login = () => {
                 </div>
               </div>
 
-              {/* Error Message */}
-              {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-600 text-sm">{error}</p>
-                </div>
-              )}
+
+
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-6">

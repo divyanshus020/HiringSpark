@@ -8,9 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Calendar } from '../ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { useJobPosting } from '../../context/JobPostingContext';
-import { ArrowLeft, ArrowRight, CalendarIcon, Info, Phone, Mail, User } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CalendarIcon, Info, Phone, Mail, User, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '../../lib/utils';
+import { updateJobStep4, postJob } from '../../../api/hr/jobs.api';
+import { toast } from 'react-toastify';
 
 const timeSlots = [
   '9:00 AM - 10:00 AM',
@@ -24,11 +26,10 @@ const timeSlots = [
 ];
 
 const ScheduleStep = () => {
-  const { state, setSchedule, setCurrentStep, calculateTotal } = useJobPosting();
+  const { state, setSchedule, setCurrentStep } = useJobPosting();
   const [formData, setFormData] = useState(state.schedule);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const { total } = calculateTotal();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -42,11 +43,35 @@ const ScheduleStep = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      setSchedule(formData);
-      setCurrentStep(5);
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    try {
+      // Update schedule data (step 4)
+      const scheduleResponse = await updateJobStep4(state.jobId!, {
+        contactPerson: formData.contactName,
+        companyEmail: formData.companyEmail,
+        preferredDate: formData.preferredDate,
+        note: formData.additionalNotes || '',
+      });
+
+      if (scheduleResponse.data.success) {
+        // Post the job immediately (no payment required)
+        const postResponse = await postJob(state.jobId!);
+
+        if (postResponse.data.success) {
+          setSchedule(formData);
+          toast.success('Job posted successfully!');
+          setCurrentStep(5); // Go to success step
+        }
+      }
+    } catch (error: any) {
+      console.error('Error posting job:', error);
+      toast.error(error.response?.data?.message || 'Failed to post job. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -211,9 +236,18 @@ const ScheduleStep = () => {
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back
               </Button>
-              <Button type="submit" size="lg">
-                <span>Proceed to Pay ₹{Math.round(total)}</span>
-                <ArrowRight className="ml-2 h-4 w-4" />
+              <Button type="submit" size="lg" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Posting Job...
+                  </>
+                ) : (
+                  <>
+                    <span>Post Job</span>
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
               </Button>
             </div>
           </form>

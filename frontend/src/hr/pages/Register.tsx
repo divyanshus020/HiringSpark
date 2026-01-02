@@ -3,18 +3,22 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Helmet } from "react-helmet-async";
-import { Briefcase, Mail, Lock, User, Building2, Github, Linkedin } from "lucide-react";
+import { Briefcase, Mail, Lock, User, Building2, Github, Linkedin, Loader2, Phone, MapPin } from "lucide-react";
+import { registerAPI } from "../../api/auth/auth.api";
+import { toast } from "react-toastify";
 
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: "",
-    company: "",
+    fullName: "",
+    companyName: "",
     email: "",
+    phone: "",
+    address: "",
     password: "",
     confirmPassword: "",
   });
-  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -23,35 +27,50 @@ const Register = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
 
     // Validation
-    if (!formData.name || !formData.company || !formData.email || !formData.password || !formData.confirmPassword) {
-      setError("Please fill in all fields");
+    if (!formData.fullName || !formData.companyName || !formData.email || !formData.phone || !formData.address || !formData.password || !formData.confirmPassword) {
+      toast.error("Please fill in all fields");
+      setIsLoading(false);
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+      toast.error("Passwords do not match");
+      setIsLoading(false);
       return;
     }
 
     if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long");
+      toast.error("Password must be at least 6 characters long");
+      setIsLoading(false);
       return;
     }
 
-    // Save to localStorage
-    const hrUser = {
-      name: formData.name,
-      company: formData.company,
-      email: formData.email,
-      password: formData.password,
-    };
+    try {
+      const response = await registerAPI({
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        companyName: formData.companyName,
+        address: formData.address,
+      });
 
-    localStorage.setItem("hrUser", JSON.stringify(hrUser));
-    navigate("/hr/login");
+      if (response.data.success) {
+        toast.success("Registration successful! Please login.");
+        setTimeout(() => {
+          navigate("/hr/login");
+        }, 1500);
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || "Registration failed. Please try again.";
+      toast.error(errorMessage);
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -152,12 +171,7 @@ const Register = () => {
                 </div>
               </div>
 
-              {/* Error Message */}
-              {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-600 text-sm">{error}</p>
-                </div>
-              )}
+
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-5">
@@ -169,12 +183,13 @@ const Register = () => {
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <Input
                       type="text"
-                      name="name"
+                      name="fullName"
                       placeholder="Enter your full name"
-                      value={formData.name}
+                      value={formData.fullName}
                       onChange={handleChange}
                       required
-                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                      disabled={isLoading}
+                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -187,12 +202,13 @@ const Register = () => {
                     <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <Input
                       type="text"
-                      name="company"
+                      name="companyName"
                       placeholder="Enter your company name"
-                      value={formData.company}
+                      value={formData.companyName}
                       onChange={handleChange}
                       required
-                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                      disabled={isLoading}
+                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -210,7 +226,46 @@ const Register = () => {
                       value={formData.email}
                       onChange={handleChange}
                       required
-                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                      disabled={isLoading}
+                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type="tel"
+                      name="phone"
+                      placeholder="Enter your phone number"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      required
+                      disabled={isLoading}
+                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Address
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type="text"
+                      name="address"
+                      placeholder="Enter your company address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      required
+                      disabled={isLoading}
+                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -228,7 +283,8 @@ const Register = () => {
                       value={formData.password}
                       onChange={handleChange}
                       required
-                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                      disabled={isLoading}
+                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -246,16 +302,25 @@ const Register = () => {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       required
-                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                      disabled={isLoading}
+                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
 
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg"
+                  disabled={isLoading}
+                  className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
-                  Create Account
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : (
+                    "Create Account"
+                  )}
                 </Button>
               </form>
 

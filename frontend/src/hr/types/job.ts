@@ -49,6 +49,7 @@ export interface OrderSummary {
 
 export interface JobPostingState {
   currentStep: number;
+  jobId: string | null;
   jobDetails: JobDetails;
   planType: 'basic' | 'premium';
   platforms: PlatformSelection;

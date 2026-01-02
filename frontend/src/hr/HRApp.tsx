@@ -4,6 +4,8 @@ import { TooltipProvider } from "./components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import Dashboard from "./pages/Dashboard";
 import CreateJob from "./pages/CreateJob";
@@ -22,6 +24,18 @@ const HRApp = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
           {/* No BrowserRouter here - it's already in main App.tsx */}
           <Routes>
             {/* HR routes - all paths relative to /hr */}

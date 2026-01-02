@@ -419,3 +419,36 @@ export const postJob = async (req, res) => {
     });
   }
 };
+// @desc    Delete job
+// @route   DELETE /api/jobs/:id
+export const deleteJob = async (req, res) => {
+    try {
+        const job = await Job.findById(req.params.id);
+
+        if (!job) {
+            return res.status(404).json({
+                success: false,
+                message: 'Job not found'
+            });
+        }
+
+        if (job.userId.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to delete this job'
+            });
+        }
+
+        await Job.findByIdAndDelete(req.params.id);
+
+        res.json({
+            success: true,
+            message: 'Job deleted successfully'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};

@@ -1,4 +1,4 @@
-import { Bell, User, LogOut } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
@@ -31,12 +31,10 @@ const Header = (): JSX.Element => {
       <div className="container flex h-20 items-center justify-between">
         {/* LEFT */}
         <div className="flex items-center gap-12">
-          <Link to="/hr/dashboard" className="flex items-center gap-3 group">
-            <img
-              src="/hiring_bazaar.jpeg"
-              alt="Hiring Bazaar"
-              className="h-12 w-auto transition-all group-hover:scale-105"
-            />
+          <Link to="/hr/dashboard" className="flex items-center gap-2 group">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent transition-all group-hover:scale-105">
+              HireSpark
+            </h1>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
@@ -67,11 +65,6 @@ const Header = (): JSX.Element => {
 
         {/* RIGHT */}
         <div className="flex items-center gap-4">
-          {/* Notifications */}
-          <button className="relative rounded-full p-2.5 hover:bg-indigo-50 transition-colors group">
-            <Bell className="h-6 w-6 text-gray-600 group-hover:text-indigo-600 transition-colors" />
-            <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" />
-          </button>
 
           {/* User Avatar + Tooltip */}
           <TooltipProvider delayDuration={0}>

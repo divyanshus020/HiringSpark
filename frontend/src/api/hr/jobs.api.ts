@@ -23,3 +23,6 @@ export const getAllJobs = () =>
 
 export const getSingleJob = (id: string) =>
   api.get(`/jobs/${id}`);
+
+export const deleteJob = (id: string) =>
+  api.delete(`/jobs/${id}`);

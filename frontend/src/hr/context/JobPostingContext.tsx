@@ -25,7 +25,7 @@ const defaultJobDetails: JobDetails = {
   title: '',
   company: '',
   location: '',
-  jobType: 'Full Time',
+  jobType: 'full-time',
   minExperience: 0,
   maxExperience: 2,
   openings: 1,
@@ -43,6 +43,7 @@ interface JobPostingContextType {
   setPlanType: (type: 'basic' | 'premium') => void;
   setPlatforms: (platforms: PlatformSelection) => void;
   setSchedule: (schedule: ScheduleDetails) => void;
+  setJobId: (id: string) => void;
   calculateTotal: () => { subtotal: number; gst: number; total: number };
   resetState: () => void;
 }
@@ -60,6 +61,7 @@ export const useJobPosting = () => {
 export const JobPostingProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<JobPostingState>({
     currentStep: 1,
+    jobId: null,
     jobDetails: defaultJobDetails,
     planType: 'basic',
     platforms: defaultPlatforms,
@@ -108,6 +110,10 @@ export const JobPostingProvider = ({ children }: { children: ReactNode }) => {
     setState(prev => ({ ...prev, schedule }));
   };
 
+  const setJobId = (id: string) => {
+    setState(prev => ({ ...prev, jobId: id }));
+  };
+
   const calculateTotal = () => {
     const { platforms, planType } = state;
     let subtotal = 0;
@@ -142,6 +148,7 @@ export const JobPostingProvider = ({ children }: { children: ReactNode }) => {
   const resetState = () => {
     setState({
       currentStep: 1,
+      jobId: null,
       jobDetails: defaultJobDetails,
       planType: 'basic',
       platforms: defaultPlatforms,
@@ -165,6 +172,7 @@ export const JobPostingProvider = ({ children }: { children: ReactNode }) => {
         setPlanType,
         setPlatforms,
         setSchedule,
+        setJobId,
         calculateTotal,
         resetState,
       }}

@@ -7,7 +7,8 @@ import {
   updateJobStep4,
   getMyJobs,
   getJob,
-  postJob
+  postJob,
+  deleteJob
 } from '../controllers/jobController.js';
 import { protect, isHR } from '../middlewares/auth.js';
 
@@ -24,5 +25,8 @@ router.put('/:id/post', protect, isHR, postJob);
 // Get jobs
 router.get('/', protect, isHR, getMyJobs);
 router.get('/:id', protect, isHR, getJob);
+
+// Delete job
+router.delete('/:id', protect, isHR, deleteJob);
 
 export default router;

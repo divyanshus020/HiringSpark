@@ -5,12 +5,11 @@ import JobDetailsStep from '../components/job-posting/JobDetailsStep';
 import SelectPlanStep from '../components/job-posting/SelectPlanStep';
 import PlatformSelectionStep from '../components/job-posting/PlatformSelectionStep';
 import ScheduleStep from '../components/job-posting/ScheduleStep';
-import PaymentStep from '../components/job-posting/PaymentStep';
 import SuccessStep from '../components/job-posting/SuccessStep';
 import { JobPostingProvider, useJobPosting } from '../context/JobPostingContext';
 import { Loader2, Briefcase } from 'lucide-react';
 
-const steps = ['Job Details', 'Select Plan', 'Platforms', 'Schedule', 'Confirm'];
+const steps = ['Job Details', 'Select Plan', 'Platforms', 'Schedule', 'Success'];
 
 const CreateJobContent = () => {
   const { state } = useJobPosting();
@@ -36,8 +35,6 @@ const CreateJobContent = () => {
       case 4:
         return <ScheduleStep />;
       case 5:
-        return <PaymentStep />;
-      case 6:
         return <SuccessStep />;
       default:
         return <JobDetailsStep />;
@@ -129,7 +126,7 @@ const CreateJobContent = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <Header />
-      
+
       <main className="container py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-indigo-800 to-purple-900 bg-clip-text text-transparent text-center mb-3">
@@ -141,7 +138,7 @@ const CreateJobContent = () => {
         </div>
 
         <StepIndicator currentStep={state.currentStep} steps={steps} />
-        
+
         <div className="mt-10">
           {renderStep()}
         </div>

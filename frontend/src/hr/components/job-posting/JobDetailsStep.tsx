@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
@@ -7,23 +7,67 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useJobPosting } from '../../context/JobPostingContext';
 import { ArrowRight, Briefcase, MapPin, Clock, Users, Plus, X, Sparkles } from 'lucide-react';
+import { createJobDraft, updateJobStep1 } from '../../../api/hr/jobs.api';
+import { toast } from 'react-toastify';
 
 const JobDetailsStep = () => {
-  const { state, setJobDetails, setCurrentStep } = useJobPosting();
+  const { state, setJobDetails, setCurrentStep, setJobId } = useJobPosting();
   const [formData, setFormData] = useState(state.jobDetails);
   const [newSkill, setNewSkill] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Create draft on component mount if no jobId exists
+  useEffect(() => {
+    const initializeDraft = async () => {
+      if (!state.jobId) {
+        try {
+          const response = await createJobDraft();
+          if (response.data.success) {
+            setJobId(response.data.job._id);
+          }
+        } catch (error: any) {
+          console.error('Error creating draft:', error);
+          toast.error('Failed to initialize job posting');
+        }
+      }
+    };
+    initializeDraft();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Show loader before moving to next step
-    setTimeout(() => {
-      setJobDetails(formData);
-      setCurrentStep(2);
+    try {
+      // Update job step 1 with details
+      const response = await updateJobStep1(state.jobId!, {
+        jobTitle: formData.title,
+        companyName: formData.company,
+        location: formData.location,
+        jobType: formData.jobType,
+        minExp: formData.minExperience,
+        maxExp: formData.maxExperience,
+        openings: formData.openings,
+        minSalary: formData.minSalary,
+        maxSalary: formData.maxSalary,
+        description: formData.description,
+        requirements: formData.requirements,
+        skills: formData.skills,
+      });
+
+      if (response.data.success) {
+        setJobDetails(formData);
+        toast.success('Job details saved!');
+        setTimeout(() => {
+          setCurrentStep(2);
+          setIsLoading(false);
+        }, 400);
+      }
+    } catch (error: any) {
+      console.error('Error saving job details:', error);
+      toast.error(error.response?.data?.message || 'Failed to save job details');
       setIsLoading(false);
-    }, 400);
+    }
   };
 
   const addSkill = () => {
@@ -199,11 +243,10 @@ const JobDetailsStep = () => {
                       <SelectValue placeholder="Select job type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Full Time">Full Time</SelectItem>
-                      <SelectItem value="Part Time">Part Time</SelectItem>
-                      <SelectItem value="Contract">Contract</SelectItem>
-                      <SelectItem value="Internship">Internship</SelectItem>
-                      <SelectItem value="Freelance">Freelance</SelectItem>
+                      <SelectItem value="full-time">Full Time</SelectItem>
+                      <SelectItem value="part-time">Part Time</SelectItem>
+                      <SelectItem value="contract">Contract</SelectItem>
+                      <SelectItem value="internship">Internship</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
