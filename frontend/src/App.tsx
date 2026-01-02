@@ -2,20 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import HRAccounts from "./pages/HRAccounts";
-import Candidates from "./pages/Candidates";
-import JobPostings from "./pages/JobPostings";
-import Settings from "./pages/Settings";
-import NotFound from "./pages/NotFound";
-import HRDetail from "./pages/HRDetail";
-import JobPostingDetail from "./pages/JobPostingDetail";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // Import Admin App
 import AdminApp from "./admin/AdminApp";
+
+// Import HR App
+import HRApp from "./hr/HRApp";
 
 const queryClient = new QueryClient();
 
@@ -26,22 +19,17 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Main Frontend Routes */}
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/hr-accounts" element={<HRAccounts />} />
-          <Route path="/hr-accounts/:id" element={<HRDetail />} />
-          <Route path="/candidates" element={<Candidates />} />
-          <Route path="/job-postings" element={<JobPostings />} />
-          <Route path="/job-postings/:id" element={<JobPostingDetail />} />
-          <Route path="/settings" element={<Settings />} />
+          {/* Root redirect to admin */}
+          <Route path="/" element={<Navigate to="/admin" replace />} />
 
           {/* Admin Routes - All routes starting with /admin */}
           <Route path="/admin/*" element={<AdminApp />} />
 
-          {/* 404 Not Found */}
-          <Route path="*" element={<NotFound />} />
+          {/* HR Routes - All routes starting with /hr */}
+          <Route path="/hr/*" element={<HRApp />} />
+
+          {/* 404 Not Found - redirect to admin */}
+          <Route path="*" element={<Navigate to="/admin" replace />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

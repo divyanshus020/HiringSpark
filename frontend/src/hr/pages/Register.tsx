@@ -51,7 +51,7 @@ const Register = () => {
     };
 
     localStorage.setItem("hrUser", JSON.stringify(hrUser));
-    navigate("/login");
+    navigate("/hr/login");
   };
 
   return (
@@ -68,51 +68,51 @@ const Register = () => {
                 {/* Decorative Elements */}
                 <div className="absolute -top-8 -left-8 w-32 h-32 bg-emerald-200 rounded-full opacity-30 blur-2xl"></div>
                 <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-teal-200 rounded-full opacity-30 blur-2xl"></div>
-                
+
                 {/* Team/Hiring Illustration - SVG */}
                 <svg viewBox="0 0 400 400" className="w-full h-auto drop-shadow-xl">
                   {/* Laptop/Computer */}
-                  <rect x="100" y="200" width="200" height="120" rx="8" fill="#1F2937" opacity="0.9"/>
-                  <rect x="110" y="210" width="180" height="100" rx="4" fill="#3B82F6" opacity="0.2"/>
-                  
+                  <rect x="100" y="200" width="200" height="120" rx="8" fill="#1F2937" opacity="0.9" />
+                  <rect x="110" y="210" width="180" height="100" rx="4" fill="#3B82F6" opacity="0.2" />
+
                   {/* Screen Content - Charts/Graphs */}
-                  <rect x="130" y="230" width="60" height="40" rx="4" fill="#10B981" opacity="0.6"/>
-                  <rect x="200" y="240" width="60" height="30" rx="4" fill="#F59E0B" opacity="0.6"/>
-                  <rect x="130" y="280" width="130" height="8" rx="4" fill="#6366F1" opacity="0.4"/>
-                  
+                  <rect x="130" y="230" width="60" height="40" rx="4" fill="#10B981" opacity="0.6" />
+                  <rect x="200" y="240" width="60" height="30" rx="4" fill="#F59E0B" opacity="0.6" />
+                  <rect x="130" y="280" width="130" height="8" rx="4" fill="#6366F1" opacity="0.4" />
+
                   {/* Laptop Base */}
-                  <path d="M 80 320 L 320 320 L 310 340 L 90 340 Z" fill="#374151" opacity="0.9"/>
-                  
+                  <path d="M 80 320 L 320 320 L 310 340 L 90 340 Z" fill="#374151" opacity="0.9" />
+
                   {/* People Icons - Team */}
                   <g>
                     {/* Person 1 - Left */}
-                    <circle cx="130" cy="140" r="20" fill="#8B5CF6" opacity="0.9"/>
-                    <path d="M 110 170 Q 110 155 130 155 Q 150 155 150 170 L 145 190 L 115 190 Z" fill="#8B5CF6" opacity="0.9"/>
-                    
+                    <circle cx="130" cy="140" r="20" fill="#8B5CF6" opacity="0.9" />
+                    <path d="M 110 170 Q 110 155 130 155 Q 150 155 150 170 L 145 190 L 115 190 Z" fill="#8B5CF6" opacity="0.9" />
+
                     {/* Person 2 - Center */}
-                    <circle cx="200" cy="120" r="25" fill="#3B82F6" opacity="0.9"/>
-                    <path d="M 175 155 Q 175 135 200 135 Q 225 135 225 155 L 218 180 L 182 180 Z" fill="#3B82F6" opacity="0.9"/>
-                    
+                    <circle cx="200" cy="120" r="25" fill="#3B82F6" opacity="0.9" />
+                    <path d="M 175 155 Q 175 135 200 135 Q 225 135 225 155 L 218 180 L 182 180 Z" fill="#3B82F6" opacity="0.9" />
+
                     {/* Person 3 - Right */}
-                    <circle cx="270" cy="140" r="20" fill="#EC4899" opacity="0.9"/>
-                    <path d="M 250 170 Q 250 155 270 155 Q 290 155 290 170 L 285 190 L 255 190 Z" fill="#EC4899" opacity="0.9"/>
+                    <circle cx="270" cy="140" r="20" fill="#EC4899" opacity="0.9" />
+                    <path d="M 250 170 Q 250 155 270 155 Q 290 155 290 170 L 285 190 L 255 190 Z" fill="#EC4899" opacity="0.9" />
                   </g>
-                  
+
                   {/* Connection Lines */}
-                  <line x1="150" y1="150" x2="180" y2="140" stroke="#94A3B8" strokeWidth="3" opacity="0.5"/>
-                  <line x1="220" y1="140" x2="250" y2="150" stroke="#94A3B8" strokeWidth="3" opacity="0.5"/>
-                  
+                  <line x1="150" y1="150" x2="180" y2="140" stroke="#94A3B8" strokeWidth="3" opacity="0.5" />
+                  <line x1="220" y1="140" x2="250" y2="150" stroke="#94A3B8" strokeWidth="3" opacity="0.5" />
+
                   {/* Decorative Elements */}
-                  <circle cx="350" cy="100" r="8" fill="#F59E0B" opacity="0.6"/>
-                  <circle cx="370" cy="150" r="6" fill="#10B981" opacity="0.6"/>
-                  <circle cx="50" cy="120" r="10" fill="#3B82F6" opacity="0.6"/>
-                  <circle cx="40" cy="180" r="7" fill="#EC4899" opacity="0.6"/>
-                  
+                  <circle cx="350" cy="100" r="8" fill="#F59E0B" opacity="0.6" />
+                  <circle cx="370" cy="150" r="6" fill="#10B981" opacity="0.6" />
+                  <circle cx="50" cy="120" r="10" fill="#3B82F6" opacity="0.6" />
+                  <circle cx="40" cy="180" r="7" fill="#EC4899" opacity="0.6" />
+
                   {/* Document/Resume floating */}
-                  <rect x="320" y="220" width="60" height="80" rx="6" fill="white" opacity="0.9" transform="rotate(15 350 260)"/>
-                  <rect x="330" y="235" width="40" height="6" rx="3" fill="#3B82F6" opacity="0.4" transform="rotate(15 350 238)"/>
-                  <rect x="330" y="250" width="35" height="5" rx="2.5" fill="#6366F1" opacity="0.4" transform="rotate(15 347.5 252.5)"/>
-                  <rect x="330" y="265" width="40" height="5" rx="2.5" fill="#8B5CF6" opacity="0.4" transform="rotate(15 350 267.5)"/>
+                  <rect x="320" y="220" width="60" height="80" rx="6" fill="white" opacity="0.9" transform="rotate(15 350 260)" />
+                  <rect x="330" y="235" width="40" height="6" rx="3" fill="#3B82F6" opacity="0.4" transform="rotate(15 350 238)" />
+                  <rect x="330" y="250" width="35" height="5" rx="2.5" fill="#6366F1" opacity="0.4" transform="rotate(15 347.5 252.5)" />
+                  <rect x="330" y="265" width="40" height="5" rx="2.5" fill="#8B5CF6" opacity="0.4" transform="rotate(15 350 267.5)" />
                 </svg>
 
                 {/* Text Content */}
@@ -134,14 +134,14 @@ const Register = () => {
                 <div className="flex items-center gap-2 mb-6">
                   <img src="/hiring_bazaar.jpeg" alt="Hiring Bazaar" className="w-64 h-auto" />
                 </div>
-                
+
                 <div className="flex justify-between items-center">
                   <h1 className="text-3xl lg:text-4xl font-bold text-gray-800">Sign up</h1>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <span>Already registered?</span>
-                    <Link to="/login">
-                      <Button 
-                        variant="outline" 
+                    <Link to="/hr/login">
+                      <Button
+                        variant="outline"
                         size="sm"
                         className="bg-gray-900 text-white hover:bg-gray-800 border-gray-900"
                       >
@@ -279,7 +279,7 @@ const Register = () => {
                   </button>
                   <button className="p-3 rounded-full bg-gray-100 hover:bg-gray-800 transition-colors group">
                     <svg className="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                     </svg>
                   </button>
                 </div>

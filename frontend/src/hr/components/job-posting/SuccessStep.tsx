@@ -109,7 +109,7 @@ Phone: ${state.schedule.phoneNumber}
 
   const handleGoToDashboard = () => {
     resetState();
-    navigate('/');
+    navigate('/hr/dashboard');
   };
 
   return (

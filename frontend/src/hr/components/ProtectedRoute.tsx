@@ -14,7 +14,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps): JSX.Element => {
     // Simulate authentication check with a slight delay for smooth UX
     const checkAuth = () => {
       const authStatus = sessionStorage.getItem("isAuth") === "true";
-      
+
       // Add a minimum loading time for smooth transition
       setTimeout(() => {
         setIsAuth(authStatus);
@@ -109,7 +109,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps): JSX.Element => {
 
   // Redirect to login if not authenticated
   if (!isAuth) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/hr/login" replace />;
   }
 
   // Render protected content

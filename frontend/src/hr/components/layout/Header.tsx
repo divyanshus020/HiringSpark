@@ -16,14 +16,14 @@ const Header = (): JSX.Element => {
   const hrUser = JSON.parse(localStorage.getItem("hrUser") || "{}");
 
   const navItems = [
-    { label: "Dashboard", path: "/dashboard" },
-    { label: "Create Job", path: "/create-job" },
-    { label: "Candidates", path: "/candidates" },
+    { label: "Dashboard", path: "/hr/dashboard" },
+    { label: "Create Job", path: "/hr/create-job" },
+    { label: "Candidates", path: "/hr/candidates" },
   ];
 
   const handleLogout = (): void => {
     sessionStorage.clear();
-    navigate("/login");
+    navigate("/hr/login");
   };
 
   return (
@@ -31,7 +31,7 @@ const Header = (): JSX.Element => {
       <div className="container flex h-20 items-center justify-between">
         {/* LEFT */}
         <div className="flex items-center gap-12">
-          <Link to="/dashboard" className="flex items-center gap-3 group">
+          <Link to="/hr/dashboard" className="flex items-center gap-3 group">
             <img
               src="/hiring_bazaar.jpeg"
               alt="Hiring Bazaar"
