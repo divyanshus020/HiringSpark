@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { getAdminStats } from "../api/admin/admin.api";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Briefcase, Users, FileText, Loader2 } from "lucide-react";
+import { DashboardLayout } from "../components/layout/DashboardLayout";
+import { StatCard } from "../components/dashboard/StatCard";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Users, Briefcase, FileText, TrendingUp, Activity, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Dashboard() {
@@ -18,111 +20,203 @@ export default function Dashboard() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const statsCards = stats
-    ? [
-      {
-        label: "Total HR Accounts",
-        value: stats.totalHRs || "0",
-        icon: Users,
-        color: "from-blue-500 to-cyan-500",
-        bgColor: "bg-blue-50",
-      },
-      {
-        label: "Open Jobs",
-        value: stats.totalJobs || "0",
-        icon: Briefcase,
-        color: "from-purple-500 to-pink-500",
-        bgColor: "bg-purple-50",
-      },
-      {
-        label: "Total Candidates",
-        value: stats.totalCandidates || "0",
-        icon: FileText,
-        color: "from-emerald-500 to-teal-500",
-        bgColor: "bg-emerald-50",
-      },
-    ]
-    : [];
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
-      </div>
+      <DashboardLayout title="Dashboard">
+        <div className="flex items-center justify-center h-96">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="container py-8">
-        {/* Header */}
+    <DashboardLayout title="Dashboard">
+      <div className="space-y-6">
+        {/* Welcome Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-12 text-center"
         >
-          <p className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</p>
-          <p className="text-gray-500">
-            Manage your hiring platform with ease
-          </p>
+          <div className="bg-gradient-to-r from-primary to-primary/80 rounded-lg p-6 text-primary-foreground">
+            <h2 className="text-2xl font-bold mb-2">Welcome to HireSpark Admin</h2>
+            <p className="text-primary-foreground/90">
+              Monitor and manage your recruitment platform from here
+            </p>
+          </div>
         </motion.div>
 
-        {/* Stats Cards */}
-        <div className="grid gap-6 md:grid-cols-3 mb-8">
-          {statsCards.map((stat, index) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Card className="border-0 shadow-xl hover:shadow-2xl transition-shadow duration-300 overflow-hidden">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">
-                    {stat.label}
-                  </CardTitle>
-                  <div
-                    className={`p-3 rounded-xl bg-gradient-to-br ${stat.color}`}
-                  >
-                    <stat.icon className="h-5 w-5 text-white" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-4xl font-bold text-gray-900">
-                    {stat.value}
-                  </div>
-                  <div className={`mt-2 h-2 rounded-full ${stat.bgColor}`}>
-                    <div
-                      className={`h-full rounded-full bg-gradient-to-r ${stat.color}`}
-                      style={{ width: "75%" }}
-                    ></div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+        {/* Stats Grid */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <StatCard
+              title="Total HR Accounts"
+              value={stats?.totalHRs || 0}
+              icon={Users}
+              trend={{ value: 12, isPositive: true }}
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <StatCard
+              title="Total Job Postings"
+              value={stats?.totalJobs || 0}
+              icon={Briefcase}
+              trend={{ value: 8, isPositive: true }}
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <StatCard
+              title="Total Candidates"
+              value={stats?.totalCandidates || 0}
+              icon={FileText}
+              trend={{ value: 23, isPositive: true }}
+            />
+          </motion.div>
         </div>
 
-        {/* Welcome Message */}
+        {/* Activity Overview */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" />
+                  Platform Activity
+                </CardTitle>
+                <CardDescription>Recent platform statistics</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                      <span className="text-sm text-muted-foreground">Active HRs</span>
+                    </div>
+                    <span className="font-semibold">{stats?.totalHRs || 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                      <span className="text-sm text-muted-foreground">Open Positions</span>
+                    </div>
+                    <span className="font-semibold">{stats?.totalJobs || 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-purple-500"></div>
+                      <span className="text-sm text-muted-foreground">Applications</span>
+                    </div>
+                    <span className="font-semibold">{stats?.totalCandidates || 0}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  Growth Metrics
+                </CardTitle>
+                <CardDescription>Month-over-month growth</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-muted-foreground">HR Signups</span>
+                      <span className="text-sm font-medium text-green-600">+12%</span>
+                    </div>
+                    <div className="w-full bg-secondary rounded-full h-2">
+                      <div className="bg-green-500 h-2 rounded-full" style={{ width: '75%' }}></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-muted-foreground">Job Posts</span>
+                      <span className="text-sm font-medium text-blue-600">+8%</span>
+                    </div>
+                    <div className="w-full bg-secondary rounded-full h-2">
+                      <div className="bg-blue-500 h-2 rounded-full" style={{ width: '60%' }}></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-muted-foreground">Applications</span>
+                      <span className="text-sm font-medium text-purple-600">+23%</span>
+                    </div>
+                    <div className="w-full bg-secondary rounded-full h-2">
+                      <div className="bg-purple-500 h-2 rounded-full" style={{ width: '90%' }}></div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
+        {/* Quick Actions */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
         >
-          <Card className="border-0 shadow-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
-            <CardContent className="p-8">
-              <h2 className="text-2xl font-bold mb-2">
-                Welcome to HireSpark Admin Panel
-              </h2>
-              <p className="text-indigo-100">
-                Monitor and manage all HR accounts, job postings, and candidates
-                from this central dashboard.
-              </p>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" />
+                Quick Actions
+              </CardTitle>
+              <CardDescription>Manage your platform efficiently</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-4">
+                <button className="flex flex-col items-center justify-center p-4 rounded-lg border border-border hover:bg-accent transition-colors">
+                  <Users className="h-8 w-8 text-primary mb-2" />
+                  <span className="text-sm font-medium">View HRs</span>
+                </button>
+                <button className="flex flex-col items-center justify-center p-4 rounded-lg border border-border hover:bg-accent transition-colors">
+                  <Briefcase className="h-8 w-8 text-primary mb-2" />
+                  <span className="text-sm font-medium">View Jobs</span>
+                </button>
+                <button className="flex flex-col items-center justify-center p-4 rounded-lg border border-border hover:bg-accent transition-colors">
+                  <FileText className="h-8 w-8 text-primary mb-2" />
+                  <span className="text-sm font-medium">Candidates</span>
+                </button>
+                <button className="flex flex-col items-center justify-center p-4 rounded-lg border border-border hover:bg-accent transition-colors">
+                  <Activity className="h-8 w-8 text-primary mb-2" />
+                  <span className="text-sm font-medium">Analytics</span>
+                </button>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

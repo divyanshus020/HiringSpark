@@ -16,11 +16,11 @@ import {
 import { Button } from "@/components/ui/button";
 
 const menuItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "HR Accounts", url: "/hr-accounts", icon: Users },
-  { title: "Candidates", url: "/candidates", icon: UserCheck },
-  { title: "Job Postings", url: "/job-postings", icon: Briefcase },
-  { title: "Settings", url: "/settings", icon: Settings },
+  { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
+  { title: "HR Accounts", url: "/admin/hr-accounts", icon: Users },
+  { title: "Candidates", url: "/admin/candidates", icon: UserCheck },
+  { title: "Job Postings", url: "/admin/job-postings", icon: Briefcase },
+  { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -60,11 +60,10 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild isActive={isActive}>
                       <NavLink
                         to={item.url}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                          isActive
-                            ? "bg-primary text-primary-foreground"
-                            : "text-sidebar-foreground hover:bg-sidebar-accent"
-                        }`}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent"
+                          }`}
                       >
                         <item.icon className="h-5 w-5 shrink-0" />
                         {!collapsed && <span>{item.title}</span>}
@@ -82,7 +81,11 @@ export function AppSidebar() {
         <Button
           variant="ghost"
           className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
-          onClick={() => window.location.href = '/auth'}
+          onClick={() => {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = '/admin/auth';
+          }}
         >
           <LogOut className="h-5 w-5" />
           {!collapsed && <span>Logout</span>}

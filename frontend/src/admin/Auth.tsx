@@ -3,49 +3,68 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "react-toastify";
+import { loginAPI } from "../api/auth/auth.api";
+import { Loader2 } from "lucide-react";
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate auth delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const response = await loginAPI({ email, password });
 
-    toast({
-      title: isLogin ? "Welcome back!" : "Account created!",
-      description: "Redirecting to dashboard...",
-    });
+      if (response.data.success) {
+        const { token, user } = response.data;
 
-    setIsLoading(false);
-    navigate("/dashboard");
+        // Check if user is admin
+        if (user.role !== 'ADMIN') {
+          toast.error('Access denied. Admin credentials required.');
+          setIsLoading(false);
+          return;
+        }
+
+        // Store token and user data
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        sessionStorage.setItem('isAuth', 'true');
+
+        toast.success('Welcome back, Admin!');
+        navigate('/admin/dashboard');
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      toast.error(error.response?.data?.message || 'Invalid admin credentials');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary mb-4">
-            <span className="text-primary-foreground font-bold text-lg">HS</span>
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">HireSpark</h1>
-          <p className="text-muted-foreground mt-2">
-            {isLogin ? "Sign in to your admin account" : "Create your admin account"}
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+            HireSpark
+          </h1>
+          <p className="text-gray-600 text-lg font-medium">Admin Portal</p>
+          <p className="text-gray-500 mt-2">
+            Sign in with your admin credentials
           </p>
         </div>
 
-        <div className="bg-card rounded-lg border border-border p-6 shadow-sm">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="bg-white rounded-xl border-0 shadow-xl p-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sm font-semibold text-gray-700">
+                Email Address
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -53,11 +72,15 @@ export default function Auth() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="h-12 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                disabled={isLoading}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-sm font-semibold text-gray-700">
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -65,28 +88,33 @@ export default function Auth() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="h-12 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                disabled={isLoading}
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
+            <Button
+              type="submit"
+              className="w-full h-12 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-base font-semibold"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign In'
+              )}
             </Button>
           </form>
-
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-primary hover:underline"
-            >
-              {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-            </button>
-          </div>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground">
-          This is a static demo. Any credentials will work.
-        </p>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-sm text-blue-800 font-medium mb-1">Admin Credentials:</p>
+          <p className="text-xs text-blue-600">Email: admin@recruit.com</p>
+          <p className="text-xs text-blue-600">Password: admin123</p>
+        </div>
       </div>
     </div>
   );

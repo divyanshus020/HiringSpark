@@ -9,6 +9,9 @@ const router = express.Router();
 // All routes here are protected and Admin-only
 router.use(protect, isAdmin);
 
+// Admin Dashboard Stats
+router.get('/stats', adminCtrl.getAdminStats);
+
 router.get('/jobs', adminCtrl.getAllJobsMaster);
 // 1. HR Management (RUD)
 router.get('/hrs', adminCtrl.getAllHRs);

@@ -61,7 +61,7 @@ const seedDatabase = async () => {
     console.log(`✅ ${planData.length} plans seeded.`);
 
     // 3. Seed Admin User
-    const adminExists = await User.findOne({ email: 'admin@gmail.com' });
+    const adminExists = await User.findOne({ email: 'admin@recruit.com' });
     if (!adminExists) {
       const hashedPassword = await bcrypt.hash('admin123', 10);
       await User.create({
@@ -73,7 +73,7 @@ const seedDatabase = async () => {
         orgName: 'Recruitment Admin',
         address: 'Mumbai, India'
       });
-      console.log('✅ Admin user created: admin@recruit.com / Admin@123');
+      console.log('✅ Admin user created: admin@recruit.com / admin123');
     }
 
     // 4. Seed Test HR Users
@@ -175,16 +175,16 @@ const seedDatabase = async () => {
 
     // Get HR users
     const hrUsersList = await User.find({ role: 'HR' }).limit(2);
-    
+
     for (let i = 0; i < Math.min(jobsData.length, hrUsersList.length); i++) {
       const job = jobsData[i];
       const hrUser = hrUsersList[i];
-      
-      const existingJob = await Job.findOne({ 
+
+      const existingJob = await Job.findOne({
         jobTitle: job.jobTitle,
-        userId: hrUser._id 
+        userId: hrUser._id
       });
-      
+
       if (!existingJob) {
         await Job.create({
           ...job,
@@ -196,7 +196,7 @@ const seedDatabase = async () => {
 
     console.log('--- ✅ Seeding Complete Successfully ---');
     console.log('\n📋 Test Credentials:');
-    console.log('Admin: admin@gmail.com / admin123');
+    console.log('Admin: admin@recruit.com / admin123');
     console.log('HR 1: rahul@techcorp.com / Password@123');
     console.log('HR 2: priya@innovate.com / Password@123');
     console.log('HR 3: amit@globaltech.com / Password@123');

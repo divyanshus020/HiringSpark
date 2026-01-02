@@ -3,6 +3,27 @@ import { Platform } from '../models/Platform.js';
 import { Job } from '../models/Job.js';
 import { Candidate } from '../models/Candidate.js';
 
+// --- ADMIN DASHBOARD STATS ---
+export const getAdminStats = async (req, res) => {
+  try {
+    const totalHRs = await User.countDocuments({ role: 'HR' });
+    const totalJobs = await Job.countDocuments();
+    const totalCandidates = await Candidate.countDocuments();
+
+    res.json({
+      success: true,
+      data: {
+        totalHRs,
+        totalJobs,
+        totalCandidates
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 // --- HR USER MANAGEMENT (RUD) ---
 export const getAllHRs = async (req, res) => {
   try {
@@ -31,7 +52,7 @@ export const updateHR = async (req, res) => {
       { isActive, fullName, orgName, address },
       { new: true }
     ).select('-password');
-    
+
     if (!hr) return res.status(404).json({ success: false, message: 'HR not found' });
     res.json({ success: true, hr });
   } catch (error) {
@@ -60,9 +81,9 @@ export const deleteHRAndData = async (req, res) => {
     // 5. Finally, delete the HR user
     await User.findByIdAndDelete(hrId);
 
-    res.json({ 
-      success: true, 
-      message: `HR ${hr.email} and all associated jobs/candidates deleted successfully.` 
+    res.json({
+      success: true,
+      message: `HR ${hr.email} and all associated jobs/candidates deleted successfully.`
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -105,7 +126,7 @@ export const getAllJobsMaster = async (req, res) => {
     const jobs = await Job.find()
       .populate('userId', 'fullName email orgName')
       .sort({ createdAt: -1 });
-    
+
     res.json({ success: true, count: jobs.length, jobs });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import Dashboard from "./Dashboard";
 import Auth from "./Auth";
@@ -24,6 +26,7 @@ const AdminApp = () => {
                 <TooltipProvider>
                     <Toaster />
                     <Sonner />
+                    <ToastContainer position="top-right" autoClose={3000} />
                     {/* No BrowserRouter here - it's already in main App.tsx */}
                     <Routes>
                         {/* Admin routes - all paths relative to /admin */}
