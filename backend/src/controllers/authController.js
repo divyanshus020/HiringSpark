@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 import crypto from 'crypto';
 import { transporter } from '../config/mail.js';
+import { env } from '../config/env.js';
 
 // @desc    Register HR
 // @route   POST /api/auth/register
@@ -67,32 +68,32 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
+
     // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Invalid credentials' 
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
       });
     }
-    
+
     // Check password
     const isPasswordMatch = await bcrypt.compare(password, user.password);
     if (!isPasswordMatch) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Invalid credentials' 
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
       });
     }
-    
+
     // Generate token
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '30d' }
     );
-    
+
     res.json({
       success: true,
       token,
@@ -107,9 +108,9 @@ export const login = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: error.message 
+    res.status(500).json({
+      success: false,
+      message: error.message
     });
   }
 };
@@ -119,15 +120,15 @@ export const login = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
-    
+
     res.json({
       success: true,
       user
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: error.message 
+    res.status(500).json({
+      success: false,
+      message: error.message
     });
   }
 };
@@ -142,12 +143,19 @@ export const forgotPassword = async (req, res) => {
   const resetToken = crypto.randomBytes(20).toString('hex');
 
   user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-  user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; 
+  user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
 
   await user.save();
 
   const message = `Your password reset token is: ${resetToken}. 
                   Please enter this on the reset page.`;
+
+  if (!transporter) {
+    return res.status(503).json({
+      success: false,
+      message: "Email service is currently unavailable. Please contact support."
+    });
+  }
 
   try {
     await transporter.sendMail({
@@ -177,10 +185,10 @@ export const resetPassword = async (req, res) => {
 
   const salt = await bcrypt.genSalt(10);
   user.password = await bcrypt.hash(req.body.password, salt);
-  
+
   user.resetPasswordToken = undefined;
   user.resetPasswordExpire = undefined;
-  
+
   await user.save();
   res.json({ success: true, message: "Password updated successfully" });
 };

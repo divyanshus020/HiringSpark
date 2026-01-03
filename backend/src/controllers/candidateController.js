@@ -2,6 +2,7 @@ import { Candidate } from '../models/Candidate.js';
 import { Job } from '../models/Job.js';
 import { User } from '../models/User.js';
 import { transporter } from '../config/mail.js';
+import { env } from '../config/env.js';
 import { candidateAddedEmailTemplate } from '../utils/emailTemplates.js';
 
 // @desc    Add candidate to job (admin only)
@@ -52,26 +53,30 @@ export const addCandidate = async (req, res) => {
 
     // Send email notification to HR
     try {
-      const hrEmail = job.userId.email;
-      const hrName = job.userId.fullName;
-      const jobTitle = job.jobTitle;
+      if (transporter && env.EMAIL_USER) {
+        const hrEmail = job.userId.email;
+        const hrName = job.userId.fullName;
+        const jobTitle = job.jobTitle;
 
-      const emailHtml = candidateAddedEmailTemplate(
-        hrName,
-        name,
-        jobTitle,
-        email,
-        phoneNumber
-      );
+        const emailHtml = candidateAddedEmailTemplate(
+          hrName,
+          name,
+          jobTitle,
+          email,
+          phoneNumber
+        );
 
-      await transporter.sendMail({
-        from: `"HireSpark Admin" <${process.env.EMAIL_USER}>`,
-        to: hrEmail,
-        subject: `🎯 New Candidate Added - ${jobTitle}`,
-        html: emailHtml
-      });
+        await transporter.sendMail({
+          from: `"HireSpark Admin" <${env.EMAIL_USER}>`,
+          to: hrEmail,
+          subject: `🎯 New Candidate Added - ${jobTitle}`,
+          html: emailHtml
+        });
 
-      console.log(`✅ Email sent to HR: ${hrEmail} for candidate: ${name}`);
+        console.log(`✅ Email sent to HR: ${hrEmail} for candidate: ${name}`);
+      } else {
+        console.log('⚠️ Transporter or EMAIL_USER not configured. Skipping email notification.');
+      }
     } catch (emailError) {
       console.error('❌ Error sending email:', emailError);
       // Don't fail the request if email fails

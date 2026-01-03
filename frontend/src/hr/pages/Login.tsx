@@ -15,7 +15,7 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast.error("Please fill in all fields");
       return;
@@ -48,9 +48,9 @@ const Login = () => {
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      const errorMessage = 
-        error.response?.data?.message || 
-        error.message || 
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
         "Login failed. Please check your credentials.";
       toast.error(errorMessage);
       setIsLoading(false);
@@ -149,38 +149,6 @@ const Login = () => {
                 </Button>
               </form>
 
-              {/* Forgot Password */}
-              <div className="mt-4 text-center">
-                <Link to="/forgot-password" className="text-sm text-indigo-600 hover:underline">
-                  Forgot Password?
-                </Link>
-              </div>
-
-              {/* Social Login */}
-              <div className="mt-8">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-white text-gray-500">Log in with</span>
-                  </div>
-                </div>
-
-                <div className="mt-6 flex justify-center gap-4">
-                  <button className="p-3 rounded-full bg-gray-100 hover:bg-gray-800 transition-colors group">
-                    <Github className="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" />
-                  </button>
-                  <button className="p-3 rounded-full bg-gray-100 hover:bg-blue-600 transition-colors group">
-                    <Linkedin className="w-5 h-5 text-blue-600 group-hover:text-white transition-colors" />
-                  </button>
-                  <button className="p-3 rounded-full bg-gray-100 hover:bg-gray-800 transition-colors group">
-                    <svg className="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
             </div>
 
             {/* Right Side - Illustration */}

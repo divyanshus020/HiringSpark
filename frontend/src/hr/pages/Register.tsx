@@ -63,7 +63,7 @@ const Register = () => {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
         sessionStorage.setItem("isAuth", "true");
-        
+
         toast.success("Registration successful! Redirecting...");
         setTimeout(() => {
           navigate("/hr/dashboard");
@@ -157,8 +157,10 @@ const Register = () => {
             <div className="w-full lg:w-1/2 p-8 lg:p-12 order-1 lg:order-2">
               {/* Header */}
               <div className="mb-8">
-                <div className="flex items-center gap-2 mb-6">
-                  <img src="/admin/hiring_bazaar.jpeg" alt="Hiring Spark" className="w-64 h-auto" />
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-3xl mb-2 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    HireSpark
+                  </span>
                 </div>
 
                 <div className="flex justify-between items-center">
@@ -330,32 +332,6 @@ const Register = () => {
                   )}
                 </Button>
               </form>
-
-              {/* Social Sign Up */}
-              <div className="mt-6">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-white text-gray-500">Or sign up with</span>
-                  </div>
-                </div>
-
-                <div className="mt-6 flex justify-center gap-4">
-                  <button className="p-3 rounded-full bg-gray-100 hover:bg-gray-800 transition-colors group">
-                    <Github className="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" />
-                  </button>
-                  <button className="p-3 rounded-full bg-gray-100 hover:bg-blue-600 transition-colors group">
-                    <Linkedin className="w-5 h-5 text-blue-600 group-hover:text-white transition-colors" />
-                  </button>
-                  <button className="p-3 rounded-full bg-gray-100 hover:bg-gray-800 transition-colors group">
-                    <svg className="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </div>

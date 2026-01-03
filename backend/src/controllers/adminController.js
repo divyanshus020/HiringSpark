@@ -287,34 +287,39 @@ export const updateJobStatus = async (req, res) => {
       try {
         const { transporter } = await import('../config/mail.js');
         const { jobApprovedEmailTemplate } = await import('../utils/emailTemplates.js');
+        const { env } = await import('../config/env.js');
 
-        const hrEmail = job.userId.email;
-        const hrName = job.userId.fullName;
-        const jobTitle = job.jobTitle;
-        const jobLocation = job.location;
-        const jobType = job.jobType;
-        const postedDate = new Date(job.createdAt).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        });
+        if (transporter && env.EMAIL_USER) {
+          const hrEmail = job.userId.email;
+          const hrName = job.userId.fullName;
+          const jobTitle = job.jobTitle;
+          const jobLocation = job.location;
+          const jobType = job.jobType;
+          const postedDate = new Date(job.createdAt).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
 
-        const emailHtml = jobApprovedEmailTemplate(
-          hrName,
-          jobTitle,
-          jobLocation,
-          jobType,
-          postedDate
-        );
+          const emailHtml = jobApprovedEmailTemplate(
+            hrName,
+            jobTitle,
+            jobLocation,
+            jobType,
+            postedDate
+          );
 
-        await transporter.sendMail({
-          from: `"HireSpark Admin" <${process.env.EMAIL_USER}>`,
-          to: hrEmail,
-          subject: `✅ Job Approved - ${jobTitle}`,
-          html: emailHtml
-        });
+          await transporter.sendMail({
+            from: `"HireSpark Admin" <${env.EMAIL_USER}>`,
+            to: hrEmail,
+            subject: `✅ Job Approved - ${jobTitle}`,
+            html: emailHtml
+          });
 
-        console.log(`✅ Job approval email sent to HR: ${hrEmail} for job: ${jobTitle}`);
+          console.log(`✅ Job approval email sent to HR: ${hrEmail} for job: ${jobTitle}`);
+        } else {
+          console.log('⚠️ Transporter or EMAIL_USER not configured. Skipping job approval email.');
+        }
       } catch (emailError) {
         console.error('❌ Error sending job approval email:', emailError);
         // Don't fail the request if email fails
