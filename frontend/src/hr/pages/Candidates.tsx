@@ -5,38 +5,54 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Users as UsersIcon, FileText, Loader2, ExternalLink, Mail, Phone } from 'lucide-react';
-import { getCandidatesByJob } from '../../api/hr/candidates.api';
+import { getCandidatesByJob, getMyCandidates, updateCandidateStatus } from '../../api/hr/candidates.api';
 import { getSingleJob } from '../../api/hr/jobs.api';
 import { toast } from 'react-toastify';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
 
 const Candidates = () => {
   const [searchParams] = useSearchParams();
   const jobId = searchParams.get('jobId');
+  console.log(jobId);
   const [candidates, setCandidates] = useState<any[]>([]);
   const [jobDetails, setJobDetails] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!jobId) {
-        toast.error('No job selected');
-        setIsLoading(false);
-        return;
-      }
-
       try {
         setIsLoading(true);
 
-        // Fetch job details
-        const jobResponse = await getSingleJob(jobId);
-        if (jobResponse.data.success) {
-          setJobDetails(jobResponse.data.job);
-        }
+        if (jobId) {
+          // Fetch candidates for this job
+          const candidatesResponse = await getCandidatesByJob(jobId);
+          if (candidatesResponse.data.success) {
+            console.log(candidatesResponse.data.candidates);
+            setCandidates(candidatesResponse.data.candidates || []);
+          }
 
-        // Fetch candidates for this job
-        const candidatesResponse = await getCandidatesByJob(jobId);
-        if (candidatesResponse.data.success) {
-          setCandidates(candidatesResponse.data.candidates || []);
+          // Fetch job details for header
+          try {
+            const jobResponse = await getSingleJob(jobId);
+            if (jobResponse.data.success) {
+              setJobDetails(jobResponse.data.job);
+            }
+          } catch (e) {
+            console.log("Error fetching job details", e);
+          }
+        } else {
+          // Fetch all candidates for the current HR
+          const candidatesResponse = await getMyCandidates();
+          if (candidatesResponse.data.success) {
+            setCandidates(candidatesResponse.data.candidates || []);
+            setJobDetails(null);
+          }
         }
       } catch (error: any) {
         console.error('Error fetching data:', error);
@@ -48,6 +64,20 @@ const Candidates = () => {
 
     fetchData();
   }, [jobId]);
+
+  const handleStatusChange = async (candidateId: string, newStatus: string) => {
+    try {
+      await updateCandidateStatus(candidateId, newStatus);
+      toast.success("Candidate status updated");
+      // Optimistic update
+      setCandidates(candidates.map(c =>
+        c._id === candidateId ? { ...c, status: newStatus } : c
+      ));
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Failed to update status");
+    }
+  };
 
   const handleViewCV = (cvUrl: string) => {
     if (!cvUrl) {
@@ -88,11 +118,15 @@ const Candidates = () => {
         <div className="mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-indigo-800 to-purple-900 bg-clip-text text-transparent flex items-center gap-3">
             <UsersIcon className="h-10 w-10 text-indigo-600" />
-            Candidates
+            {jobDetails ? 'Candidates' : 'All Candidates'}
           </h1>
-          {jobDetails && (
+          {jobDetails ? (
             <p className="text-gray-600 mt-2 text-lg">
               Applications for <span className="font-semibold">{jobDetails.jobTitle}</span>
+            </p>
+          ) : (
+            <p className="text-gray-600 mt-2 text-lg">
+              Showing candidates from all your job postings
             </p>
           )}
         </div>
@@ -118,10 +152,11 @@ const Candidates = () => {
                     <tr className="border-b border-gray-200">
                       <th className="text-left py-4 px-4 font-semibold text-gray-700">#</th>
                       <th className="text-left py-4 px-4 font-semibold text-gray-700">Name</th>
+                      <th className="text-left py-4 px-4 font-semibold text-gray-700">Job Title</th>
                       <th className="text-left py-4 px-4 font-semibold text-gray-700">Email</th>
                       <th className="text-left py-4 px-4 font-semibold text-gray-700">Phone</th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">Experience</th>
                       <th className="text-left py-4 px-4 font-semibold text-gray-700">Status</th>
+                      <th className="text-left py-4 px-4 font-semibold text-gray-700">Update Status</th>
                       <th className="text-left py-4 px-4 font-semibold text-gray-700">CV</th>
                     </tr>
                   </thead>
@@ -136,6 +171,9 @@ const Candidates = () => {
                           <div className="font-semibold text-gray-900">{candidate.name}</div>
                         </td>
                         <td className="py-4 px-4">
+                          <div className="text-sm font-medium text-indigo-600">{candidate.jobId?.jobTitle || 'N/A'}</div>
+                        </td>
+                        <td className="py-4 px-4">
                           <div className="flex items-center gap-2 text-gray-600">
                             <Mail className="h-4 w-4" />
                             <span className="text-sm">{candidate.email}</span>
@@ -144,18 +182,32 @@ const Candidates = () => {
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-2 text-gray-600">
                             <Phone className="h-4 w-4" />
-                            <span className="text-sm">{candidate.phone || 'N/A'}</span>
+                            <span className="text-sm">{candidate.phoneNumber || 'N/A'}</span>
                           </div>
                         </td>
                         <td className="py-4 px-4">
-                          <span className="text-sm text-gray-600">
-                            {candidate.experience || 'Not specified'}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4">
-                          <Badge variant="secondary">
+                          <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 border-indigo-100">
                             {candidate.status || 'Applied'}
                           </Badge>
+                        </td>
+                        <td className="py-4 px-4">
+                          <Select
+                            defaultValue={candidate.status || "Pending Review"}
+                            onValueChange={(val) => handleStatusChange(candidate._id, val)}
+                          >
+                            <SelectTrigger className="w-[180px] text-gray-700 border-gray-200 h-8 text-xs font-medium">
+                              <SelectValue placeholder="Change Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Pending Review">Pending Review</SelectItem>
+                              <SelectItem value="Shortlisted by HR">Shortlisted by HR</SelectItem>
+                              <SelectItem value="Interviewed">Interviewed</SelectItem>
+                              <SelectItem value="Rejected">Rejected</SelectItem>
+                              <SelectItem value="Hired">Hired</SelectItem>
+                              <SelectItem value="Engaged">Engaged</SelectItem>
+                              <SelectItem value="Taken">Taken</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </td>
                         <td className="py-4 px-4">
                           {candidate.resumeUrl ? (

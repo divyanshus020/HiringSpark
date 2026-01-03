@@ -248,7 +248,7 @@ export const getMyJobs = async (req, res) => {
           userId: new mongoose.Types.ObjectId(req.user._id)
         }
       },
-      
+
       // Step 2: Lookup to get candidate count
       {
         $lookup: {
@@ -258,7 +258,7 @@ export const getMyJobs = async (req, res) => {
           as: 'candidates'
         }
       },
-      
+
       // Step 3: Add fields for candidate count and formatted dates
       {
         $addFields: {
@@ -292,7 +292,7 @@ export const getMyJobs = async (req, res) => {
           }
         }
       },
-      
+
       // Step 4: Project only required fields
       {
         $project: {
@@ -310,7 +310,7 @@ export const getMyJobs = async (req, res) => {
           totalAmount: 1
         }
       },
-      
+
       // Step 5: Sort by latest updated
       {
         $sort: { updatedAt: -1 }
@@ -321,15 +321,18 @@ export const getMyJobs = async (req, res) => {
     const statusMap = {
       'draft': 'Draft',
       'pending': 'Pending Review',
-      'posted': 'Active'
+      'active': 'Active',
+      'rejected': 'Rejected',
+      'posted': 'Active' // Legacy support
     };
 
     const formattedJobs = jobs.map(job => ({
       ...job,
       statusText: statusMap[job.status] || job.status,
       // Add status color for frontend
-      statusColor: job.status === 'draft' ? 'gray' : 
-                   job.status === 'pending' ? 'orange' : 'green'
+      statusColor: job.status === 'draft' ? 'gray' :
+        job.status === 'pending' ? 'orange' :
+          job.status === 'active' || job.status === 'posted' ? 'green' : 'red'
     }));
 
     res.json({
@@ -398,14 +401,14 @@ export const postJob = async (req, res) => {
       });
     }
 
-    if (job.status !== 'pending') {
+    if (job.status !== 'pending' && job.status !== 'draft') {
       return res.status(400).json({
         success: false,
-        message: 'Job must be in pending status to post'
+        message: 'Job must be in pending or draft status to submit for approval'
       });
     }
 
-    job.status = 'posted';
+    job.status = 'pending';
     await job.save();
 
     res.json({
@@ -422,33 +425,33 @@ export const postJob = async (req, res) => {
 // @desc    Delete job
 // @route   DELETE /api/jobs/:id
 export const deleteJob = async (req, res) => {
-    try {
-        const job = await Job.findById(req.params.id);
+  try {
+    const job = await Job.findById(req.params.id);
 
-        if (!job) {
-            return res.status(404).json({
-                success: false,
-                message: 'Job not found'
-            });
-        }
-
-        if (job.userId.toString() !== req.user._id.toString()) {
-            return res.status(403).json({
-                success: false,
-                message: 'Not authorized to delete this job'
-            });
-        }
-
-        await Job.findByIdAndDelete(req.params.id);
-
-        res.json({
-            success: true,
-            message: 'Job deleted successfully'
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
     }
+
+    if (job.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to delete this job'
+      });
+    }
+
+    await Job.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: 'Job deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
 };

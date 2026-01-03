@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { getAllJobPostings } from "../api/admin/admin.api";
+import { getAllJobPostings, updateJobStatus, deleteJobAdmin } from "../api/admin/admin.api";
+import { toast } from "react-toastify";
+import { Check, X, Trash2 } from "lucide-react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { useNavigate } from "react-router-dom";
 import {
@@ -47,8 +49,50 @@ export default function JobPostings() {
     navigate(`/admin/job-postings/${job._id}`);
   };
 
+  const handleApprove = async (id: string) => {
+    try {
+      await updateJobStatus(id, "active");
+      toast.success("Job approved successfully");
+      fetchJobs();
+    } catch (error) {
+      toast.error("Failed to approve job");
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    try {
+      await updateJobStatus(id, "rejected");
+      toast.success("Job rejected");
+      fetchJobs();
+    } catch (error) {
+      toast.error("Failed to reject job");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this job? This will remove all associated candidates.")) return;
+    try {
+      await deleteJobAdmin(id);
+      toast.success("Job deleted");
+      fetchJobs();
+    } catch (error) {
+      toast.error("Failed to delete job");
+    }
+  };
+
+  const pendingCount = jobs.filter(j => j.status === 'pending').length;
+
   return (
-    <DashboardLayout title="Job Postings">
+    <DashboardLayout title={
+      <div className="flex items-center gap-3">
+        Job Postings
+        {pendingCount > 0 && (
+          <span className="bg-destructive text-destructive-foreground text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
+            {pendingCount} Pending
+          </span>
+        )}
+      </div>
+    }>
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="relative w-full sm:w-96">
@@ -116,22 +160,61 @@ export default function JobPostings() {
                       <Badge
                         variant="outline"
                         className={
-                          job.status === 'posted'
+                          job.status === 'active' || job.status === 'posted'
                             ? "bg-green-50 text-green-700 border-green-200"
-                            : "bg-yellow-50 text-yellow-700 border-yellow-200"
+                            : job.status === 'pending'
+                              ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                              : job.status === 'rejected'
+                                ? "bg-red-50 text-red-700 border-red-200"
+                                : "bg-gray-50 text-gray-700 border-gray-200"
                         }
                       >
-                        {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                        {job.status === 'active' || job.status === 'posted' ? 'Active' :
+                          job.status === 'pending' ? 'Pending Review' :
+                            job.status.charAt(0).toUpperCase() + job.status.slice(1)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        className="bg-blue-500 hover:bg-blue-600 text-white"
-                        onClick={() => handleViewDetails(job)}
-                      >
-                        View
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        {job.status === 'pending' && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                              onClick={() => handleApprove(job._id)}
+                              title="Approve"
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => handleReject(job._id)}
+                              title="Reject"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 w-8 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                          onClick={() => handleDelete(job._id)}
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-blue-500 hover:bg-blue-600 text-white h-8"
+                          onClick={() => handleViewDetails(job)}
+                        >
+                          View
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -144,26 +227,4 @@ export default function JobPostings() {
   );
 }
 
-// Helper icons mapping
-function Trash2(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 6h18" />
-      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-      <line x1="10" y1="11" x2="10" y2="17" />
-      <line x1="14" y1="11" x2="14" y2="17" />
-    </svg>
-  );
-}
+// End of component

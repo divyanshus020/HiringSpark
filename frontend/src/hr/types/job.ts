@@ -70,5 +70,7 @@ export const PRICING = {
   collegeNetwork: 200, // per month
   trainingCentreNetwork: 200, // per month
   apna: 500, // per month
+  premiumPlan: 1500, // Fixed price for premium
+  totalSavings: 950, // Display savings
   gstRate: 0.18, // 18% GST
 };

@@ -1,11 +1,11 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getJobPostingDetail } from "../api/admin/admin.api";
+import { getJobPostingDetail, updateJobStatus } from "../api/admin/admin.api";
 import { getCandidatesByJob, addCandidate, updateCandidateStatus } from "../api/hr/candidates.api";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Calendar, Linkedin, ExternalLink } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, Linkedin, ExternalLink, Check, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -28,8 +28,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function JobPostingDetail() {
+  // All hooks must be called at the top before any conditional returns
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   const [job, setJob] = useState<any>(null);
@@ -50,10 +52,13 @@ export default function JobPostingDetail() {
     setIsLoading(true);
     try {
       const jobRes = await getJobPostingDetail(id);
-      setJob(jobRes.data || jobRes.data.data);
+      console.log(jobRes);
+      // Access the job object correctly from the response
+      setJob(jobRes.data.job || jobRes.data.data || jobRes.data);
 
       const candidatesRes = await getCandidatesByJob(id);
-      setCandidates(candidatesRes.data || candidatesRes.data.data || []);
+      console.log(candidatesRes);
+      setCandidates(candidatesRes.data.candidates || []);
     } catch (error) {
       console.error("Error fetching job details:", error);
       // Fallback to mock data since backend route might be missing
@@ -168,15 +173,61 @@ export default function JobPostingDetail() {
     );
   }
 
-  const location = useLocation();
+  // Calculate back path and text
   const backPath = location.state?.from || '/admin/job-postings';
   const backText = backPath.includes('hr-accounts') ? 'Back to HR Details' : 'Back to Job Postings';
+
+  // Safe date formatting helper
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return 'N/A';
+      }
+      return date.toISOString().split('T')[0];
+    } catch {
+      return 'N/A';
+    }
+  };
 
   return (
     <DashboardLayout title="Job Postings">
       <div className="space-y-6">
         {/* Header Link */}
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
+          <div className="flex gap-2">
+            {job.status === 'pending' && (
+              <>
+                <Button
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700 text-white gap-2 h-8"
+                  onClick={async () => {
+                    try {
+                      await updateJobStatus(job._id, "active");
+                      toast({ title: "Approved", description: "Job is now active." });
+                      fetchData();
+                    } catch (e) { toast({ title: "Error", description: "Failed to approve", variant: "destructive" }); }
+                  }}
+                >
+                  <Check className="h-4 w-4" /> Approve Job
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-red-600 hover:bg-red-50 gap-2 h-8 border-red-200"
+                  onClick={async () => {
+                    try {
+                      await updateJobStatus(job._id, "rejected");
+                      toast({ title: "Rejected", description: "Job has been rejected." });
+                      fetchData();
+                    } catch (e) { toast({ title: "Error", description: "Failed to reject", variant: "destructive" }); }
+                  }}
+                >
+                  <X className="h-4 w-4" /> Reject Job
+                </Button>
+              </>
+            )}
+          </div>
           <button
             onClick={() => navigate(backPath)}
             className="text-blue-500 hover:text-blue-600 text-sm flex items-center gap-1"
@@ -188,7 +239,25 @@ export default function JobPostingDetail() {
         {/* Job Info Card */}
         <Card className="border-gray-100 shadow-sm">
           <CardContent className="p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-6">{job.jobTitle}</h2>
+            <div className="flex justify-between items-start mb-6">
+              <h2 className="text-xl font-bold text-gray-800">{job.jobTitle}</h2>
+              <Badge
+                variant="outline"
+                className={
+                  job.status === 'active' || job.status === 'posted'
+                    ? "bg-green-50 text-green-700 border-green-200"
+                    : job.status === 'pending'
+                      ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                      : job.status === 'rejected'
+                        ? "bg-red-50 text-red-700 border-red-200"
+                        : "bg-gray-50 text-gray-700 border-gray-200"
+                }
+              >
+                {job.status === 'active' || job.status === 'posted' ? 'Active' :
+                  job.status === 'pending' ? 'Pending Review' :
+                    job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+              </Badge>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
               <div className="space-y-4">
@@ -201,7 +270,9 @@ export default function JobPostingDetail() {
 
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-gray-500 uppercase">SALARY RANGE</p>
-                  <p className="text-gray-900">{job.salaryRange || "12-18 LPA"}</p>
+                  <p className="text-gray-900">
+                    {job.salaryRange || (job.minSalary && job.maxSalary ? `${job.minSalary / 100000}-${job.maxSalary / 100000} LPA` : "N/A")}
+                  </p>
                 </div>
               </div>
 
@@ -210,15 +281,15 @@ export default function JobPostingDetail() {
                   {/* Empty spacer or alignment if needed, or simple margin */}
                   <p className="text-xs font-semibold text-gray-500 uppercase">PLAN TYPE</p>
                   <p className="text-gray-900">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${job.planType === 'Premium' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
-                      {job.planType || 'Premium'}
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${job.plan === 'premium' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
+                      {job.plan || 'basic'}
                     </span>
                   </p>
                 </div>
 
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-gray-500 uppercase">POSTED DATE</p>
-                  <p className="text-gray-900">{new Date(job.createdAt).toISOString().split('T')[0]}</p>
+                  <p className="text-gray-900">{formatDate(job.createdAt)}</p>
                 </div>
               </div>
             </div>
@@ -268,7 +339,11 @@ export default function JobPostingDetail() {
               <h3 className="font-semibold text-gray-800">Candidates for This Job</h3>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-blue-500 hover:bg-blue-600 text-white gap-2">
+                  <Button
+                    className="bg-blue-500 hover:bg-blue-600 text-white gap-2"
+                    disabled={job.status !== 'active' && job.status !== 'posted'}
+                    title={job.status !== 'active' && job.status !== 'posted' ? "Only active jobs can accept candidates" : ""}
+                  >
                     <Plus className="h-4 w-4" />
                     Upload Candidate
                   </Button>
@@ -348,7 +423,7 @@ export default function JobPostingDetail() {
                       defaultValue={candidate.status || "Pending Review"}
                       onValueChange={(val) => handleStatusChange(candidate._id, val)}
                     >
-                      <SelectTrigger className="w-[180px] bg-gray-500 text-white border-0 h-8 text-xs font-medium">
+                      <SelectTrigger className="w-[180px] text-black  border-gray-200 border-2 h-8 text-xs font-medium">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

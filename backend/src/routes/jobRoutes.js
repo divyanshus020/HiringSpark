@@ -23,8 +23,8 @@ router.put('/:id/step4', protect, isHR, updateJobStep4);
 router.put('/:id/post', protect, isHR, postJob);
 
 // Get jobs
-router.get('/', protect, isHR, getMyJobs);
-router.get('/:id', protect, isHR, getJob);
+router.get('/', protect,  getMyJobs);
+router.get('/:id', protect,  getJob);
 
 // Delete job
 router.delete('/:id', protect, isHR, deleteJob);

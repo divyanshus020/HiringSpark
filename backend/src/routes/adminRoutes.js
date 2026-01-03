@@ -13,9 +13,13 @@ router.use(protect, isAdmin);
 router.get('/stats', adminCtrl.getAdminStats);
 
 router.get('/jobs', adminCtrl.getAllJobsMaster);
+
 // 1. HR Management (RUD)
 router.get('/hrs', adminCtrl.getAllHRs);
 router.get('/hrs/:id', adminCtrl.getHRById);
+router.get('/hrs/:hrId/jobs', adminCtrl.getJobsByHR); // Get all jobs for specific HR
+router.put('/jobs/:id/status', adminCtrl.updateJobStatus); // Approve/Reject job
+router.delete('/jobs/:id', adminCtrl.deleteJobAdmin); // Delete job
 router.put('/hrs/:id', adminCtrl.updateHR);
 
 // 2. Candidate Master CRUD

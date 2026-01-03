@@ -1,6 +1,6 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getHRDetail, getAllJobPostings } from "../api/admin/admin.api";
+import { getHRDetail, getJobsByHR } from "../api/admin/admin.api";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,20 +34,14 @@ export default function HRDetail() {
       setIsLoading(true);
       try {
         const hrRes = await getHRDetail(id);
-        const hrData = hrRes.data || hrRes.data.data;
+        console.log(hrRes.data.hr);
+        const hrData = hrRes.data.hr || hrRes.data.data;
         setHr(hrData);
 
-        const jobsRes = await getAllJobPostings();
-        const allJobs = jobsRes.data.jobs || jobsRes.data.data || [];
-
-        // Filter jobs for this HR
-        const hrJobs = allJobs.filter((job: any) =>
-          job.createdBy === id ||
-          job.createdBy?._id === id ||
-          job.userId === id ||
-          job.userId?._id === id
-        );
-        setJobs(hrJobs);
+        // Fetch jobs for this specific HR (including drafts)
+        const jobsRes = await getJobsByHR(id);
+        console.log(jobsRes.data.jobs);
+        setJobs(jobsRes.data.jobs || []);
 
       } catch (error) {
         console.error("Error fetching details:", error);
@@ -171,7 +165,7 @@ export default function HRDetail() {
                           </span>
                         </TableCell>
                         <TableCell className="text-gray-600">{new Date(job.createdAt).toISOString().split('T')[0]}</TableCell>
-                        <TableCell className="text-gray-600 pl-8">{job.candidates?.length || "0"}</TableCell>
+                        <TableCell className="text-gray-600 pl-8">{job.candidateCount || 0}</TableCell>
                         <TableCell className="text-right">
                           <Button
                             size="sm"

@@ -222,7 +222,7 @@ const PlatformSelectionStep = () => {
                       </Select>
                     )}
                     <span className="text-[#0077B5] font-bold text-base">
-                      ₹{PRICING.linkedin.perDay}/day
+                      {state.planType === 'premium' ? 'Included' : `₹${PRICING.linkedin.perDay}/day`}
                     </span>
                   </div>
                 </div>
@@ -260,7 +260,7 @@ const PlatformSelectionStep = () => {
                       </span>
                     )}
                     <span className="text-[#4A90E2] font-bold text-base">
-                      ₹{platforms.naukri.plan ? PRICING.naukri[platforms.naukri.plan] : '400+'}
+                      {state.planType === 'premium' ? 'Included' : `₹${platforms.naukri.plan ? PRICING.naukri[platforms.naukri.plan] : '400+'}`}
                     </span>
                   </div>
                 </div>
@@ -292,7 +292,9 @@ const PlatformSelectionStep = () => {
                       </p>
                     </div>
                   </div>
-                  <span className="text-purple-600 font-bold text-base">₹{PRICING.timesJob}/month</span>
+                  <span className="text-purple-600 font-bold text-base">
+                    {state.planType === 'premium' ? 'Included' : `₹${PRICING.timesJob}/month`}
+                  </span>
                 </div>
 
                 {/* IIM Jobs */}
@@ -412,7 +414,9 @@ const PlatformSelectionStep = () => {
                       </p>
                     </div>
                   </div>
-                  <span className="text-amber-600 font-bold text-base">₹{PRICING.collegeNetwork}/month</span>
+                  <span className="text-amber-600 font-bold text-base">
+                    {state.planType === 'premium' ? 'Included' : `₹${PRICING.collegeNetwork}/month`}
+                  </span>
                 </div>
 
                 {/* Training Centre Network */}
@@ -442,7 +446,9 @@ const PlatformSelectionStep = () => {
                       </p>
                     </div>
                   </div>
-                  <span className="text-indigo-600 font-bold text-base">₹{PRICING.trainingCentreNetwork}/month</span>
+                  <span className="text-indigo-600 font-bold text-base">
+                    {state.planType === 'premium' ? 'Included' : `₹${PRICING.trainingCentreNetwork}/month`}
+                  </span>
                 </div>
 
                 {/* Apna */}
@@ -472,7 +478,9 @@ const PlatformSelectionStep = () => {
                       </p>
                     </div>
                   </div>
-                  <span className="text-teal-600 font-bold text-base">₹{PRICING.apna}/month</span>
+                  <span className="text-teal-600 font-bold text-base">
+                    {state.planType === 'premium' ? 'Included' : `₹${PRICING.apna}/month`}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -555,11 +563,24 @@ const PlatformSelectionStep = () => {
                     <span className="text-gray-600">Subtotal</span>
                     <span className="font-semibold text-gray-900">₹{subtotal}</span>
                   </div>
-                  {state.planType === 'premium' && gst > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">GST (18%)</span>
-                      <span className="font-semibold text-gray-900">₹{Math.round(gst)}</span>
-                    </div>
+                  {state.planType === 'premium' && (
+                    <>
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span className="flex items-center gap-1">
+                          <Sparkles className="h-3 w-3" />
+                          Premium Discount
+                        </span>
+                        <span className="font-semibold">-₹950</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">GST (18%)</span>
+                        <span className="font-semibold text-gray-900">₹{Math.round(gst)}</span>
+                      </div>
+                      <div className="mt-2 p-2 bg-green-50 border border-green-100 rounded-lg flex items-center justify-between">
+                        <span className="text-green-700 text-xs font-bold uppercase tracking-wider">Total Savings</span>
+                        <span className="text-green-700 font-bold">₹{PRICING.totalSavings}</span>
+                      </div>
+                    </>
                   )}
                 </div>
 

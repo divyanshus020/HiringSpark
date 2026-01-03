@@ -55,7 +55,7 @@ const Dashboard = (): JSX.Element => {
         // Fetch dashboard stats
         const statsResponse = await getHrDashboardStats();
         if (statsResponse.data.success) {
-          setStats(statsResponse.data.data);
+          setStats(statsResponse.data.dashboard.stats);
         }
 
         // Fetch recent jobs
@@ -97,10 +97,10 @@ const Dashboard = (): JSX.Element => {
   };
 
   const statsCards = stats ? [
-    { label: "Active Jobs", value: stats.activeJobs || "0", change: `${stats.jobsThisWeek || 0} this week`, icon: Briefcase, color: "from-blue-500 to-cyan-500" },
-    { label: "Total Applicants", value: stats.totalApplicants || "0", change: `${stats.applicantsToday || 0} today`, icon: Users, color: "from-purple-500 to-pink-500" },
-    { label: "Pending Review", value: stats.pendingReview || "0", change: `${stats.urgentReview || 0} urgent`, icon: Clock, color: "from-orange-500 to-red-500" },
-    { label: "Hired This Month", value: stats.hiredThisMonth || "0", change: `${stats.hireGrowth || 0}%`, icon: TrendingUp, color: "from-emerald-500 to-teal-500" },
+    { label: "Active Jobs", value: stats.activeJobs?.value || "0", change: stats.activeJobs?.change || "0 this week", icon: Briefcase, color: "from-blue-500 to-cyan-500" },
+    { label: "Total Applicants", value: stats.totalApplicants?.value || "0", change: stats.totalApplicants?.change || "0 today", icon: Users, color: "from-purple-500 to-pink-500" },
+    { label: "Pending Review", value: stats.pendingReview?.value || "0", change: stats.pendingReview?.change || "0 urgent", icon: Clock, color: "from-orange-500 to-red-500" },
+    { label: "Hired This Month", value: stats.hiredThisMonth?.value || "0", change: stats.hiredThisMonth?.change || "0%", icon: TrendingUp, color: "from-emerald-500 to-teal-500" },
   ] : [];
 
   const getStatusVariant = (
@@ -256,154 +256,7 @@ const Dashboard = (): JSX.Element => {
           </CardContent>
         </Card>
 
-        {/* Analytics Charts */}
-        <div className="grid gap-6 md:grid-cols-2 mt-8">
-          {/* Job Status Distribution */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <Card className="border-0 shadow-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Briefcase className="h-5 w-5 text-indigo-600" />
-                  Job Status Distribution
-                </CardTitle>
-                <CardDescription>Breakdown of your job postings by status</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {stats ? (
-                  <div className="space-y-4">
-                    {/* Active Jobs */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="h-4 w-4 rounded-full bg-green-500"></div>
-                        <span className="text-sm font-medium">Active Jobs</span>
-                      </div>
-                      <span className="text-2xl font-bold text-green-600">
-                        {stats.activeJobs || 0}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className="bg-green-500 h-3 rounded-full transition-all"
-                        style={{
-                          width: `${stats.activeJobs ? (stats.activeJobs / (stats.activeJobs + 1)) * 100 : 0}%`,
-                        }}
-                      ></div>
-                    </div>
 
-                    {/* Draft Jobs */}
-                    <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-4 w-4 rounded-full bg-yellow-500"></div>
-                        <span className="text-sm font-medium">Draft Jobs</span>
-                      </div>
-                      <span className="text-2xl font-bold text-yellow-600">
-                        {recentJobs.filter((j: any) => j.status === 'draft').length || 0}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className="bg-yellow-500 h-3 rounded-full transition-all"
-                        style={{
-                          width: `${recentJobs.filter((j: any) => j.status === 'draft').length ? 50 : 0}%`,
-                        }}
-                      ></div>
-                    </div>
-
-                    {/* Total */}
-                    <div className="pt-4 border-t border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-gray-700">Total Jobs</span>
-                        <span className="text-3xl font-bold text-indigo-600">
-                          {stats.activeJobs || 0}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Candidate Statistics */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6 }}
-          >
-            <Card className="border-0 shadow-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-purple-600" />
-                  Candidate Overview
-                </CardTitle>
-                <CardDescription>Total applications received</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {stats ? (
-                  <div className="space-y-4">
-                    {/* Total Applicants */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="h-4 w-4 rounded-full bg-purple-500"></div>
-                        <span className="text-sm font-medium">Total Applicants</span>
-                      </div>
-                      <span className="text-2xl font-bold text-purple-600">
-                        {stats.totalApplicants || 0}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className="bg-purple-500 h-3 rounded-full transition-all"
-                        style={{ width: '100%' }}
-                      ></div>
-                    </div>
-
-                    {/* Pending Review */}
-                    <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-4 w-4 rounded-full bg-orange-500"></div>
-                        <span className="text-sm font-medium">Pending Review</span>
-                      </div>
-                      <span className="text-2xl font-bold text-orange-600">
-                        {stats.pendingReview || 0}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className="bg-orange-500 h-3 rounded-full transition-all"
-                        style={{
-                          width: `${stats.totalApplicants ? (stats.pendingReview / stats.totalApplicants) * 100 : 0}%`,
-                        }}
-                      ></div>
-                    </div>
-
-                    {/* Today's Applications */}
-                    <div className="pt-4 border-t border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-gray-700">Today's Applications</span>
-                        <span className="text-3xl font-bold text-blue-600">
-                          {stats.applicantsToday || 0}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
       </main>
     </div>
   );

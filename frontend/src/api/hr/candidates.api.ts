@@ -17,5 +17,5 @@ export const updateCandidateFeedback = (
 export const getMyCandidates = () =>
   api.get("/candidates/my-candidates");
 
-export const updateCandidateStatus = (id: string, status: string) =>
-  api.put(`/candidates/${id}/status`, { status });
+export const updateCandidateStatus = (id: string, feedback: string) =>
+  api.put(`/candidates/${id}/feedback`, { feedback });

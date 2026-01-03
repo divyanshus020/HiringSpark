@@ -1,6 +1,8 @@
 import { LayoutDashboard, Users, UserCheck, Briefcase, Settings, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { getAdminStats } from "@/api/admin/admin.api";
 import {
   Sidebar,
   SidebarContent,
@@ -27,6 +29,25 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await getAdminStats();
+        if (res.data.success) {
+          setPendingCount(res.data.data.pendingJobsCount || 0);
+        }
+      } catch (error) {
+        console.error("Error fetching sidebar stats:", error);
+      }
+    };
+
+    fetchStats();
+    // Refresh stats every 5 minutes
+    const interval = setInterval(fetchStats, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -55,18 +76,31 @@ export function AppSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => {
                 const isActive = location.pathname === item.url;
+                const isJobPostings = item.title === "Job Postings";
+
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive}>
                       <NavLink
                         to={item.url}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${isActive
-                          ? "bg-primary text-primary-foreground"
+                        className={`flex items-center justify-between gap-3 px-3 py-2 rounded-md transition-colors w-full ${isActive
+                          ? "bg-primary text-primary-foreground font-medium"
                           : "text-sidebar-foreground hover:bg-sidebar-accent"
                           }`}
                       >
-                        <item.icon className="h-5 w-5 shrink-0" />
-                        {!collapsed && <span>{item.title}</span>}
+                        <div className="flex items-center gap-3 min-w-0">
+                          <item.icon className="h-5 w-5 shrink-0" />
+                          {!collapsed && <span className="truncate">{item.title}</span>}
+                        </div>
+
+                        {isJobPostings && pendingCount > 0 && (
+                          <div className={collapsed
+                            ? "absolute top-0 right-0 h-2 w-2 rounded-full bg-destructive border border-sidebar"
+                            : "bg-destructive text-destructive-foreground text-[10px] font-bold h-5 min-w-[20px] px-1.5 rounded-full flex items-center justify-center shadow-sm"
+                          }>
+                            {!collapsed && pendingCount}
+                          </div>
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

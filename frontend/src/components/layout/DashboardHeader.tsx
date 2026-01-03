@@ -1,6 +1,7 @@
 import { Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { ReactNode } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface DashboardHeaderProps {
-  title: string;
+  title: ReactNode;
 }
 
 export function DashboardHeader({ title }: DashboardHeaderProps) {

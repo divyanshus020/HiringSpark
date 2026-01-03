@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 
 export default function Candidates() {
+  console.log("Candidates");
   const [candidates, setCandidates] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -32,6 +33,7 @@ export default function Candidates() {
     setIsLoading(true);
     try {
       const res = await getAllCandidates();
+      console.log(res);
       setCandidates(res.data.candidates || res.data.data || []);
     } catch (error) {
       console.error(error);

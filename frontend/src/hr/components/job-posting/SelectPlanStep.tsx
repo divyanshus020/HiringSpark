@@ -87,6 +87,17 @@ const SelectPlanStep = () => {
                 <plan.icon className="h-12 w-12 text-white" />
               </div>
               <CardTitle className="text-3xl font-bold text-gray-900 mb-3">{plan.name}</CardTitle>
+              <div className="flex flex-col items-center mb-3">
+                <span className={cn(
+                  "text-4xl font-black bg-gradient-to-r bg-clip-text text-transparent",
+                  plan.id === 'premium' ? "from-purple-600 to-pink-600" : "from-blue-600 to-cyan-600"
+                )}>
+                  {plan.id === 'premium' ? '₹1,500' : 'Varies'}
+                </span>
+                {plan.id === 'premium' && (
+                  <span className="text-gray-400 line-through text-sm font-medium">₹2,450</span>
+                )}
+              </div>
               <CardDescription className="text-base text-gray-600 px-6">{plan.description}</CardDescription>
             </CardHeader>
 

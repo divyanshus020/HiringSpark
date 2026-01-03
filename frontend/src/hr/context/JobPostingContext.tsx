@@ -118,25 +118,29 @@ export const JobPostingProvider = ({ children }: { children: ReactNode }) => {
     const { platforms, planType } = state;
     let subtotal = 0;
 
-    // LinkedIn
-    if (platforms.linkedin.selected) {
-      subtotal += PRICING.linkedin.perDay * platforms.linkedin.days;
+    if (planType === 'premium') {
+      subtotal = PRICING.premiumPlan;
+    } else {
+      // LinkedIn
+      if (platforms.linkedin.selected) {
+        subtotal += PRICING.linkedin.perDay * platforms.linkedin.days;
+      }
+
+      // Naukri
+      if (platforms.naukri.selected && platforms.naukri.plan) {
+        subtotal += PRICING.naukri[platforms.naukri.plan];
+      }
+
+      // Job Boards
+      if (platforms.timesJob) subtotal += PRICING.timesJob;
+      if (platforms.iimJobs) subtotal += PRICING.iimJobs;
+      if (platforms.unstop) subtotal += PRICING.unstop;
+
+      // Networks
+      if (platforms.collegeNetwork) subtotal += PRICING.collegeNetwork;
+      if (platforms.trainingCentreNetwork) subtotal += PRICING.trainingCentreNetwork;
+      if (platforms.apna) subtotal += PRICING.apna;
     }
-
-    // Naukri
-    if (platforms.naukri.selected && platforms.naukri.plan) {
-      subtotal += PRICING.naukri[platforms.naukri.plan];
-    }
-
-    // Job Boards
-    if (platforms.timesJob) subtotal += PRICING.timesJob;
-    if (platforms.iimJobs) subtotal += PRICING.iimJobs;
-    if (platforms.unstop) subtotal += PRICING.unstop;
-
-    // Networks
-    if (platforms.collegeNetwork) subtotal += PRICING.collegeNetwork;
-    if (platforms.trainingCentreNetwork) subtotal += PRICING.trainingCentreNetwork;
-    if (platforms.apna) subtotal += PRICING.apna;
 
     // GST applies to premium plan
     const gst = planType === 'premium' ? subtotal * PRICING.gstRate : 0;

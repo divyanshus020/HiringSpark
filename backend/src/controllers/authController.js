@@ -184,3 +184,7 @@ export const resetPassword = async (req, res) => {
   await user.save();
   res.json({ success: true, message: "Password updated successfully" });
 };
+
+export const admin_login = () => {
+
+}

@@ -14,7 +14,9 @@ export default function Dashboard() {
     setIsLoading(true);
     getAdminStats()
       .then((res) => {
-        setStats(res.data.data || res.data);
+        console.log(res);
+        console.log(res.data.data);
+        setStats(res.data.data);
       })
       .catch(console.error)
       .finally(() => setIsLoading(false));
@@ -58,7 +60,7 @@ export default function Dashboard() {
               title="Total HR Accounts"
               value={stats?.totalHRs || 0}
               icon={Users}
-              trend={{ value: 12, isPositive: true }}
+              trend={{ value: stats?.trends?.hrTrend || 0, isPositive: stats?.trends?.hrTrend > 0 ? true : false }}
             />
           </motion.div>
 
@@ -71,7 +73,7 @@ export default function Dashboard() {
               title="Total Job Postings"
               value={stats?.totalJobs || 0}
               icon={Briefcase}
-              trend={{ value: 8, isPositive: true }}
+              trend={{ value: stats?.trends?.jobTrend || 0, isPositive: stats?.trends?.jobTrend > 0 ? true : false }}
             />
           </motion.div>
 
@@ -84,7 +86,19 @@ export default function Dashboard() {
               title="Total Candidates"
               value={stats?.totalCandidates || 0}
               icon={FileText}
-              trend={{ value: 23, isPositive: true }}
+              trend={{ value: stats?.trends?.candidateTrend || 0, isPositive: stats?.trends?.candidateTrend > 0 ? true : false }}
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <StatCard
+              title="Pending Review"
+              value={stats?.pendingJobsCount || 0}
+              icon={Clock}
             />
           </motion.div>
         </div>
@@ -107,28 +121,28 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-3">
-                    <button
-                      onClick={() => window.location.href = '/admin/hr-accounts'}
-                      className="flex flex-col items-center justify-center p-4 rounded-lg border border-border hover:bg-accent transition-colors"
-                    >
-                      <Users className="h-8 w-8 text-primary mb-2" />
-                      <span className="text-sm font-medium">HR Accounts</span>
-                    </button>
-                    <button
-                      onClick={() => window.location.href = '/admin/job-postings'}
-                      className="flex flex-col items-center justify-center p-4 rounded-lg border border-border hover:bg-accent transition-colors"
-                    >
-                      <Briefcase className="h-8 w-8 text-primary mb-2" />
-                      <span className="text-sm font-medium">Job Postings</span>
-                    </button>
-                    <button
-                      onClick={() => window.location.href = '/admin/candidates'}
-                      className="flex flex-col items-center justify-center p-4 rounded-lg border border-border hover:bg-accent transition-colors"
-                    >
-                      <FileText className="h-8 w-8 text-primary mb-2" />
-                      <span className="text-sm font-medium">Candidates</span>
-                    </button>
-                  </div>
+                <button
+                  onClick={() => window.location.href = '/admin/hr-accounts'}
+                  className="flex flex-col items-center justify-center p-4 rounded-lg border border-border hover:bg-accent transition-colors"
+                >
+                  <Users className="h-8 w-8 text-primary mb-2" />
+                  <span className="text-sm font-medium">HR Accounts</span>
+                </button>
+                <button
+                  onClick={() => window.location.href = '/admin/job-postings'}
+                  className="flex flex-col items-center justify-center p-4 rounded-lg border border-border hover:bg-accent transition-colors"
+                >
+                  <Briefcase className="h-8 w-8 text-primary mb-2" />
+                  <span className="text-sm font-medium">Job Postings</span>
+                </button>
+                <button
+                  onClick={() => window.location.href = '/admin/candidates'}
+                  className="flex flex-col items-center justify-center p-4 rounded-lg border border-border hover:bg-accent transition-colors"
+                >
+                  <FileText className="h-8 w-8 text-primary mb-2" />
+                  <span className="text-sm font-medium">Candidates</span>
+                </button>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
