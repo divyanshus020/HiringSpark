@@ -121,11 +121,7 @@ export default function Auth() {
           </form>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-800 font-medium mb-1">Admin Credentials:</p>
-          <p className="text-xs text-blue-600">Email: admin@recruit.com</p>
-          <p className="text-xs text-blue-600">Password: admin123</p>
-        </div>
+        {/* Admin credentials box removed for production-like login UI */}
       </div>
     </div>
   );

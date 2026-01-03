@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { loginAPI } from "@/api/auth/auth.api";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -17,16 +18,29 @@ export default function Auth() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate auth delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const response = await loginAPI({ email, password });
+      
+      // Store token and user data
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      sessionStorage.setItem("isAuth", "true");
 
-    toast({
-      title: "Welcome back!",
-      description: "Redirecting to dashboard...",
-    });
+      toast({
+        title: "Welcome back!",
+        description: "Redirecting to dashboard...",
+      });
 
-    setIsLoading(false);
-    navigate("/dashboard");
+      setIsLoading(false);
+      navigate("/dashboard");
+    } catch (error: any) {
+      setIsLoading(false);
+      toast({
+        title: "Login Failed",
+        description: error.response?.data?.message || "Network error. Make sure backend is running on port 3000",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -75,7 +89,7 @@ export default function Auth() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground">
-          This is a static demo. Any credentials will work.
+          Make sure backend is running: npm run dev
         </p>
       </div>
     </div>

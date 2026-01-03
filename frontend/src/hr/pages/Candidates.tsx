@@ -50,10 +50,21 @@ const Candidates = () => {
   }, [jobId]);
 
   const handleViewCV = (cvUrl: string) => {
-    if (cvUrl) {
-      window.open(cvUrl, '_blank');
-    } else {
+    if (!cvUrl) {
       toast.error('CV not available');
+      return;
+    }
+
+    // If backend returned a relative path (e.g. /uploads/resumes/...),
+    // open it from the backend host so the browser can fetch the file.
+    try {
+      const isFullUrl = /^https?:\/\//i.test(cvUrl);
+      const backendHost = 'http://localhost:5000';
+      const openUrl = isFullUrl ? cvUrl : `${backendHost}${cvUrl}`;
+      window.open(openUrl, '_blank');
+    } catch (err) {
+      console.error('Failed to open CV:', err);
+      toast.error('Failed to open CV');
     }
   };
 

@@ -60,7 +60,7 @@ const Login = () => {
   return (
     <>
       <Helmet>
-        <title>HR Login - Hiring Bazaar</title>
+        <title>HR Login - Hiring Spark</title>
       </Helmet>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden">
@@ -69,8 +69,10 @@ const Login = () => {
             <div className="w-full lg:w-1/2 p-8 lg:p-12">
               {/* Header */}
               <div className="mb-8">
-                <div className="flex items-center gap-2 mb-6 -ml-6">
-                  <img src="/hiring_bazaar.jpeg" alt="Hiring Bazaar" className="w-64 h-auto" />
+                <div className="flex items-center gap-2 mb-6">
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    HireSpark
+                  </h1>
                 </div>
 
                 <div className="flex justify-between items-center">

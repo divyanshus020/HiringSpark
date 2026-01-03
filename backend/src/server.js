@@ -28,7 +28,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files (for resumes)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// uploads folder is located at project root `backend/uploads`, so serve from one level up
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // Basic route
 app.get('/', (req, res) => {

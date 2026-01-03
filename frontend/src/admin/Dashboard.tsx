@@ -89,96 +89,7 @@ export default function Dashboard() {
           </motion.div>
         </div>
 
-        {/* Activity Overview */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-primary" />
-                  Platform Activity
-                </CardTitle>
-                <CardDescription>Recent platform statistics</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                      <span className="text-sm text-muted-foreground">Active HRs</span>
-                    </div>
-                    <span className="font-semibold">{stats?.totalHRs || 0}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-                      <span className="text-sm text-muted-foreground">Open Positions</span>
-                    </div>
-                    <span className="font-semibold">{stats?.totalJobs || 0}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-purple-500"></div>
-                      <span className="text-sm text-muted-foreground">Applications</span>
-                    </div>
-                    <span className="font-semibold">{stats?.totalCandidates || 0}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                  Growth Metrics
-                </CardTitle>
-                <CardDescription>Month-over-month growth</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-muted-foreground">HR Signups</span>
-                      <span className="text-sm font-medium text-green-600">+12%</span>
-                    </div>
-                    <div className="w-full bg-secondary rounded-full h-2">
-                      <div className="bg-green-500 h-2 rounded-full" style={{ width: '75%' }}></div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-muted-foreground">Job Posts</span>
-                      <span className="text-sm font-medium text-blue-600">+8%</span>
-                    </div>
-                    <div className="w-full bg-secondary rounded-full h-2">
-                      <div className="bg-blue-500 h-2 rounded-full" style={{ width: '60%' }}></div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-muted-foreground">Applications</span>
-                      <span className="text-sm font-medium text-purple-600">+23%</span>
-                    </div>
-                    <div className="w-full bg-secondary rounded-full h-2">
-                      <div className="bg-purple-500 h-2 rounded-full" style={{ width: '90%' }}></div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
+        {/* Activity Overview and Growth Metrics removed to simplify admin dashboard UI */}
 
         {/* Quick Actions */}
         <motion.div
@@ -195,24 +106,29 @@ export default function Dashboard() {
               <CardDescription>Manage your platform efficiently</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-4">
-                <button className="flex flex-col items-center justify-center p-4 rounded-lg border border-border hover:bg-accent transition-colors">
-                  <Users className="h-8 w-8 text-primary mb-2" />
-                  <span className="text-sm font-medium">View HRs</span>
-                </button>
-                <button className="flex flex-col items-center justify-center p-4 rounded-lg border border-border hover:bg-accent transition-colors">
-                  <Briefcase className="h-8 w-8 text-primary mb-2" />
-                  <span className="text-sm font-medium">View Jobs</span>
-                </button>
-                <button className="flex flex-col items-center justify-center p-4 rounded-lg border border-border hover:bg-accent transition-colors">
-                  <FileText className="h-8 w-8 text-primary mb-2" />
-                  <span className="text-sm font-medium">Candidates</span>
-                </button>
-                <button className="flex flex-col items-center justify-center p-4 rounded-lg border border-border hover:bg-accent transition-colors">
-                  <Activity className="h-8 w-8 text-primary mb-2" />
-                  <span className="text-sm font-medium">Analytics</span>
-                </button>
-              </div>
+              <div className="grid gap-4 md:grid-cols-3">
+                    <button
+                      onClick={() => window.location.href = '/admin/hr-accounts'}
+                      className="flex flex-col items-center justify-center p-4 rounded-lg border border-border hover:bg-accent transition-colors"
+                    >
+                      <Users className="h-8 w-8 text-primary mb-2" />
+                      <span className="text-sm font-medium">HR Accounts</span>
+                    </button>
+                    <button
+                      onClick={() => window.location.href = '/admin/job-postings'}
+                      className="flex flex-col items-center justify-center p-4 rounded-lg border border-border hover:bg-accent transition-colors"
+                    >
+                      <Briefcase className="h-8 w-8 text-primary mb-2" />
+                      <span className="text-sm font-medium">Job Postings</span>
+                    </button>
+                    <button
+                      onClick={() => window.location.href = '/admin/candidates'}
+                      className="flex flex-col items-center justify-center p-4 rounded-lg border border-border hover:bg-accent transition-colors"
+                    >
+                      <FileText className="h-8 w-8 text-primary mb-2" />
+                      <span className="text-sm font-medium">Candidates</span>
+                    </button>
+                  </div>
             </CardContent>
           </Card>
         </motion.div>

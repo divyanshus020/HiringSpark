@@ -83,7 +83,7 @@ const Register = () => {
   return (
     <>
       <Helmet>
-        <title>HR Register - Hiring Bazaar</title>
+        <title>HR Register - Hiring Spark</title>
       </Helmet>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden">
@@ -147,7 +147,7 @@ const Register = () => {
                     Build Your Dream Team
                   </h2>
                   <p className="text-gray-600 text-sm">
-                    Join thousands of companies using Hiring Bazaar to find and hire the best candidates efficiently.
+                    Join thousands of companies using Hiring Spark to find and hire the best candidates efficiently.
                   </p>
                 </div>
               </div>
@@ -158,7 +158,7 @@ const Register = () => {
               {/* Header */}
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-6">
-                  <img src="/hiring_bazaar.jpeg" alt="Hiring Bazaar" className="w-64 h-auto" />
+                  <img src="/admin/hiring_bazaar.jpeg" alt="Hiring Spark" className="w-64 h-auto" />
                 </div>
 
                 <div className="flex justify-between items-center">

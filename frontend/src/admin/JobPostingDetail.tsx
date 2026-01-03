@@ -109,11 +109,13 @@ export default function JobPostingDetail() {
 
     try {
       const formData = new FormData();
-      formData.append("fullName", newCandidate.name);
+      // Backend expects these exact field names
+      formData.append("name", newCandidate.name);
       formData.append("email", newCandidate.email);
-      formData.append("phone", newCandidate.phone);
+      formData.append("phoneNumber", newCandidate.phone);
       formData.append("jobId", id);
-      formData.append("status", newCandidate.initialStatus);
+      // optional source for tracking where candidate was added
+      formData.append("source", "HR_PORTAL");
       if (newCandidate.resume) {
         formData.append("resume", newCandidate.resume);
       }
