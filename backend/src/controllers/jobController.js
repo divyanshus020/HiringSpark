@@ -293,7 +293,12 @@ export const getMyJobs = async (req, res) => {
         }
       },
 
-      // Step 4: Project only required fields
+      // Step 4: Sort by latest updated (Move before projection for correct timestamp sorting)
+      {
+        $sort: { updatedAt: -1 }
+      },
+
+      // Step 5: Project only required fields
       {
         $project: {
           _id: 1,
@@ -307,13 +312,10 @@ export const getMyJobs = async (req, res) => {
           applications: 1,
           // Additional fields if needed
           plan: 1,
-          totalAmount: 1
+          totalAmount: 1,
+          location: 1, // Added for UI consistency if needed
+          jobType: 1
         }
-      },
-
-      // Step 5: Sort by latest updated
-      {
-        $sort: { updatedAt: -1 }
       }
     ]);
 

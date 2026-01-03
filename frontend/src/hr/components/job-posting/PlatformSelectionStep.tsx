@@ -4,7 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui
 import { Checkbox } from '../ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useJobPosting } from '../../context/JobPostingContext';
-import { ArrowLeft, ArrowRight, Briefcase, GraduationCap, Building2, Users, Sparkles } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Briefcase,
+  GraduationCap,
+  Building2,
+  Users,
+  Sparkles,
+  Crown
+} from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { PRICING } from '../../types/job';
 import NaukriPlanDialog from './NaukriPlanDialog';
@@ -221,9 +230,11 @@ const PlatformSelectionStep = () => {
                         </SelectContent>
                       </Select>
                     )}
-                    <span className="text-[#0077B5] font-bold text-base">
-                      {state.planType === 'premium' ? 'Included' : `₹${PRICING.linkedin.perDay}/day`}
-                    </span>
+                    {state.planType !== 'premium' && (
+                      <span className="text-[#0077B5] font-bold text-base">
+                        ₹{PRICING.linkedin.perDay}/day
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -259,9 +270,11 @@ const PlatformSelectionStep = () => {
                         {platforms.naukri.plan === 'standard' ? 'Standard' : 'Classified'}
                       </span>
                     )}
-                    <span className="text-[#4A90E2] font-bold text-base">
-                      {state.planType === 'premium' ? 'Included' : `₹${platforms.naukri.plan ? PRICING.naukri[platforms.naukri.plan] : '400+'}`}
-                    </span>
+                    {state.planType !== 'premium' && (
+                      <span className="text-[#4A90E2] font-bold text-base">
+                        ₹{platforms.naukri.plan ? PRICING.naukri[platforms.naukri.plan] : '400+'}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -292,9 +305,11 @@ const PlatformSelectionStep = () => {
                       </p>
                     </div>
                   </div>
-                  <span className="text-purple-600 font-bold text-base">
-                    {state.planType === 'premium' ? 'Included' : `₹${PRICING.timesJob}/month`}
-                  </span>
+                  {state.planType !== 'premium' && (
+                    <span className="text-purple-600 font-bold text-base">
+                      ₹{PRICING.timesJob}/month
+                    </span>
+                  )}
                 </div>
 
                 {/* IIM Jobs */}
@@ -414,9 +429,11 @@ const PlatformSelectionStep = () => {
                       </p>
                     </div>
                   </div>
-                  <span className="text-amber-600 font-bold text-base">
-                    {state.planType === 'premium' ? 'Included' : `₹${PRICING.collegeNetwork}/month`}
-                  </span>
+                  {state.planType !== 'premium' && (
+                    <span className="text-amber-600 font-bold text-base">
+                      ₹{PRICING.collegeNetwork}/month
+                    </span>
+                  )}
                 </div>
 
                 {/* Training Centre Network */}
@@ -446,9 +463,11 @@ const PlatformSelectionStep = () => {
                       </p>
                     </div>
                   </div>
-                  <span className="text-indigo-600 font-bold text-base">
-                    {state.planType === 'premium' ? 'Included' : `₹${PRICING.trainingCentreNetwork}/month`}
-                  </span>
+                  {state.planType !== 'premium' && (
+                    <span className="text-indigo-600 font-bold text-base">
+                      ₹{PRICING.trainingCentreNetwork}/month
+                    </span>
+                  )}
                 </div>
 
                 {/* Apna */}
@@ -478,9 +497,11 @@ const PlatformSelectionStep = () => {
                       </p>
                     </div>
                   </div>
-                  <span className="text-teal-600 font-bold text-base">
-                    {state.planType === 'premium' ? 'Included' : `₹${PRICING.apna}/month`}
-                  </span>
+                  {state.planType !== 'premium' && (
+                    <span className="text-teal-600 font-bold text-base">
+                      ₹{PRICING.apna}/month
+                    </span>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -495,9 +516,11 @@ const PlatformSelectionStep = () => {
                 <CardTitle className="text-xl font-bold text-gray-900">Order Summary</CardTitle>
                 <div className="flex items-center justify-between mt-2">
                   <span className="text-gray-600 text-sm">{state.planType === 'premium' ? 'Premium' : 'Basic'} Plan</span>
-                  <span className="text-xs bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 px-3 py-1 rounded-full font-semibold border border-indigo-200">
-                    {state.planType === 'premium' ? 'All Inclusive' : 'Custom'}
-                  </span>
+                  {state.planType !== 'premium' && (
+                    <span className="text-xs bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 px-3 py-1 rounded-full font-semibold border border-indigo-200">
+                      Custom
+                    </span>
+                  )}
                 </div>
               </CardHeader>
 
@@ -558,40 +581,34 @@ const PlatformSelectionStep = () => {
                   )}
                 </div>
 
-                <div className="border-t border-dashed border-gray-300 pt-4 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span className="font-semibold text-gray-900">₹{subtotal}</span>
-                  </div>
-                  {state.planType === 'premium' && (
-                    <>
-                      <div className="flex justify-between text-sm text-green-600">
-                        <span className="flex items-center gap-1">
-                          <Sparkles className="h-3 w-3" />
-                          Premium Discount
-                        </span>
-                        <span className="font-semibold">-₹950</span>
-                      </div>
+                {state.planType !== 'premium' && (
+                  <>
+                    <div className="border-t border-dashed border-gray-300 pt-4 space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">GST (18%)</span>
-                        <span className="font-semibold text-gray-900">₹{Math.round(gst)}</span>
+                        <span className="text-gray-600">Subtotal</span>
+                        <span className="font-semibold text-gray-900">₹{subtotal}</span>
                       </div>
-                      <div className="mt-2 p-2 bg-green-50 border border-green-100 rounded-lg flex items-center justify-between">
-                        <span className="text-green-700 text-xs font-bold uppercase tracking-wider">Total Savings</span>
-                        <span className="text-green-700 font-bold">₹{PRICING.totalSavings}</span>
-                      </div>
-                    </>
-                  )}
-                </div>
+                    </div>
 
-                <div className="border-t-2 border-gray-200 pt-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-gray-900 text-lg">Total</span>
-                    <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                      ₹{Math.round(total)}
-                    </span>
+                    <div className="border-t-2 border-gray-200 pt-4">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-gray-900 text-lg">Total</span>
+                        <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                          ₹{Math.round(total)}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {state.planType === 'premium' && (
+                  <div className="p-4 bg-purple-50 border border-purple-100 rounded-xl mt-4">
+                    <p className="text-purple-800 text-sm font-medium flex items-center gap-2">
+                      <Crown className="h-4 w-4" />
+                      Premium Plan Active: All platforms included.
+                    </p>
                   </div>
-                </div>
+                )}
 
                 <Button
                   onClick={handleContinue}

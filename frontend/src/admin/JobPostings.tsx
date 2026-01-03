@@ -16,12 +16,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Building2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function JobPostings() {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [jobToDelete, setJobToDelete] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const fetchJobs = async () => {
     setIsLoading(true);
@@ -70,13 +82,22 @@ export default function JobPostings() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this job? This will remove all associated candidates.")) return;
+    setJobToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!jobToDelete) return;
+
+    setIsDeleteDialogOpen(false);
     try {
-      await deleteJobAdmin(id);
+      await deleteJobAdmin(jobToDelete);
       toast.success("Job deleted");
       fetchJobs();
     } catch (error) {
       toast.error("Failed to delete job");
+    } finally {
+      setJobToDelete(null);
     }
   };
 
@@ -223,6 +244,26 @@ export default function JobPostings() {
           </Table>
         </div>
       </div>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Job Posting?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this job? This will remove all associated candidates and data. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }

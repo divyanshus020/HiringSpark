@@ -140,7 +140,9 @@
   }
 
   /* Smooth transitions for interactive elements */
-  a, button, [role="button"] {
+  a,
+  button,
+  [role="button"] {
     @apply transition-colors duration-150;
   }
 
@@ -158,4 +160,87 @@
   tbody tr {
     @apply transition-colors duration-150;
   }
+}
+
+/* Driver.js Custom Theme */
+.driver-popover.driverjs-theme {
+  background-color: #ffffff;
+  color: #1f2937;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  max-width: 350px;
+}
+
+.driver-popover.driverjs-theme .driver-popover-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.driver-popover.driverjs-theme .driver-popover-description {
+  font-size: 0.875rem;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.driver-popover.driverjs-theme .driver-popover-footer {
+  margin-top: 15px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.driver-popover.driverjs-theme .driver-popover-btn {
+  font-size: 0.75rem;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-shadow: none;
+  transition: all 0.2s;
+}
+
+.driver-popover.driverjs-theme .driver-popover-next-btn {
+  background: linear-gradient(to right, #6366f1, #a855f7);
+  color: white;
+  border: none;
+}
+
+.driver-popover.driverjs-theme .driver-popover-next-btn:hover {
+  background: linear-gradient(to right, #4f46e5, #9333ea);
+}
+
+.driver-popover.driverjs-theme .driver-popover-prev-btn {
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+
+.driver-popover.driverjs-theme .driver-popover-prev-btn:hover {
+  background-color: #e5e7eb;
+}
+
+.driver-popover.driverjs-theme .driver-popover-close-btn {
+  color: #9ca3af;
+}
+
+.driver-popover.driverjs-theme .driver-popover-close-btn:hover {
+  color: #4b5563;
+}
+
+.driver-popover.driverjs-theme .driver-popover-progress-text {
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+
+.driver-popover.driverjs-theme .driver-popover-arrow {
+  border-color: #ffffff;
+}
+
+/* Highlight style */
+.driverjs-active-element {
+  outline: 4px solid rgba(99, 102, 241, 0.4) !important;
+  border-radius: 8px !important;
 }

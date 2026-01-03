@@ -52,15 +52,18 @@ export default function JobPostingDetail() {
     setIsLoading(true);
     try {
       const jobRes = await getJobPostingDetail(id);
-      console.log(jobRes);
       // Access the job object correctly from the response
       setJob(jobRes.data.job || jobRes.data.data || jobRes.data);
 
       const candidatesRes = await getCandidatesByJob(id);
-      console.log(candidatesRes);
       setCandidates(candidatesRes.data.candidates || []);
     } catch (error) {
       console.error("Error fetching job details:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load job details. Showing cached/mock data.",
+        variant: "destructive",
+      });
       // Fallback to mock data since backend route might be missing
       setJob({
         _id: id,
@@ -89,7 +92,7 @@ export default function JobPostingDetail() {
       });
       // Optimistic update or refetch
       setCandidates(candidates.map(c =>
-        c._id === candidateId ? { ...c, status: newStatus } : c
+        c._id === candidateId ? { ...c, hrFeedback: newStatus } : c
       ));
     } catch (error) {
       console.error("Error updating status:", error);
@@ -420,7 +423,7 @@ export default function JobPostingDetail() {
                   </div>
                   <div>
                     <Select
-                      defaultValue={candidate.status || "Pending Review"}
+                      value={candidate.hrFeedback || "Pending Review"}
                       onValueChange={(val) => handleStatusChange(candidate._id, val)}
                     >
                       <SelectTrigger className="w-[180px] text-black  border-gray-200 border-2 h-8 text-xs font-medium">

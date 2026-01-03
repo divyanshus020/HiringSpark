@@ -22,7 +22,7 @@ const menuItems = [
   { title: "HR Accounts", url: "/admin/hr-accounts", icon: Users },
   { title: "Candidates", url: "/admin/candidates", icon: UserCheck },
   { title: "Job Postings", url: "/admin/job-postings", icon: Briefcase },
-  { title: "Settings", url: "/admin/settings", icon: Settings },
+  // { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -54,15 +54,15 @@ export function AppSidebar() {
       <div className="flex h-16 items-center px-4 border-b border-sidebar-border">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">HS</span>
-            </div>
-            <span className="font-semibold text-sidebar-foreground">Hiring Spark</span>
+
+            <span className="font-bold text-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              HireSpark
+            </span>
           </div>
         )}
         {collapsed && (
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center mx-auto">
-            <span className="text-primary-foreground font-bold text-sm">HS</span>
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 flex items-center justify-center mx-auto shadow-md">
+            <span className="text-white font-bold text-sm">HS</span>
           </div>
         )}
       </div>

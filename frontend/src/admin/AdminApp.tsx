@@ -12,7 +12,6 @@ import Auth from "./Auth";
 import HRAccounts from "./HRAccounts";
 import Candidates from "./Candidates";
 import JobPostings from "./JobPostings";
-import Settings from "./Settings";
 import NotFound from "./NotFound";
 import HRDetail from "./HRDetail";
 import JobPostingDetail from "./JobPostingDetail";
@@ -42,7 +41,7 @@ const AdminApp = () => {
                         <Route path="/candidates" element={<Candidates />} />
                         <Route path="/job-postings" element={<JobPostings />} />
                         <Route path="/job-postings/:id" element={<JobPostingDetail />} />
-                        <Route path="/settings" element={<Settings />} />
+
 
                         <Route path="/*" element={<NotFound />} />
                     </Routes>

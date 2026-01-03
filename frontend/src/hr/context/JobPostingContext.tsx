@@ -44,6 +44,7 @@ interface JobPostingContextType {
   setPlatforms: (platforms: PlatformSelection) => void;
   setSchedule: (schedule: ScheduleDetails) => void;
   setJobId: (id: string) => void;
+  loadJobData: (job: any) => void;
   calculateTotal: () => { subtotal: number; gst: number; total: number };
   resetState: () => void;
 }
@@ -114,6 +115,37 @@ export const JobPostingProvider = ({ children }: { children: ReactNode }) => {
     setState(prev => ({ ...prev, jobId: id }));
   };
 
+  const loadJobData = (job: any) => {
+    setState(prev => ({
+      ...prev,
+      jobId: job._id,
+      currentStep: job.currentStep || 1,
+      planType: job.plan || 'basic',
+      jobDetails: {
+        title: job.jobTitle || '',
+        company: job.companyName || '',
+        location: job.location || '',
+        jobType: job.jobType || 'full-time',
+        minExperience: job.minExp || 0,
+        maxExperience: job.maxExp || 2,
+        openings: job.openings || 1,
+        minSalary: job.minSalary?.toString() || '',
+        maxSalary: job.maxSalary?.toString() || '',
+        description: job.description || '',
+        requirements: job.requirements || '',
+        skills: job.skills || [],
+      },
+      schedule: {
+        contactName: job.contactPerson || '',
+        phoneNumber: job.phoneNumber || '',
+        companyEmail: job.companyEmail || '',
+        preferredDate: job.preferredDate ? new Date(job.preferredDate) : null,
+        preferredTimeSlot: job.preferredTimeSlot || '',
+        additionalNotes: job.note || '',
+      }
+    }));
+  };
+
   const calculateTotal = () => {
     const { platforms, planType } = state;
     let subtotal = 0;
@@ -177,6 +209,7 @@ export const JobPostingProvider = ({ children }: { children: ReactNode }) => {
         setPlatforms,
         setSchedule,
         setJobId,
+        loadJobData,
         calculateTotal,
         resetState,
       }}

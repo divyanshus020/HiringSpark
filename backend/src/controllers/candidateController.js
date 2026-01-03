@@ -128,18 +128,15 @@ export const getCandidatesByJob = async (req, res) => {
 // @desc    Update candidate feedback
 // @route   PUT /api/candidates/:id/feedback
 export const updateCandidateFeedback = async (req, res) => {
-  console.log(req.body);
   try {
     const { feedback } = req.body;
     const validFeedback = ['PENDING', 'INTERVIEW_SCHEDULED', 'HIRED', 'REJECTED', 'Pending Review', 'Shortlisted by HB', 'Engaged', 'Taken', 'Shortlisted by HR', 'Interviewed', 'Rejected', 'Hired'];
-    console.log(validFeedback);
     if (!validFeedback.includes(feedback)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid feedback status'
       });
     }
-    console.log(feedback);
     const candidate = await Candidate.findById(req.params.id)
       .populate('jobId', 'userId');
 

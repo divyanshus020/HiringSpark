@@ -9,6 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import Dashboard from "./pages/Dashboard";
 import CreateJob from "./pages/CreateJob";
+import Jobs from "./pages/Jobs";
 import Candidates from "./pages/Candidates";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -59,6 +60,14 @@ const HRApp = () => {
               element={
                 <ProtectedRoute>
                   <CreateJob />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/jobs"
+              element={
+                <ProtectedRoute>
+                  <Jobs />
                 </ProtectedRoute>
               }
             />

@@ -19,7 +19,6 @@ import {
 const Candidates = () => {
   const [searchParams] = useSearchParams();
   const jobId = searchParams.get('jobId');
-  console.log(jobId);
   const [candidates, setCandidates] = useState<any[]>([]);
   const [jobDetails, setJobDetails] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,7 +32,6 @@ const Candidates = () => {
           // Fetch candidates for this job
           const candidatesResponse = await getCandidatesByJob(jobId);
           if (candidatesResponse.data.success) {
-            console.log(candidatesResponse.data.candidates);
             setCandidates(candidatesResponse.data.candidates || []);
           }
 
@@ -71,7 +69,7 @@ const Candidates = () => {
       toast.success("Candidate status updated");
       // Optimistic update
       setCandidates(candidates.map(c =>
-        c._id === candidateId ? { ...c, status: newStatus } : c
+        c._id === candidateId ? { ...c, hrFeedback: newStatus } : c
       ));
     } catch (error) {
       console.error("Error updating status:", error);
@@ -187,12 +185,12 @@ const Candidates = () => {
                         </td>
                         <td className="py-4 px-4">
                           <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 border-indigo-100">
-                            {candidate.status || 'Applied'}
+                            {candidate.hrFeedback || 'Pending Review'}
                           </Badge>
                         </td>
                         <td className="py-4 px-4">
                           <Select
-                            defaultValue={candidate.status || "Pending Review"}
+                            value={candidate.hrFeedback || "Pending Review"}
                             onValueChange={(val) => handleStatusChange(candidate._id, val)}
                           >
                             <SelectTrigger className="w-[180px] text-gray-700 border-gray-200 h-8 text-xs font-medium">

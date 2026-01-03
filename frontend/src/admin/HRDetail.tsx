@@ -5,6 +5,7 @@ import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
+import { toast } from "react-toastify";
 import {
   Table,
   TableBody,
@@ -34,17 +35,16 @@ export default function HRDetail() {
       setIsLoading(true);
       try {
         const hrRes = await getHRDetail(id);
-        console.log(hrRes.data.hr);
         const hrData = hrRes.data.hr || hrRes.data.data;
         setHr(hrData);
 
         // Fetch jobs for this specific HR (including drafts)
         const jobsRes = await getJobsByHR(id);
-        console.log(jobsRes.data.jobs);
         setJobs(jobsRes.data.jobs || []);
 
       } catch (error) {
         console.error("Error fetching details:", error);
+        toast.error("Failed to load HR details");
       } finally {
         setIsLoading(false);
       }

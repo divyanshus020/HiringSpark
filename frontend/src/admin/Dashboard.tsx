@@ -14,8 +14,6 @@ export default function Dashboard() {
     setIsLoading(true);
     getAdminStats()
       .then((res) => {
-        console.log(res);
-        console.log(res.data.data);
         setStats(res.data.data);
       })
       .catch(console.error)

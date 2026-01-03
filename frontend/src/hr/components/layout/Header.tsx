@@ -1,4 +1,4 @@
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, Sparkles } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
@@ -8,15 +8,18 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import useHrTour from "../../hooks/useHrTour";
 
 const Header = (): JSX.Element => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { startTour } = useHrTour();
 
   const hrUser = JSON.parse(localStorage.getItem("hrUser") || "{}");
 
   const navItems = [
     { label: "Dashboard", path: "/hr/dashboard" },
+    { label: "Jobs", path: "/hr/jobs" },
     { label: "Create Job", path: "/hr/create-job" },
     { label: "Candidates", path: "/hr/candidates" },
   ];
@@ -37,7 +40,7 @@ const Header = (): JSX.Element => {
             </h1>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-8" id="main-nav">
             {navItems.map((item) => (
               <Link
                 key={item.path}
@@ -97,15 +100,26 @@ const Header = (): JSX.Element => {
           </TooltipProvider>
 
           {/* Logout */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className="gap-2 text-gray-600 hover:text-red-600 hover:bg-red-50"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">Logout</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={startTour}
+              className="hidden md:flex gap-2 text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+            >
+              <Sparkles className="h-4 w-4" />
+              <span>Tour</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="gap-2 text-gray-600 hover:text-red-600 hover:bg-red-50"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </Button>
+          </div>
         </div>
       </div>
     </header>

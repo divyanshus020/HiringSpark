@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 
 export default function Candidates() {
-  console.log("Candidates");
+
   const [candidates, setCandidates] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,10 +33,10 @@ export default function Candidates() {
     setIsLoading(true);
     try {
       const res = await getAllCandidates();
-      console.log(res);
       setCandidates(res.data.candidates || res.data.data || []);
     } catch (error) {
       console.error(error);
+      toast.error("Failed to load candidates");
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +52,7 @@ export default function Candidates() {
       toast.success("Candidate status updated");
       // Optimistic update
       setCandidates(candidates.map(c =>
-        c._id === candidateId ? { ...c, status: newStatus } : c
+        c._id === candidateId ? { ...c, hrFeedback: newStatus } : c
       ));
     } catch (error) {
       console.error("Error updating status:", error);
@@ -139,9 +139,9 @@ export default function Candidates() {
                     <TableCell>
                       <Badge
                         variant="secondary"
-                        className={getStatusBadgeClass(candidate.status)}
+                        className={getStatusBadgeClass(candidate.hrFeedback)}
                       >
-                        {candidate.status || 'Pending Review'}
+                        {candidate.hrFeedback || 'Pending Review'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
@@ -150,7 +150,7 @@ export default function Candidates() {
                     <TableCell>
                       <Select
                         onValueChange={(val) => handleStatusChange(candidate._id, val)}
-                        defaultValue={candidate.status}
+                        value={candidate.hrFeedback || "Pending Review"}
                       >
                         <SelectTrigger className="w-full h-8">
                           <SelectValue placeholder="Change Status" />

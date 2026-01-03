@@ -18,20 +18,35 @@ import {
   Eye,
   Loader2,
   Trash2,
+  Pencil,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../components/ui/alert-dialog";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { getHrDashboardStats } from "../../api/hr/dashbaord.api";
 import { getAllJobs, deleteJob } from "../../api/hr/jobs.api";
 import { toast } from "react-toastify";
+import useHrTour from "../hooks/useHrTour";
 
 const Dashboard = (): JSX.Element => {
   const [stats, setStats] = useState<any>(null);
   const [recentJobs, setRecentJobs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
+  const [jobToDelete, setJobToDelete] = useState<{ id: string, title: string } | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const navigate = useNavigate();
+  const { startTour } = useHrTour();
 
   const fetchJobs = async () => {
     try {
@@ -54,6 +69,7 @@ const Dashboard = (): JSX.Element => {
 
         // Fetch dashboard stats
         const statsResponse = await getHrDashboardStats();
+        console.log(statsResponse);
         if (statsResponse.data.success) {
           setStats(statsResponse.data.dashboard.stats);
         }
@@ -71,14 +87,33 @@ const Dashboard = (): JSX.Element => {
     fetchDashboardData();
   }, []);
 
-  const handleDeleteJob = async (jobId: string, jobTitle: string) => {
-    if (!confirm(`Are you sure you want to delete "${jobTitle}"?`)) {
-      return;
+  // Trigger tour on first visit
+  useEffect(() => {
+    if (!isLoading && stats) {
+      const hasSeenTour = localStorage.getItem(`hasSeenTour_${user.email}`);
+      if (!hasSeenTour) {
+        // Small delay to ensure everything is rendered and animations are done
+        const timer = setTimeout(() => {
+          startTour();
+          localStorage.setItem(`hasSeenTour_${user.email}`, "true");
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
     }
+  }, [isLoading, stats, user.email, startTour]);
 
-    setDeletingJobId(jobId);
+  const handleDeleteJob = async (jobId: string, jobTitle: string) => {
+    setJobToDelete({ id: jobId, title: jobTitle });
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!jobToDelete) return;
+
+    setIsDeleteDialogOpen(false);
+    setDeletingJobId(jobToDelete.id);
     try {
-      const response = await deleteJob(jobId);
+      const response = await deleteJob(jobToDelete.id);
       if (response.data.success) {
         toast.success("Job deleted successfully!");
         // Refresh jobs list
@@ -89,6 +124,7 @@ const Dashboard = (): JSX.Element => {
       toast.error(error.response?.data?.message || "Failed to delete job");
     } finally {
       setDeletingJobId(null);
+      setJobToDelete(null);
     }
   };
 
@@ -131,6 +167,7 @@ const Dashboard = (): JSX.Element => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="grid gap-6 md:grid-cols-[1fr_auto] items-start mb-8"
+          id="welcome-section"
         >
           {/* Left: Text */}
           <div className="min-w-0">
@@ -147,7 +184,7 @@ const Dashboard = (): JSX.Element => {
 
           {/* Right: Button */}
           <div className="flex justify-start md:justify-end">
-            <Link to="/hr/create-job">
+            <Link to="/hr/create-job" id="create-job-button">
               <Button
                 size="lg"
                 className="gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg whitespace-nowrap"
@@ -165,7 +202,7 @@ const Dashboard = (): JSX.Element => {
             <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8" id="stats-section">
             {statsCards.map((stat, index) => (
               <motion.div
                 key={stat.label}
@@ -194,7 +231,7 @@ const Dashboard = (): JSX.Element => {
         )}
 
         {/* Recent Jobs */}
-        <Card className="border-0 shadow-xl mb-8">
+        <Card className="border-0 shadow-xl mb-8" id="recent-jobs-section">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle className="text-2xl font-bold flex items-center gap-2">
@@ -203,7 +240,9 @@ const Dashboard = (): JSX.Element => {
               </CardTitle>
               <CardDescription>Manage and track your job postings</CardDescription>
             </div>
-            <Button variant="outline" size="sm">View All</Button>
+            <Link to="/hr/jobs">
+              <Button variant="outline" size="sm">View All</Button>
+            </Link>
           </CardHeader>
 
           <CardContent className="space-y-4">
@@ -227,14 +266,28 @@ const Dashboard = (): JSX.Element => {
                   <div className="flex items-center gap-3">
                     <Badge variant={getStatusVariant(job.status)}>{job.statusText || job.status}</Badge>
                     <span className="text-sm text-gray-500">{job.applications || 0} applications</span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleViewCandidates(job._id)}
-                      title="View Candidates"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
+
+                    {job.status === 'draft' ? (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => navigate(`/hr/create-job?id=${job._id}`)}
+                        title="Edit Draft"
+                        className="hover:text-amber-600"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleViewCandidates(job._id)}
+                        title="View Candidates"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    )}
+
                     <Button
                       variant="ghost"
                       size="icon"
@@ -258,6 +311,26 @@ const Dashboard = (): JSX.Element => {
 
 
       </main>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the job posting for "{jobToDelete?.title}" and remove all associated candidate data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete Job
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

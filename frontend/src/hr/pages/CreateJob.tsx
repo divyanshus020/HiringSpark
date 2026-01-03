@@ -8,21 +8,41 @@ import ScheduleStep from '../components/job-posting/ScheduleStep';
 import SuccessStep from '../components/job-posting/SuccessStep';
 import { JobPostingProvider, useJobPosting } from '../context/JobPostingContext';
 import { Loader2, Briefcase } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { getSingleJob } from '../../api/hr/jobs.api';
+import { toast } from 'react-toastify';
 
 const steps = ['Job Details', 'Select Plan', 'Platforms', 'Schedule', 'Success'];
 
 const CreateJobContent = () => {
-  const { state } = useJobPosting();
+  const { state, loadJobData, resetState } = useJobPosting();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('id');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate page loading with smooth transition
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 400);
+    const initPage = async () => {
+      try {
+        if (editId) {
+          const response = await getSingleJob(editId);
+          if (response.data.success) {
+            loadJobData(response.data.job);
+          } else {
+            toast.error("Failed to load draft data");
+          }
+        } else {
+          resetState();
+        }
+      } catch (error) {
+        console.error("Error loading job:", error);
+        toast.error("Error loading job details");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    return () => clearTimeout(timer);
-  }, []);
+    initPage();
+  }, [editId]);
 
   const renderStep = () => {
     switch (state.currentStep) {
