@@ -273,13 +273,52 @@ export const updateJobStatus = async (req, res) => {
       req.params.id,
       { status },
       { new: true }
-    );
+    ).populate('userId', 'fullName email');
 
     if (!job) {
       return res.status(404).json({
         success: false,
         message: 'Job not found'
       });
+    }
+
+    // Send email notification to HR when job is approved
+    if (status === 'active' || status === 'posted') {
+      try {
+        const { transporter } = await import('../config/mail.js');
+        const { jobApprovedEmailTemplate } = await import('../utils/emailTemplates.js');
+
+        const hrEmail = job.userId.email;
+        const hrName = job.userId.fullName;
+        const jobTitle = job.jobTitle;
+        const jobLocation = job.location;
+        const jobType = job.jobType;
+        const postedDate = new Date(job.createdAt).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+
+        const emailHtml = jobApprovedEmailTemplate(
+          hrName,
+          jobTitle,
+          jobLocation,
+          jobType,
+          postedDate
+        );
+
+        await transporter.sendMail({
+          from: `"HireSpark Admin" <${process.env.EMAIL_USER}>`,
+          to: hrEmail,
+          subject: `✅ Job Approved - ${jobTitle}`,
+          html: emailHtml
+        });
+
+        console.log(`✅ Job approval email sent to HR: ${hrEmail} for job: ${jobTitle}`);
+      } catch (emailError) {
+        console.error('❌ Error sending job approval email:', emailError);
+        // Don't fail the request if email fails
+      }
     }
 
     res.json({

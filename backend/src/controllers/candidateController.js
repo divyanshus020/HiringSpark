@@ -1,5 +1,8 @@
 import { Candidate } from '../models/Candidate.js';
 import { Job } from '../models/Job.js';
+import { User } from '../models/User.js';
+import { transporter } from '../config/mail.js';
+import { candidateAddedEmailTemplate } from '../utils/emailTemplates.js';
 
 // @desc    Add candidate to job (admin only)
 // @route   POST /api/candidates
@@ -8,7 +11,7 @@ export const addCandidate = async (req, res) => {
     const { jobId, name, email, phoneNumber, source } = req.body;
 
     // Check if job exists and belongs to HR
-    const job = await Job.findById(jobId);
+    const job = await Job.findById(jobId).populate('userId', 'fullName email');
     if (!job) {
       return res.status(404).json({
         success: false,
@@ -46,6 +49,33 @@ export const addCandidate = async (req, res) => {
       source,
       hrFeedback: 'PENDING'
     });
+
+    // Send email notification to HR
+    try {
+      const hrEmail = job.userId.email;
+      const hrName = job.userId.fullName;
+      const jobTitle = job.jobTitle;
+
+      const emailHtml = candidateAddedEmailTemplate(
+        hrName,
+        name,
+        jobTitle,
+        email,
+        phoneNumber
+      );
+
+      await transporter.sendMail({
+        from: `"HireSpark Admin" <${process.env.EMAIL_USER}>`,
+        to: hrEmail,
+        subject: `🎯 New Candidate Added - ${jobTitle}`,
+        html: emailHtml
+      });
+
+      console.log(`✅ Email sent to HR: ${hrEmail} for candidate: ${name}`);
+    } catch (emailError) {
+      console.error('❌ Error sending email:', emailError);
+      // Don't fail the request if email fails
+    }
 
     res.status(201).json({
       success: true,
