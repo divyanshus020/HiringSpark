@@ -75,21 +75,7 @@ const Login = () => {
                   </h1>
                 </div>
 
-                <div className="flex justify-between items-center">
-                  <h1 className="text-3xl lg:text-4xl font-bold text-gray-800">Log in</h1>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span>Don't have an account?</span>
-                    <Link to="/hr/register">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="bg-gray-900 text-white hover:bg-gray-800 border-gray-900"
-                      >
-                        Sign Up
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
+                <h1 className="text-3xl lg:text-4xl font-bold text-gray-800">Log in</h1>
               </div>
 
 
@@ -147,6 +133,18 @@ const Login = () => {
                     "Log in"
                   )}
                 </Button>
+
+                {/* Sign Up Button - Moved below Login */}
+                <div className="text-center">
+                  <Link to="/hr/register">
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 bg-white hover:bg-gray-50 text-gray-900 border-gray-300 font-medium rounded-lg transition-all"
+                    >
+                      Sign Up
+                    </Button>
+                  </Link>
+                </div>
               </form>
 
             </div>

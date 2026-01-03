@@ -139,6 +139,11 @@
     @apply ring-2 ring-primary ring-offset-2 outline-none;
   }
 
+  /* Exception for driver.js tour buttons */
+  .driver-popover button:focus-visible {
+    @apply ring-0 ring-offset-0 outline-none;
+  }
+
   /* Smooth transitions for interactive elements */
   a,
   button,
@@ -200,34 +205,108 @@
   font-weight: 600;
   text-shadow: none;
   transition: all 0.2s;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.driver-popover.driverjs-theme .driver-popover-btn:focus,
+.driver-popover.driverjs-theme .driver-popover-btn:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .driver-popover.driverjs-theme .driver-popover-next-btn {
-  background: linear-gradient(to right, #6366f1, #a855f7);
-  color: white;
-  border: none;
+  background: linear-gradient(to right, #6366f1, #a855f7) !important;
+  color: white !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2) !important;
+}
+
+/* Remove any pseudo-elements or backgrounds */
+.driver-popover.driverjs-theme .driver-popover-next-btn::before,
+.driver-popover.driverjs-theme .driver-popover-next-btn::after {
+  display: none !important;
+  content: none !important;
+  background: none !important;
 }
 
 .driver-popover.driverjs-theme .driver-popover-next-btn:hover {
-  background: linear-gradient(to right, #4f46e5, #9333ea);
+  background: linear-gradient(to right, #4f46e5, #9333ea) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(99, 102, 241, 0.3) !important;
+  border: none !important;
+}
+
+.driver-popover.driverjs-theme .driver-popover-next-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2) !important;
+  background: linear-gradient(to right, #4f46e5, #9333ea) !important;
+}
+
+.driver-popover.driverjs-theme .driver-popover-next-btn:focus,
+.driver-popover.driverjs-theme .driver-popover-next-btn:focus-visible {
+  outline: none !important;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2) !important;
+  background: linear-gradient(to right, #6366f1, #a855f7) !important;
+  border: none !important;
+}
+
+/* Target all child elements inside Next button */
+.driver-popover.driverjs-theme .driver-popover-next-btn *,
+.driver-popover.driverjs-theme .driver-popover-next-btn span,
+.driver-popover.driverjs-theme .driver-popover-next-btn div {
+  background: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove any text wrapper backgrounds */
+.driver-popover.driverjs-theme .driver-popover-next-btn::before,
+.driver-popover.driverjs-theme .driver-popover-next-btn::after,
+.driver-popover.driverjs-theme .driver-popover-next-btn *::before,
+.driver-popover.driverjs-theme .driver-popover-next-btn *::after {
+  background: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  content: none !important;
+  display: none !important;
 }
 
 .driver-popover.driverjs-theme .driver-popover-prev-btn {
   background-color: #f3f4f6;
   color: #4b5563;
   border: 1px solid #e5e7eb;
+  outline: none !important;
 }
 
 .driver-popover.driverjs-theme .driver-popover-prev-btn:hover {
   background-color: #e5e7eb;
 }
 
+.driver-popover.driverjs-theme .driver-popover-prev-btn:focus,
+.driver-popover.driverjs-theme .driver-popover-prev-btn:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 .driver-popover.driverjs-theme .driver-popover-close-btn {
   color: #9ca3af;
+  outline: none !important;
 }
 
 .driver-popover.driverjs-theme .driver-popover-close-btn:hover {
   color: #4b5563;
+}
+
+.driver-popover.driverjs-theme .driver-popover-close-btn:focus,
+.driver-popover.driverjs-theme .driver-popover-close-btn:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .driver-popover.driverjs-theme .driver-popover-progress-text {

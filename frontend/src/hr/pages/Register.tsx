@@ -166,7 +166,7 @@ const Register = () => {
                 <div className="flex justify-between items-center">
                   <h1 className="text-3xl lg:text-4xl font-bold text-gray-800">Sign up</h1>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span>Already registered?</span>
+                    <span> </span>
                     <Link to="/hr/login">
                       <Button
                         variant="outline"
