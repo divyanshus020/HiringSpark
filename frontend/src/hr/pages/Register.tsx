@@ -29,26 +29,24 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
     // Validation
     if (!formData.fullName || !formData.companyName || !formData.email || !formData.phone || !formData.address || !formData.password || !formData.confirmPassword) {
       toast.error("Please fill in all fields");
-      setIsLoading(false);
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match");
-      setIsLoading(false);
       return;
     }
 
     if (formData.password.length < 6) {
       toast.error("Password must be at least 6 characters long");
-      setIsLoading(false);
       return;
     }
+
+    setIsLoading(true);
 
     try {
       const response = await registerAPI({
@@ -60,13 +58,22 @@ const Register = () => {
         address: formData.address,
       });
 
-      if (response.data.success) {
-        toast.success("Registration successful! Please login.");
+      if (response.data && response.data.success) {
+        // Store token and user data
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        sessionStorage.setItem("isAuth", "true");
+        
+        toast.success("Registration successful! Redirecting...");
         setTimeout(() => {
-          navigate("/hr/login");
-        }, 1500);
+          navigate("/hr/dashboard");
+        }, 500);
+      } else {
+        toast.error(response.data?.message || "Registration failed. Please try again.");
+        setIsLoading(false);
       }
     } catch (error: any) {
+      console.error("Registration error:", error);
       const errorMessage = error.response?.data?.message || "Registration failed. Please try again.";
       toast.error(errorMessage);
       setIsLoading(false);

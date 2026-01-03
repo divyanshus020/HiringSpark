@@ -15,16 +15,22 @@ export default function Auth() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const response = await loginAPI({ email, password });
 
-      if (response.data.success) {
+      if (response.data && response.data.success) {
         const { token, user } = response.data;
 
         // Check if user is admin
-        if (user.role !== 'ADMIN') {
+        if (user.role !== 'Admin' && user.role !== 'ADMIN') {
           toast.error('Access denied. Admin credentials required.');
           setIsLoading(false);
           return;
@@ -36,12 +42,17 @@ export default function Auth() {
         sessionStorage.setItem('isAuth', 'true');
 
         toast.success('Welcome back, Admin!');
-        navigate('/admin/dashboard');
+        setTimeout(() => {
+          navigate('/admin/dashboard');
+        }, 500);
+      } else {
+        toast.error(response.data?.message || 'Invalid credentials');
+        setIsLoading(false);
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.response?.data?.message || 'Invalid admin credentials');
-    } finally {
+      const errorMessage = error.response?.data?.message || 'Invalid admin credentials';
+      toast.error(errorMessage);
       setIsLoading(false);
     }
   };

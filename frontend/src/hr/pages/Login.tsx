@@ -15,12 +15,18 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const response = await loginAPI({ email, password });
 
-      if (response.data.success) {
+      if (response.data && response.data.success) {
         // Store token and user data
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
@@ -35,10 +41,17 @@ const Login = () => {
           } else {
             navigate("/hr/dashboard");
           }
-        }, 1000);
+        }, 500);
+      } else {
+        toast.error(response.data?.message || "Login failed. Please try again.");
+        setIsLoading(false);
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "Login failed. Please check your credentials.";
+      console.error("Login error:", error);
+      const errorMessage = 
+        error.response?.data?.message || 
+        error.message || 
+        "Login failed. Please check your credentials.";
       toast.error(errorMessage);
       setIsLoading(false);
     }
