@@ -65,7 +65,7 @@ app.use((req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  
+
   // Multer file upload error
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({
@@ -73,14 +73,14 @@ app.use((err, req, res, next) => {
       message: 'File size too large. Maximum size is 5MB'
     });
   }
-  
+
   if (err.message.includes('Only PDF, DOC, DOCX')) {
     return res.status(400).json({
       success: false,
       message: 'Only PDF, DOC, DOCX files are allowed'
     });
   }
-  
+
   res.status(500).json({
     success: false,
     message: 'Internal server error',
@@ -93,5 +93,5 @@ app.listen(PORT, () => {
   connectDB();
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📡 API Base URL: http://localhost:${PORT}`);
-  console.log(`📦 MongoDB: ${process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/jobportal'}`);
+  console.log(`📦 MongoDB: ${process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/hirespark'}`);
 });

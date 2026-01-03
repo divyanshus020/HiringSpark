@@ -1,5 +1,6 @@
 import api from "../axios";
 
+// HR Authentication
 export const registerAPI = (data: {
   fullName: string;
   email: string;
@@ -14,6 +15,19 @@ export const loginAPI = (data: {
   password: string;
 }) => api.post("/auth/login", data);
 
+// Admin Authentication
+export const adminLoginAPI = (data: {
+  email: string;
+  password: string;
+}) => api.post("/auth/admin/login", data);
+
+export const adminRegisterAPI = (data: {
+  fullName: string;
+  email: string;
+  password: string;
+}) => api.post("/auth/admin/register", data);
+
+// Common
 export const getMeAPI = () => api.get("/auth/me");
 
 export const logoutAPI = () => {

@@ -11,6 +11,14 @@ export const register = async (req, res) => {
   try {
     const { fullName, email, phone, password, companyName, address } = req.body;
 
+    // Basic validation - only email and password required
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and password are required'
+      });
+    }
+
     // Check if user exists
     const userExists = await User.findOne({ $or: [{ email }, { phone }] });
     if (userExists) {
@@ -24,7 +32,7 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create user
+    // Create HR user with auto-set role
     const user = await User.create({
       fullName,
       email,
@@ -32,7 +40,7 @@ export const register = async (req, res) => {
       password: hashedPassword,
       companyName,
       address,
-      role: 'HR'
+      role: 'HR' // Auto-set to HR
     });
 
     // Generate token
@@ -56,6 +64,7 @@ export const register = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('HR registration error:', error);
     res.status(500).json({
       success: false,
       message: error.message
@@ -69,12 +78,28 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide email and password'
+      });
+    }
+
     // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
+      });
+    }
+
+    // Check if user is active
+    if (!user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'Account is deactivated. Please contact support.'
       });
     }
 
@@ -108,9 +133,10 @@ export const login = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({
       success: false,
-      message: error.message
+      message: 'Server error during login'
     });
   }
 };
@@ -193,6 +219,133 @@ export const resetPassword = async (req, res) => {
   res.json({ success: true, message: "Password updated successfully" });
 };
 
-export const admin_login = () => {
+// @desc    Register Admin (Postman only - no frontend)
+// @route   POST /api/auth/admin/register
+export const adminRegister = async (req, res) => {
+  try {
+    const { fullName, email, password } = req.body;
 
-}
+    // Validation
+    if (!fullName || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide fullName, email, and password'
+      });
+    }
+
+    // Check if admin already exists
+    const adminExists = await User.findOne({ email });
+    if (adminExists) {
+      return res.status(400).json({
+        success: false,
+        message: 'User already exists with this email'
+      });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create admin user with auto-set role and defaults
+    const admin = await User.create({
+      fullName,
+      email,
+      password: hashedPassword,
+      role: 'ADMIN', // Auto-set to ADMIN
+      phone: '0000000000', // Default for admin
+      companyName: 'HireSpark Admin',
+      address: 'Admin Office'
+    });
+
+    // Generate token
+    const token = jwt.sign(
+      { id: admin._id, role: admin.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'Admin created successfully',
+      token,
+      user: {
+        id: admin._id,
+        fullName: admin.fullName,
+        email: admin.email,
+        role: admin.role
+      }
+    });
+  } catch (error) {
+    console.error('Admin registration error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Admin Login
+// @route   POST /api/auth/admin/login
+export const adminLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide email and password'
+      });
+    }
+
+    // Find admin user only
+    const admin = await User.findOne({ email, role: 'ADMIN' });
+    if (!admin) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid admin credentials'
+      });
+    }
+
+    // Check if admin is active
+    if (!admin.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'Admin account is deactivated'
+      });
+    }
+
+    // Check password
+    const isPasswordMatch = await bcrypt.compare(password, admin.password);
+    if (!isPasswordMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid admin credentials'
+      });
+    }
+
+    // Generate token
+    const token = jwt.sign(
+      { id: admin._id, role: admin.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: admin._id,
+        fullName: admin.fullName,
+        email: admin.email,
+        role: admin.role
+      }
+    });
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during admin login'
+    });
+  }
+};

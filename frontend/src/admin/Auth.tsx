@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-toastify";
-import { loginAPI } from "../api/auth/auth.api";
+import { adminLoginAPI } from "../api/auth/auth.api";
 import { Loader2 } from "lucide-react";
 
 export default function Auth() {
@@ -15,7 +15,7 @@ export default function Auth() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast.error("Please fill in all fields");
       return;
@@ -24,7 +24,7 @@ export default function Auth() {
     setIsLoading(true);
 
     try {
-      const response = await loginAPI({ email, password });
+      const response = await adminLoginAPI({ email, password });
 
       if (response.data && response.data.success) {
         const { token, user } = response.data;

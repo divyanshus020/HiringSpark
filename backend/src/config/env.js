@@ -5,16 +5,16 @@ dotenv.config();
 
 const envSchema = z.object({
   PORT: z.string().default('5000'),
-  MONGO_URI: z.string().min(1, "MongoDB URI is required"),
-  JWT_SECRET: z.string().min(1, "JWT Secret is required"),
+  MONGO_URI: z.string().default('mongodb://localhost:27017/hirespark'),
+  JWT_SECRET: z.string().default('hirespark-jwt-secret-change-in-production'),
 
-  // Admin Credentials from .env
-  ADMIN_EMAIL: z.email("Invalid Admin Email"),
-  ADMIN_PASSWORD: z.string().min(6, "Admin Password must be at least 6 characters"),
+  // Admin Credentials (optional - only needed for seeding)
+  ADMIN_EMAIL: z.string().email().optional(),
+  ADMIN_PASSWORD: z.string().optional(),
 
-  // Email Configuration
-  EMAIL_USER: z.string().email("Invalid EMAIL_USER").optional(),
-  EMAIL_PASS: z.string().min(1, "EMAIL_PASS is required").optional(),
+  // Email Configuration (optional)
+  EMAIL_USER: z.string().email().optional(),
+  EMAIL_PASS: z.string().optional(),
   FRONTEND_URL: z.string().url().default('http://localhost:5173'),
 });
 
