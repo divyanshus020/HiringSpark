@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Helmet } from "react-helmet-async";
-import { Briefcase, Mail, Lock, User, Building2, Github, Linkedin, Loader2, Phone, MapPin } from "lucide-react";
+import { Briefcase, Mail, Lock, User, Building2, Github, Linkedin, Loader2, Phone, MapPin, AlertCircle, CheckCircle } from "lucide-react";
 import { registerAPI } from "../../api/auth/auth.api";
 import { toast } from "react-toastify";
 
@@ -20,29 +20,166 @@ const Register = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
+  // Error states for each field
+  const [errors, setErrors] = useState({
+    fullName: "",
+    companyName: "",
+    email: "",
+    phone: "",
+    address: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  // Touched states for each field
+  const [touched, setTouched] = useState({
+    fullName: false,
+    companyName: false,
+    email: false,
+    phone: false,
+    address: false,
+    password: false,
+    confirmPassword: false,
+  });
+
+  // Validation functions
+  const validateFullName = (name: string) => {
+    if (!name) return "Full name is required";
+    if (name.length < 3) return "Full name must be at least 3 characters";
+    if (!/^[a-zA-Z\s]+$/.test(name)) return "Full name should only contain letters and spaces";
+    return "";
+  };
+
+  const validateCompanyName = (name: string) => {
+    if (!name) return "Company name is required";
+    if (name.length < 2) return "Company name must be at least 2 characters";
+    return "";
+  };
+
+  const validateEmail = (email: string) => {
+    if (!email) return "Email is required";
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) return "Please enter a valid email address";
+    const gmailRegex = /^[a-zA-Z0-9._-]+@gmail\.com$/;
+    if (!gmailRegex.test(email)) return "Please use a valid Gmail address (e.g., user@gmail.com)";
+    return "";
+  };
+
+  const validatePhone = (phone: string) => {
+    if (!phone) return "Phone number is required";
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(phone)) return "Phone number must be exactly 10 digits";
+    return "";
+  };
+
+  const validateAddress = (address: string) => {
+    if (!address) return "Address is required";
+    if (address.length < 5) return "Address must be at least 5 characters";
+    return "";
+  };
+
+  const validatePassword = (password: string) => {
+    if (!password) return "Password is required";
+    if (password.length < 8) return "Password must be at least 8 characters long";
+    const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+    if (!specialCharRegex.test(password)) return "Password must contain at least one special character";
+    return "";
+  };
+
+  const validateConfirmPassword = (confirmPassword: string, password: string) => {
+    if (!confirmPassword) return "Please confirm your password";
+    if (confirmPassword !== password) return "Passwords do not match";
+    return "";
+  };
+
+  // Handle field changes with validation
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
+
+    // Validate on change if field has been touched
+    if (touched[name as keyof typeof touched]) {
+      validateField(name, value);
+    }
+  };
+
+  // Validate individual field
+  const validateField = (fieldName: string, value: string) => {
+    let error = "";
+    switch (fieldName) {
+      case "fullName":
+        error = validateFullName(value);
+        break;
+      case "companyName":
+        error = validateCompanyName(value);
+        break;
+      case "email":
+        error = validateEmail(value);
+        break;
+      case "phone":
+        error = validatePhone(value);
+        break;
+      case "address":
+        error = validateAddress(value);
+        break;
+      case "password":
+        error = validatePassword(value);
+        // Also revalidate confirm password if it's been touched
+        if (touched.confirmPassword) {
+          setErrors(prev => ({
+            ...prev,
+            confirmPassword: validateConfirmPassword(formData.confirmPassword, value)
+          }));
+        }
+        break;
+      case "confirmPassword":
+        error = validateConfirmPassword(value, formData.password);
+        break;
+    }
+    setErrors(prev => ({ ...prev, [fieldName]: error }));
+  };
+
+  // Handle field blur
+  const handleBlur = (fieldName: string) => {
+    setTouched(prev => ({ ...prev, [fieldName]: true }));
+    validateField(fieldName, formData[fieldName as keyof typeof formData]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
-    if (!formData.fullName || !formData.companyName || !formData.email || !formData.phone || !formData.address || !formData.password || !formData.confirmPassword) {
-      toast.error("Please fill in all fields");
-      return;
-    }
+    // Mark all fields as touched
+    const allTouched = {
+      fullName: true,
+      companyName: true,
+      email: true,
+      phone: true,
+      address: true,
+      password: true,
+      confirmPassword: true,
+    };
+    setTouched(allTouched);
 
-    if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
+    // Validate all fields
+    const newErrors = {
+      fullName: validateFullName(formData.fullName),
+      companyName: validateCompanyName(formData.companyName),
+      email: validateEmail(formData.email),
+      phone: validatePhone(formData.phone),
+      address: validateAddress(formData.address),
+      password: validatePassword(formData.password),
+      confirmPassword: validateConfirmPassword(formData.confirmPassword, formData.password),
+    };
 
-    if (formData.password.length < 6) {
-      toast.error("Password must be at least 6 characters long");
+    setErrors(newErrors);
+
+    // Check if there are any errors
+    const hasErrors = Object.values(newErrors).some(error => error !== "");
+    if (hasErrors) {
+      toast.error("Please fix all validation errors before submitting");
       return;
     }
 
@@ -193,14 +330,34 @@ const Register = () => {
                     <Input
                       type="text"
                       name="fullName"
-                      placeholder="Enter your full name"
+                      placeholder="Enter your full name (min 3 characters)"
                       value={formData.fullName}
                       onChange={handleChange}
-                      required
+                      onBlur={() => handleBlur("fullName")}
                       disabled={isLoading}
-                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`pl-10 pr-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed ${errors.fullName && touched.fullName
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : formData.fullName && !errors.fullName && touched.fullName
+                          ? "border-green-500 focus:border-green-500 focus:ring-green-500"
+                          : ""
+                        }`}
                     />
+                    {touched.fullName && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        {errors.fullName ? (
+                          <AlertCircle className="w-5 h-5 text-red-500" />
+                        ) : formData.fullName ? (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        ) : null}
+                      </div>
+                    )}
                   </div>
+                  {errors.fullName && touched.fullName && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.fullName}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -215,30 +372,70 @@ const Register = () => {
                       placeholder="Enter your company name"
                       value={formData.companyName}
                       onChange={handleChange}
-                      required
+                      onBlur={() => handleBlur("companyName")}
                       disabled={isLoading}
-                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`pl-10 pr-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed ${errors.companyName && touched.companyName
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : formData.companyName && !errors.companyName && touched.companyName
+                          ? "border-green-500 focus:border-green-500 focus:ring-green-500"
+                          : ""
+                        }`}
                     />
+                    {touched.companyName && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        {errors.companyName ? (
+                          <AlertCircle className="w-5 h-5 text-red-500" />
+                        ) : formData.companyName ? (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        ) : null}
+                      </div>
+                    )}
                   </div>
+                  {errors.companyName && touched.companyName && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.companyName}
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
+                    Email Address
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <Input
                       type="email"
                       name="email"
-                      placeholder="Enter your email address"
+                      placeholder="Enter your Gmail address (e.g., user@gmail.com)"
                       value={formData.email}
                       onChange={handleChange}
-                      required
+                      onBlur={() => handleBlur("email")}
                       disabled={isLoading}
-                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`pl-10 pr-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed ${errors.email && touched.email
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : formData.email && !errors.email && touched.email
+                          ? "border-green-500 focus:border-green-500 focus:ring-green-500"
+                          : ""
+                        }`}
                     />
+                    {touched.email && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        {errors.email ? (
+                          <AlertCircle className="w-5 h-5 text-red-500" />
+                        ) : formData.email ? (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        ) : null}
+                      </div>
+                    )}
                   </div>
+                  {errors.email && touched.email && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.email}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -250,14 +447,34 @@ const Register = () => {
                     <Input
                       type="tel"
                       name="phone"
-                      placeholder="Enter your phone number"
+                      placeholder="Enter 10-digit phone number"
                       value={formData.phone}
                       onChange={handleChange}
-                      required
+                      onBlur={() => handleBlur("phone")}
                       disabled={isLoading}
-                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`pl-10 pr-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed ${errors.phone && touched.phone
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : formData.phone && !errors.phone && touched.phone
+                          ? "border-green-500 focus:border-green-500 focus:ring-green-500"
+                          : ""
+                        }`}
                     />
+                    {touched.phone && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        {errors.phone ? (
+                          <AlertCircle className="w-5 h-5 text-red-500" />
+                        ) : formData.phone ? (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        ) : null}
+                      </div>
+                    )}
                   </div>
+                  {errors.phone && touched.phone && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.phone}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -269,14 +486,34 @@ const Register = () => {
                     <Input
                       type="text"
                       name="address"
-                      placeholder="Enter your company address"
+                      placeholder="Enter your company address (min 5 characters)"
                       value={formData.address}
                       onChange={handleChange}
-                      required
+                      onBlur={() => handleBlur("address")}
                       disabled={isLoading}
-                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`pl-10 pr-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed ${errors.address && touched.address
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : formData.address && !errors.address && touched.address
+                          ? "border-green-500 focus:border-green-500 focus:ring-green-500"
+                          : ""
+                        }`}
                     />
+                    {touched.address && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        {errors.address ? (
+                          <AlertCircle className="w-5 h-5 text-red-500" />
+                        ) : formData.address ? (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        ) : null}
+                      </div>
+                    )}
                   </div>
+                  {errors.address && touched.address && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.address}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -288,14 +525,43 @@ const Register = () => {
                     <Input
                       type="password"
                       name="password"
-                      placeholder="Create a password"
+                      placeholder="Create a password (min 8 chars, 1 special char)"
                       value={formData.password}
                       onChange={handleChange}
-                      required
+                      onBlur={() => handleBlur("password")}
                       disabled={isLoading}
-                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`pl-10 pr-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed ${errors.password && touched.password
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : formData.password && !errors.password && touched.password
+                          ? "border-green-500 focus:border-green-500 focus:ring-green-500"
+                          : ""
+                        }`}
                     />
+                    {touched.password && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        {errors.password ? (
+                          <AlertCircle className="w-5 h-5 text-red-500" />
+                        ) : formData.password ? (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        ) : null}
+                      </div>
+                    )}
                   </div>
+                  {errors.password && touched.password && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.password}
+                    </p>
+                  )}
+                  {!touched.password && (
+                    <div className="mt-2 text-xs text-gray-500 space-y-1">
+                      <p className="font-medium">Password must contain:</p>
+                      <ul className="list-disc list-inside pl-2 space-y-0.5">
+                        <li>At least 8 characters</li>
+                        <li>At least one special character (!@#$%^&*...)</li>
+                      </ul>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -310,16 +576,42 @@ const Register = () => {
                       placeholder="Confirm your password"
                       value={formData.confirmPassword}
                       onChange={handleChange}
-                      required
+                      onBlur={() => handleBlur("confirmPassword")}
                       disabled={isLoading}
-                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`pl-10 pr-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed ${errors.confirmPassword && touched.confirmPassword
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : formData.confirmPassword && !errors.confirmPassword && touched.confirmPassword
+                          ? "border-green-500 focus:border-green-500 focus:ring-green-500"
+                          : ""
+                        }`}
                     />
+                    {touched.confirmPassword && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        {errors.confirmPassword ? (
+                          <AlertCircle className="w-5 h-5 text-red-500" />
+                        ) : formData.confirmPassword ? (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        ) : null}
+                      </div>
+                    )}
                   </div>
+                  {errors.confirmPassword && touched.confirmPassword && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.confirmPassword}
+                    </p>
+                  )}
+                  {!errors.confirmPassword && formData.confirmPassword && touched.confirmPassword && (
+                    <p className="mt-1 text-sm text-green-600 flex items-center gap-1">
+                      <CheckCircle className="w-4 h-4" />
+                      Passwords match
+                    </p>
+                  )}
                 </div>
 
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || Object.values(errors).some(error => error !== "")}
                   className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   {isLoading ? (

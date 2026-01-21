@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Helmet } from "react-helmet-async";
-import { Briefcase, Mail, Lock, Github, Linkedin, Loader2 } from "lucide-react";
+import { Briefcase, Mail, Lock, Github, Linkedin, Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { loginAPI } from "../../api/auth/auth.api";
 import { toast } from "react-toastify";
 
@@ -12,12 +12,98 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
+
+  // Email validation function
+  const validateEmail = (email: string) => {
+    if (!email) {
+      return "Email is required";
+    }
+
+    // Check for valid email format
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      return "Please enter a valid email address (e.g., user@gmail.com)";
+    }
+
+    // Check if it's a Gmail address (optional - can be removed if other emails are allowed)
+    const gmailRegex = /^[a-zA-Z0-9._-]+@gmail\.com$/;
+    if (!gmailRegex.test(email)) {
+      return "Please use a valid Gmail address (e.g., user@gmail.com)";
+    }
+
+    return "";
+  };
+
+  // Password validation function
+  const validatePassword = (password: string) => {
+    if (!password) {
+      return "Password is required";
+    }
+
+    if (password.length < 8) {
+      return "Password must be at least 8 characters long";
+    }
+
+    // Check for special character
+    const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+    if (!specialCharRegex.test(password)) {
+      return "Password must contain at least one special character (!@#$%^&*...)";
+    }
+
+    return "";
+  };
+
+  // Handle email change
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    if (emailTouched) {
+      setEmailError(validateEmail(value));
+    }
+  };
+
+  // Handle password change
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+    if (passwordTouched) {
+      setPasswordError(validatePassword(value));
+    }
+  };
+
+  // Handle email blur
+  const handleEmailBlur = () => {
+    setEmailTouched(true);
+    setEmailError(validateEmail(email));
+  };
+
+  // Handle password blur
+  const handlePasswordBlur = () => {
+    setPasswordTouched(true);
+    setPasswordError(validatePassword(password));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !password) {
-      toast.error("Please fill in all fields");
+    // Mark all fields as touched
+    setEmailTouched(true);
+    setPasswordTouched(true);
+
+    // Validate all fields
+    const emailValidationError = validateEmail(email);
+    const passwordValidationError = validatePassword(password);
+
+    setEmailError(emailValidationError);
+    setPasswordError(passwordValidationError);
+
+    // If there are validation errors, show toast and return
+    if (emailValidationError || passwordValidationError) {
+      toast.error("Please fix the validation errors before submitting");
       return;
     }
 
@@ -85,20 +171,46 @@ const Login = () => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Username or Email
+                    Email Address
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <Input
                       type="email"
-                      placeholder="Enter your username or email address"
+                      placeholder="Enter your Gmail address (e.g., user@gmail.com)"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
+                      onChange={handleEmailChange}
+                      onBlur={handleEmailBlur}
                       disabled={isLoading}
-                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`pl-10 pr-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed ${emailError && emailTouched
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : email && !emailError && emailTouched
+                          ? "border-green-500 focus:border-green-500 focus:ring-green-500"
+                          : ""
+                        }`}
                     />
+                    {emailTouched && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        {emailError ? (
+                          <AlertCircle className="w-5 h-5 text-red-500" />
+                        ) : email ? (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        ) : null}
+                      </div>
+                    )}
                   </div>
+                  {emailError && emailTouched && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {emailError}
+                    </p>
+                  )}
+                  {!emailError && email && emailTouched && (
+                    <p className="mt-1 text-sm text-green-600 flex items-center gap-1">
+                      <CheckCircle className="w-4 h-4" />
+                      Valid email format
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -109,19 +221,55 @@ const Login = () => {
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <Input
                       type="password"
-                      placeholder="Enter your password"
+                      placeholder="Enter your password (min 8 chars, 1 special char)"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
+                      onChange={handlePasswordChange}
+                      onBlur={handlePasswordBlur}
                       disabled={isLoading}
-                      className="pl-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`pl-10 pr-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed ${passwordError && passwordTouched
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : password && !passwordError && passwordTouched
+                          ? "border-green-500 focus:border-green-500 focus:ring-green-500"
+                          : ""
+                        }`}
                     />
+                    {passwordTouched && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        {passwordError ? (
+                          <AlertCircle className="w-5 h-5 text-red-500" />
+                        ) : password ? (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        ) : null}
+                      </div>
+                    )}
                   </div>
+                  {passwordError && passwordTouched && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {passwordError}
+                    </p>
+                  )}
+                  {!passwordError && password && passwordTouched && (
+                    <p className="mt-1 text-sm text-green-600 flex items-center gap-1">
+                      <CheckCircle className="w-4 h-4" />
+                      Password meets requirements
+                    </p>
+                  )}
+                  {/* Password requirements hint */}
+                  {!passwordTouched && (
+                    <div className="mt-2 text-xs text-gray-500 space-y-1">
+                      <p className="font-medium">Password must contain:</p>
+                      <ul className="list-disc list-inside pl-2 space-y-0.5">
+                        <li>At least 8 characters</li>
+                        <li>At least one special character (!@#$%^&*...)</li>
+                      </ul>
+                    </div>
+                  )}
                 </div>
 
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || !!emailError || !!passwordError}
                   className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   {isLoading ? (
