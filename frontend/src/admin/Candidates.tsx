@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getAllCandidates } from "../api/admin/admin.api";
+import { getAllCandidates, deleteCandidate } from "../api/admin/admin.api";
 import { updateCandidateStatus } from "../api/hr/candidates.api";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import {
@@ -12,9 +12,20 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button"; // Import Button
-import { Search, Eye, FileText } from "lucide-react"; // Import Icons
+import { Search, Eye, FileText, Trash2 } from "lucide-react"; // Import Icons
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -65,6 +76,17 @@ export default function Candidates() {
     }
   };
 
+  const handleDelete = async (candidateId: string) => {
+    try {
+      await deleteCandidate(candidateId);
+      toast.success("Candidate deleted successfully");
+      setCandidates(prev => prev.filter(c => c._id !== candidateId));
+    } catch (error) {
+      console.error("Error deleting candidate:", error);
+      toast.error("Failed to delete candidate");
+    }
+  };
+
   const handleViewCV = (cvUrl: string) => {
     if (!cvUrl) {
       toast.error('CV not available');
@@ -92,6 +114,7 @@ export default function Candidates() {
     candidate.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     candidate.jobId?.jobTitle?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  console.log(filteredCandidates);
 
   return (
     <DashboardLayout title="Candidates">
@@ -188,10 +211,35 @@ export default function Candidates() {
                           >
                             <FileText className="h-4 w-4" />
                             <span className="sr-only">View CV</span>
-                          </Button>
-                        ) : (
+                          </Button>) : (
                           <span className="text-sm text-gray-400">No CV</span>
                         )}
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete <strong>{candidate.name}</strong> and remove their data from our servers.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(candidate._id)} className="bg-red-600 hover:bg-red-700">
+                                Delete Candidate
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </TableCell>
                   </TableRow>

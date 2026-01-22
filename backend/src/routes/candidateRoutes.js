@@ -4,7 +4,8 @@ import {
   bulkUploadCandidates,
   getCandidatesByJob,
   updateCandidateFeedback,
-  getMyCandidates
+  getMyCandidates,
+  deleteCandidate
 } from '../controllers/candidateController.js';
 import { protect, isAdmin, isHR } from '../middlewares/auth.js';
 import { upload } from '../middlewares/upload.js';
@@ -18,6 +19,7 @@ router.post('/bulk', upload.array('resumes', 100), protect, isAdmin, bulkUploadC
 router.get('/my-candidates', protect, getMyCandidates);
 router.get('/job/:jobId', protect, getCandidatesByJob);
 router.put('/:id/feedback', protect, updateCandidateFeedback);
+router.delete('/:id', protect, isAdmin, deleteCandidate);
 
 
 export default router;

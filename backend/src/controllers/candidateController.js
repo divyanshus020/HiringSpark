@@ -155,6 +155,45 @@ export const bulkUploadCandidates = async (req, res) => {
   }
 };
 
+
+// @desc    Delete candidate (admin only)
+// @route   DELETE /api/candidates/:id
+export const deleteCandidate = async (req, res) => {
+  try {
+    const candidate = await Candidate.findById(req.params.id);
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: 'Candidate not found'
+      });
+    }
+
+    // Optional: Delete resume file from filesystem
+    const fs = await import('fs/promises');
+    const path = await import('path');
+    try {
+      if (candidate.resumeUrl) {
+        await fs.unlink(path.join(process.cwd(), candidate.resumeUrl));
+      }
+    } catch (err) {
+      console.error('Error deleting file:', err);
+    }
+
+    await candidate.deleteOne();
+
+    res.json({
+      success: true,
+      message: 'Candidate deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 // @desc    Get candidates for a job
 // @route   GET /api/candidates/job/:jobId
 export const getCandidatesByJob = async (req, res) => {
@@ -169,8 +208,13 @@ export const getCandidatesByJob = async (req, res) => {
       });
     }
 
-    // Return all candidates to both Admin and HR
+    // Base filter
     const filter = { jobId };
+
+    // If NOT admin, only show parsed candidates
+    if (req.user.role !== 'ADMIN') {
+      filter.parsingStatus = 'COMPLETED';
+    }
 
     const candidates = await Candidate.find(filter)
       .sort({ atsScore: -1, createdAt: -1 });
@@ -280,7 +324,13 @@ export const getMyCandidates = async (req, res) => {
     const jobIds = myJobs.map(job => job._id);
 
     // HR sees all candidates associated with those jobs
-    const candidates = await Candidate.find({ jobId: { $in: jobIds } })
+    // ADDED: Filter for completed parsing
+    const filter = {
+      jobId: { $in: jobIds },
+      parsingStatus: 'COMPLETED'
+    };
+
+    const candidates = await Candidate.find(filter)
       .populate('jobId', 'jobTitle')
       .sort({ atsScore: -1, createdAt: -1 });
 

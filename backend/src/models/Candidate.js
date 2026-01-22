@@ -24,6 +24,8 @@ const candidateSchema = new mongoose.Schema({
     location: String,
     email: String,
     phone: String,
+    linkedin: String,
+    github: String,
     experienceYears: Number
   },
   executiveSummary: String,

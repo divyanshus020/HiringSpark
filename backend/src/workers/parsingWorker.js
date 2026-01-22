@@ -48,6 +48,8 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
             location: parsedData.basic_info.location,
             email: parsedData.basic_info.email,
             phone: parsedData.basic_info.phone,
+            linkedin: parsedData.basic_info.linkedin,
+            github: parsedData.basic_info.github,
             experienceYears: parsedData.basic_info.experience_years
         };
         candidate.executiveSummary = parsedData.executive_summary.ai_generated_summary;

@@ -7,6 +7,7 @@ export const getJobsByHR = (hrId: string) => api.get(`/admin/hrs/${hrId}/jobs`);
 export const getAllJobPostings = () => api.get("/admin/jobs");
 export const getJobPostingDetail = (id: string) => api.get(`/jobs/${id}`);
 export const getAllCandidates = () => api.get("/admin/candidates");
+export const deleteCandidate = (id: string) => api.delete(`/candidates/${id}`);
 export const getAllPlatforms = () => api.get("/platforms");
 export const deleteHR = (id: string) => api.delete(`/admin/hrs/${id}`);
 export const updateJobStatus = (id: string, status: string) => api.put(`/admin/jobs/${id}/status`, { status });

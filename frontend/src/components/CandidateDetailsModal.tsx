@@ -145,9 +145,9 @@ export const CandidateDetailsModal = ({
                                         </ul>
                                     </div>
                                     <div>
-                                        <p className="text-xs font-bold text-red-600 uppercase mb-1">Weaknesses</p>
+                                        <p className="text-xs font-bold text-red-600 uppercase mb-1">Areas For Growth</p>
                                         <ul className="text-sm text-gray-700 space-y-1">
-                                            {aiAssessment?.weaknesses?.map((w: string, i: number) => (
+                                            {aiAssessment?.areasForGrowth?.map((w: string, i: number) => (
                                                 <li key={i} className="flex gap-2 items-start">
                                                     <AlertCircle className="h-3 w-3 mt-1 text-red-500 shrink-0" />
                                                     <span>{w}</span>
@@ -212,19 +212,74 @@ export const CandidateDetailsModal = ({
                             </div>
 
                             {/* Skills */}
+                            {/* Skills */}
                             <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                                 <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                     <Wrench className="h-4 w-4 text-indigo-500" /> Skills & Expertise
                                 </h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {Object.entries(skills).map(([category, items]: [string, any]) => (
-                                        Array.isArray(items) && items.map((skill, si) => (
-                                            <Badge key={`${category}-${si}`} variant="secondary" className="bg-purple-50 text-purple-700 hover:bg-purple-100">
-                                                {skill}
-                                            </Badge>
-                                        ))
-                                    ))}
-                                    {Object.keys(skills).length === 0 && <p className="text-sm text-gray-400 italic">No skills listed.</p>}
+
+                                <div className="space-y-4">
+                                    {/* Technical Skills */}
+                                    {skills?.technicalSkills && (
+                                        <div className="space-y-3">
+                                            <h4 className="text-sm font-medium text-gray-700 uppercase tracking-wide">Technical Skills</h4>
+
+                                            {/* Advanced */}
+                                            {skills.technicalSkills.advanced?.length > 0 && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    <span className="text-xs font-semibold text-gray-500 mr-1 mt-1">Advanced:</span>
+                                                    {skills.technicalSkills.advanced.map((skill: string, i: number) => (
+                                                        <Badge key={`adv-${i}`} variant="secondary" className="bg-green-50 text-green-700 hover:bg-green-100 border border-green-200">
+                                                            {skill}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Intermediate */}
+                                            {skills.technicalSkills.intermediate?.length > 0 && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    <span className="text-xs font-semibold text-gray-500 mr-1 mt-1">Intermediate:</span>
+                                                    {skills.technicalSkills.intermediate.map((skill: string, i: number) => (
+                                                        <Badge key={`int-${i}`} variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200">
+                                                            {skill}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Beginner */}
+                                            {skills.technicalSkills.beginner?.length > 0 && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    <span className="text-xs font-semibold text-gray-500 mr-1 mt-1">Beginner:</span>
+                                                    {skills.technicalSkills.beginner.map((skill: string, i: number) => (
+                                                        <Badge key={`beg-${i}`} variant="secondary" className="bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200">
+                                                            {skill}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Soft Skills */}
+                                    {skills?.softSkills?.length > 0 && (
+                                        <div className="pt-2 border-t border-gray-100">
+                                            <h4 className="text-sm font-medium text-gray-700 uppercase tracking-wide mb-2">Soft Skills</h4>
+                                            <div className="flex flex-wrap gap-2">
+                                                {skills.softSkills.map((skill: string, i: number) => (
+                                                    <Badge key={`soft-${i}`} variant="secondary" className="bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200">
+                                                        {skill}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Fallback for empty skills */}
+                                    {(!skills?.technicalSkills && !skills?.softSkills) && (
+                                        <p className="text-sm text-gray-400 italic">No specific skills analyzed.</p>
+                                    )}
                                 </div>
                             </div>
 
