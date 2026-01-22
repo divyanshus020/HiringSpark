@@ -11,8 +11,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button"; // Import Button
+import { Search, Eye, FileText } from "lucide-react"; // Import Icons
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 import {
@@ -22,12 +22,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CandidateDetailsModal } from "../components/CandidateDetailsModal"; // Import Modal
 
 export default function Candidates() {
 
   const [candidates, setCandidates] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Modal State
+  const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchCandidates = async () => {
     setIsLoading(true);
@@ -60,31 +65,33 @@ export default function Candidates() {
     }
   };
 
+  const handleViewCV = (cvUrl: string) => {
+    if (!cvUrl) {
+      toast.error('CV not available');
+      return;
+    }
+    // Handle CV open logic (same as HR)
+    try {
+      const isFullUrl = /^https?:\/\//i.test(cvUrl);
+      const backendHost = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+      const openUrl = isFullUrl ? cvUrl : `${backendHost}${cvUrl}`;
+      window.open(openUrl, '_blank');
+    } catch (err) {
+      console.error('Failed to open CV:', err);
+      toast.error('Failed to open CV');
+    }
+  };
+
+  const openCandidateModal = (candidate: any) => {
+    setSelectedCandidate(candidate);
+    setIsModalOpen(true);
+  };
+
   const filteredCandidates = candidates.filter(candidate =>
     candidate.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     candidate.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     candidate.jobId?.jobTitle?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'Shortlisted by HB': return 'secondary'; // using secondary for clean blue look
-      case 'Engaged': return 'outline'; // or a custom class
-      case 'Taken': return 'default';
-      case 'Pending Review': return 'outline';
-      default: return 'outline';
-    }
-  };
-
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'Shortlisted by HB': return 'bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200';
-      case 'Engaged': return 'bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200';
-      case 'Taken': return 'bg-green-50 text-green-700 hover:bg-green-100 border-green-200';
-      case 'Pending Review': return 'bg-gray-50 text-gray-700 hover:bg-gray-100 border-gray-200';
-      default: return '';
-    }
-  };
 
   return (
     <DashboardLayout title="Candidates">
@@ -114,7 +121,7 @@ export default function Candidates() {
                 <TableHead>Job</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>HR Company</TableHead>
-                <TableHead className="w-[200px]">Actions</TableHead>
+                <TableHead className="w-[200px] sticky right-0 bg-white shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)] z-10">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -134,34 +141,58 @@ export default function Candidates() {
                 filteredCandidates.map((candidate) => (
                   <TableRow key={candidate._id} className="hover:bg-muted/50 transition-colors">
                     <TableCell className="font-medium text-foreground">{candidate.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{candidate.email}</TableCell>
+                    <TableCell className="text-muted-foreground">{candidate.basicInfo?.email || candidate.email}</TableCell>
                     <TableCell className="text-muted-foreground">{candidate.jobId?.jobTitle || 'N/A'}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className={getStatusBadgeClass(candidate.hrFeedback)}
-                      >
-                        {candidate.hrFeedback || 'Pending Review'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {candidate.jobId?.companyName || candidate.addedBy?.orgName || 'N/A'}
-                    </TableCell>
                     <TableCell>
                       <Select
                         onValueChange={(val) => handleStatusChange(candidate._id, val)}
                         value={candidate.hrFeedback || "Pending Review"}
                       >
-                        <SelectTrigger className="w-full h-8">
+                        <SelectTrigger className="w-[160px] h-8 text-xs">
                           <SelectValue placeholder="Change Status" />
                         </SelectTrigger>
                         <SelectContent>
+                          <div className="mb-1 px-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Admin Actions</div>
                           <SelectItem value="Pending Review">Pending Review</SelectItem>
                           <SelectItem value="Shortlisted by HB">Shortlisted by HB</SelectItem>
                           <SelectItem value="Engaged">Engaged</SelectItem>
                           <SelectItem value="Taken">Taken</SelectItem>
+
+                          <div className="mt-2 mb-1 px-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">HR Status (Read Only)</div>
+                          <SelectItem value="PENDING" disabled>Pending</SelectItem>
+                          <SelectItem value="SHORTLISTED" disabled>Shortlisted</SelectItem>
+                          <SelectItem value="INTERVIEW_SCHEDULED" disabled>Interview</SelectItem>
+                          <SelectItem value="REJECTED" disabled>Rejected</SelectItem>
                         </SelectContent>
                       </Select>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {candidate.jobId?.companyName || candidate.addedBy?.orgName || 'N/A'}
+                    </TableCell>
+                    <TableCell className="sticky right-0 bg-white shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)] z-10">
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50"
+                          onClick={() => openCandidateModal(candidate)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        {candidate.resumeUrl ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewCV(candidate.resumeUrl)}
+                            className="gap-2"
+                          >
+                            <FileText className="h-4 w-4" />
+                            <span className="sr-only">View CV</span>
+                          </Button>
+                        ) : (
+                          <span className="text-sm text-gray-400">No CV</span>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -170,6 +201,12 @@ export default function Candidates() {
           </Table>
         </motion.div>
       </div>
+
+      <CandidateDetailsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        candidate={selectedCandidate}
+      />
     </DashboardLayout>
   );
 }

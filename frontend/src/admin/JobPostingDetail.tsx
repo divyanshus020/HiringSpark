@@ -5,7 +5,8 @@ import { getCandidatesByJob, addCandidate, updateCandidateStatus } from "../api/
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Calendar, Linkedin, ExternalLink, Check, X } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, Linkedin, ExternalLink, Check, X, Eye, Loader2, AlertCircle, CheckCircle2, SearchIcon } from "lucide-react";
+import { CandidateDetailsModal } from "@/components/CandidateDetailsModal";
 import {
   Select,
   SelectContent,
@@ -38,7 +39,16 @@ export default function JobPostingDetail() {
   const [candidates, setCandidates] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Search, Filter, Pagination State
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [minAtsFilter, setMinAtsFilter] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [newCandidate, setNewCandidate] = useState({
     name: "",
     email: "",
@@ -82,6 +92,29 @@ export default function JobPostingDetail() {
   useEffect(() => {
     fetchData();
   }, [id]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, minAtsFilter]);
+
+  // Derived state for Filtering, Sorting, Pagination
+  const filteredCandidates = candidates
+    .filter(candidate => {
+      const matchesSearch = (
+        (candidate.basicInfo?.fullName || candidate.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (candidate.basicInfo?.email || candidate.email || "").toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      const matchesStatus = statusFilter === "ALL" || (candidate.hrFeedback || "Pending Review") === statusFilter;
+      const matchesAts = (candidate.atsScore || 0) >= minAtsFilter;
+      return matchesSearch && matchesStatus && matchesAts;
+    })
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()); // Latest first
+
+  const totalPages = Math.ceil(filteredCandidates.length / itemsPerPage);
+  const paginatedCandidates = filteredCandidates.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const handleStatusChange = async (candidateId: string, newStatus: string) => {
     try {
@@ -231,12 +264,124 @@ export default function JobPostingDetail() {
               </>
             )}
           </div>
-          <button
-            onClick={() => navigate(backPath)}
-            className="text-blue-500 hover:text-blue-600 text-sm flex items-center gap-1"
-          >
-            ← {backText}
-          </button>
+          <div className="flex items-center gap-3">
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  className="bg-blue-500 hover:bg-blue-600 text-white gap-2 h-9"
+                  disabled={job.status !== 'active' && job.status !== 'posted'}
+                  title={job.status !== 'active' && job.status !== 'posted' ? "Only active jobs can accept candidates" : ""}
+                >
+                  <Plus className="h-4 w-4" />
+                  Upload Candidate
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Upload Candidate</DialogTitle>
+                  <DialogDescription>Add a new candidate to this job.</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label>Candidate Name</Label>
+                    <Input value={newCandidate.name} onChange={(e) => setNewCandidate({ ...newCandidate, name: e.target.value })} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Email</Label>
+                    <Input value={newCandidate.email} onChange={(e) => setNewCandidate({ ...newCandidate, email: e.target.value })} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Phone</Label>
+                    <Input value={newCandidate.phone} onChange={(e) => setNewCandidate({ ...newCandidate, phone: e.target.value })} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Status</Label>
+                    <Select value={newCandidate.initialStatus} onValueChange={(val) => setNewCandidate({ ...newCandidate, initialStatus: val })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Pending Review">Pending Review</SelectItem>
+                        <SelectItem value="Shortlisted by HB">Shortlisted by HB</SelectItem>
+                        <SelectItem value="Engaged">Engaged</SelectItem>
+                        <SelectItem value="Taken">Taken</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Resume (PDF/Doc)</Label>
+                    <Input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        setNewCandidate({ ...newCandidate, resume: file });
+                      }}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={handleUploadCandidate}>Save</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="border-blue-500 text-blue-500 hover:bg-blue-50 gap-2 h-9"
+                  disabled={job.status !== 'active' && job.status !== 'posted'}
+                >
+                  <Plus className="h-4 w-4" />
+                  Bulk Upload
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Bulk Upload Resumes</DialogTitle>
+                  <DialogDescription>Select up to 100 PDF resumes to upload and parse.</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label>Select Files (PDF only)</Label>
+                    <Input
+                      type="file"
+                      multiple
+                      accept=".pdf"
+                      onChange={async (e) => {
+                        const files = Array.from(e.target.files || []);
+                        if (files.length > 100) {
+                          toast({
+                            title: "Too many files",
+                            description: "Maximum 100 files allowed",
+                            variant: "destructive"
+                          });
+                          return;
+                        }
+                        if (files.length > 0 && id) {
+                          try {
+                            toast({ title: "Uploading", description: `Uploading ${files.length} resumes...` });
+                            const { bulkUploadCandidates } = await import("../api/hr/candidates.api");
+                            await bulkUploadCandidates(id, files);
+                            toast({ title: "Success", description: "Resumes uploaded and queued for parsing" });
+                            fetchData();
+                          } catch (err) {
+                            toast({ title: "Error", description: "Bulk upload failed", variant: "destructive" });
+                          }
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <button
+              onClick={() => navigate(backPath)}
+              className="text-blue-500 hover:text-blue-600 text-sm flex items-center gap-1 ml-2"
+            >
+              ← {backText}
+            </button>
+          </div>
         </div>
 
         {/* Job Info Card */}
@@ -340,112 +485,191 @@ export default function JobPostingDetail() {
           <CardContent className="p-6">
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-semibold text-gray-800">Candidates for This Job</h3>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button
-                    className="bg-blue-500 hover:bg-blue-600 text-white gap-2"
-                    disabled={job.status !== 'active' && job.status !== 'posted'}
-                    title={job.status !== 'active' && job.status !== 'posted' ? "Only active jobs can accept candidates" : ""}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Upload Candidate
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Upload Candidate</DialogTitle>
-                    <DialogDescription>Add a new candidate to this job.</DialogDescription>
-                  </DialogHeader>
-                  {/* Reuse existing inputs */}
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label>Candidate Name</Label>
-                      <Input value={newCandidate.name} onChange={(e) => setNewCandidate({ ...newCandidate, name: e.target.value })} />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Email</Label>
-                      <Input value={newCandidate.email} onChange={(e) => setNewCandidate({ ...newCandidate, email: e.target.value })} />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Phone</Label>
-                      <Input value={newCandidate.phone} onChange={(e) => setNewCandidate({ ...newCandidate, phone: e.target.value })} />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Status</Label>
-                      <Select value={newCandidate.initialStatus} onValueChange={(val) => setNewCandidate({ ...newCandidate, initialStatus: val })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pending Review">Pending Review</SelectItem>
-                          <SelectItem value="Shortlisted by HB">Shortlisted by HB</SelectItem>
-                          <SelectItem value="Engaged">Engaged</SelectItem>
-                          <SelectItem value="Taken">Taken</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Resume (PDF/Doc)</Label>
-                      <Input
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0] || null;
-                          setNewCandidate({ ...newCandidate, resume: file });
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button onClick={handleUploadCandidate}>Save</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
             </div>
 
-            <div className="space-y-4">
-              {candidates.map((candidate) => (
-                <div key={candidate._id} className="flex items-center justify-between p-4 border-l-4 border-l-blue-500 bg-white border border-gray-200 rounded shadow-sm">
-                  <div>
-                    <p className="font-bold text-gray-900">{candidate.fullName || candidate.name}</p>
-                    <p className="text-xs text-blue-500 mt-1">
-                      {candidate.email} | {candidate.phone}
-                    </p>
-                    {candidate.resume && (
-                      <a
-                        href={candidate.resume}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-green-600 mt-1 hover:underline"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        View Resume
-                      </a>
-                    )}
+            {candidates.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="flex justify-center mb-4">
+                  <div className="h-12 w-12 bg-blue-50 rounded-full flex items-center justify-center">
+                    <Plus className="h-6 w-6 text-blue-500" />
                   </div>
-                  <div>
-                    <Select
-                      value={candidate.hrFeedback || "Pending Review"}
-                      onValueChange={(val) => handleStatusChange(candidate._id, val)}
-                    >
-                      <SelectTrigger className="w-[180px] text-black  border-gray-200 border-2 h-8 text-xs font-medium">
-                        <SelectValue />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900">No candidates yet</h3>
+                <p className="mt-1 text-sm text-gray-500">Upload a candidate to get started.</p>
+              </div>
+            ) : (
+              <>
+                {/* Search and Filters Toolbar */}
+                <div className="flex flex-col md:flex-row gap-4 mb-6 justify-between items-end md:items-center">
+                  <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto flex-1">
+                    <div className="relative w-full md:w-64">
+                      <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Search by name or email..."
+                        className="pl-10"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="w-full md:w-[150px]">
+                        <SelectValue placeholder="Filter Status" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="ALL">All Statuses</SelectItem>
+                        <div className="mb-1 px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Admin Status</div>
                         <SelectItem value="Pending Review">Pending Review</SelectItem>
                         <SelectItem value="Shortlisted by HB">Shortlisted by HB</SelectItem>
                         <SelectItem value="Engaged">Engaged</SelectItem>
                         <SelectItem value="Taken">Taken</SelectItem>
+                        <div className="mt-2 mb-1 px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">HR Status</div>
+                        <SelectItem value="PENDING">Pending</SelectItem>
+                        <SelectItem value="SHORTLISTED">Shortlisted</SelectItem>
+                        <SelectItem value="INTERVIEW_SCHEDULED">Interview</SelectItem>
+                        <SelectItem value="REJECTED">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={minAtsFilter.toString()} onValueChange={(val) => setMinAtsFilter(Number(val))}>
+                      <SelectTrigger className="w-full md:w-[150px]">
+                        <SelectValue placeholder="ATS Score" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">All Scores</SelectItem>
+                        <SelectItem value="50">ATS &gt; 50%</SelectItem>
+                        <SelectItem value="70">ATS &gt; 70%</SelectItem>
+                        <SelectItem value="90">ATS &gt; 90%</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="text-sm text-gray-500">
+                    Showing {paginatedCandidates.length} of {filteredCandidates.length} candidates
+                  </div>
                 </div>
-              ))}
-              {candidates.length === 0 && (
-                <div className="text-center text-gray-500 py-4 italic">No candidates yet.</div>
-              )}
-            </div>
+
+                <div className="space-y-4">
+                  {paginatedCandidates.map((candidate) => (
+                    <div key={candidate._id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 border-l-4 border-l-blue-500 bg-white border border-gray-200 rounded shadow-sm gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-gray-900">{candidate.basicInfo?.fullName || candidate.fullName || candidate.name}</p>
+                          {/* Parsing Status Badge */}
+                          {candidate.parsingStatus === 'COMPLETED' ? (
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[10px] px-1 py-0 h-5 gap-1">
+                              <CheckCircle2 className="w-3 h-3" /> Parsed
+                            </Badge>
+                          ) : candidate.parsingStatus === 'FAILED' ? (
+                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-[10px] px-1 py-0 h-5 gap-1">
+                              <AlertCircle className="w-3 h-3" /> Failed
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-[10px] px-1 py-0 h-5 gap-1">
+                              <Loader2 className="w-3 h-3 animate-spin" /> Processing
+                            </Badge>
+                          )}
+                          {/* ATS Score Badge */}
+                          {(candidate.atsScore !== undefined) && (
+                            <Badge className={`text-[10px] px-1 py-0 h-5 ${candidate.atsScore > 70 ? 'bg-green-100 text-green-700 hover:bg-green-100' : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100'}`}>
+                              ATS: {candidate.atsScore}%
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-blue-500 mt-1">
+                          {candidate.basicInfo?.email || candidate.email} | {candidate.basicInfo?.phone || candidate.phoneNumber || candidate.phone || 'No Phone'}
+                        </p>
+                        <div className="flex items-center gap-3 mt-2">
+                          {candidate.resumeUrl && (
+                            <a
+                              href={candidate.resumeUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-xs text-green-600 hover:underline"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              View Resume
+                            </a>
+                          )}
+                          <button
+                            onClick={() => {
+                              setSelectedCandidate(candidate);
+                              setIsDetailsModalOpen(true);
+                            }}
+                            disabled={candidate.parsingStatus !== 'COMPLETED'}
+                            className={`flex items-center gap-1 text-xs font-medium ${candidate.parsingStatus === 'COMPLETED' ? 'text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`}
+                          >
+                            <Eye className="h-3 w-3" />
+                            View Details
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <Select
+                          value={candidate.hrFeedback || "Pending Review"}
+                          onValueChange={(val) => handleStatusChange(candidate._id, val)}
+                        >
+                          <SelectTrigger className="w-[180px] text-black  border-gray-200 border-2 h-8 text-xs font-medium">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <div className="mb-1 px-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Admin Actions</div>
+                            <SelectItem value="Pending Review">Pending Review</SelectItem>
+                            <SelectItem value="Shortlisted by HB">Shortlisted by HB</SelectItem>
+                            <SelectItem value="Engaged">Engaged</SelectItem>
+                            <SelectItem value="Taken">Taken</SelectItem>
+
+                            <div className="mt-2 mb-1 px-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">HR Status (Read Only)</div>
+                            <SelectItem value="PENDING" disabled>Pending</SelectItem>
+                            <SelectItem value="SHORTLISTED" disabled>Shortlisted</SelectItem>
+                            <SelectItem value="INTERVIEW_SCHEDULED" disabled>Interview</SelectItem>
+                            <SelectItem value="REJECTED" disabled>Rejected</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  ))}
+
+                  {filteredCandidates.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      No candidates match your search filters.
+                    </div>
+                  )}
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center gap-2 mt-6">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <div className="text-sm font-medium text-gray-600">
+                      Page {currentPage} of {totalPages}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
           </CardContent>
-        </Card>
-      </div>
-    </DashboardLayout>
+        </Card >
+      </div >
+
+
+      <CandidateDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        candidate={selectedCandidate}
+      />
+    </DashboardLayout >
   );
 }

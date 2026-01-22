@@ -13,10 +13,10 @@ import candidateRoutes from './routes/candidateRoutes.js';
 import planRoutes from './routes/planRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
-import { env } from 'process';
+import { env } from './config/env.js';
 
 const app = express();
-const PORT = env.PORT || 3000;
+const PORT = env.PORT || 5000;
 
 // Get __dirname in ES module
 const __filename = fileURLToPath(import.meta.url);
@@ -28,7 +28,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files (for resumes)
-// uploads folder is located at project root `backend/uploads`, so serve from one level up
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // Basic route
@@ -66,7 +65,6 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error(err.stack);
 
-  // Multer file upload error
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({
       success: false,
@@ -74,7 +72,7 @@ app.use((err, req, res, next) => {
     });
   }
 
-  if (err.message.includes('Only PDF, DOC, DOCX')) {
+  if (err.message && err.message.includes('Only PDF, DOC, DOCX')) {
     return res.status(400).json({
       success: false,
       message: 'Only PDF, DOC, DOCX files are allowed'
@@ -89,9 +87,18 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  connectDB();
+app.listen(PORT, async () => {
+  await connectDB();
   console.log(`🚀 Server running on port ${PORT}`);
+
+  // Start background worker
+  try {
+    const { pdfWorker } = await import('./workers/parsingWorker.js');
+    console.log('👷 Background worker started');
+  } catch (error) {
+    console.error('❌ Failed to start background worker:', error);
+  }
+
   console.log(`📡 API Base URL: http://localhost:${PORT}`);
-  console.log(`📦 MongoDB: ${process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/hirespark'}`);
+  console.log(`📦 MongoDB: ${env.MONGO_URI || 'mongodb://127.0.0.1:27017/hirespark'}`);
 });

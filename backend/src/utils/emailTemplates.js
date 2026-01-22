@@ -515,3 +515,61 @@ export const candidateAddedEmailTemplate = (hrName, candidateName, jobTitle, can
     </html>
   `;
 };
+
+// Template for Candidate Shortlisted Notification
+export const candidateShortlistedEmailTemplate = (candidateName, jobTitle, companyName) => {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Congratulations! You've been Shortlisted</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa; padding: 20px; line-height: 1.6; }
+        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+        .header { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 40px 30px; text-align: center; color: #ffffff; }
+        .header h1 { font-size: 26px; font-weight: 600; margin-bottom: 8px; }
+        .content { padding: 40px 30px; }
+        .greeting { font-size: 18px; color: #1e293b; margin-bottom: 20px; font-weight: 500; }
+        .message { font-size: 15px; color: #475569; margin-bottom: 30px; }
+        .highlight-box { background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 20px; margin: 25px 0; border-radius: 6px; }
+        .highlight-box h3 { color: #1e293b; font-size: 16px; margin-bottom: 5px; }
+        .highlight-box p { color: #3b82f6; font-weight: 600; font-size: 18px; }
+        .footer { background-color: #1e293b; padding: 30px; text-align: center; color: #94a3b8; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="email-container">
+        <div class="header">
+          <h1>🎉 You're Shortlisted!</h1>
+          <p>HireSpark Recruitment Update</p>
+        </div>
+        <div class="content">
+          <p class="greeting">Dear ${candidateName},</p>
+          <p class="message">
+            We are excited to inform you that your application for the position of <strong>${jobTitle}</strong> has been <strong>shortlisted</strong>!
+          </p>
+          <p class="message">
+            Our team was impressed with your profile and qualifications. We are currently reviewing next steps and will be in touch shortly regarding the interview process.
+          </p>
+          
+          <div class="highlight-box">
+            <h3>Position</h3>
+            <p>${jobTitle}</p>
+            ${companyName ? `<p style="font-size: 14px; color: #64748b; margin-top: 5px;">at ${companyName}</p>` : ''}
+          </div>
+
+          <p class="message">
+            Please keep an eye on your email for further updates.
+          </p>
+        </div>
+        <div class="footer">
+          <p>© ${new Date().getFullYear()} HireSpark. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+};

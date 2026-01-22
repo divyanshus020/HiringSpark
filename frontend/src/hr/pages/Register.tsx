@@ -60,8 +60,7 @@ const Register = () => {
     if (!email) return "Email is required";
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) return "Please enter a valid email address";
-    const gmailRegex = /^[a-zA-Z0-9._-]+@gmail\.com$/;
-    if (!gmailRegex.test(email)) return "Please use a valid Gmail address (e.g., user@gmail.com)";
+
     return "";
   };
 

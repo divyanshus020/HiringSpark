@@ -4,10 +4,12 @@ import Header from '../components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { Users as UsersIcon, FileText, Loader2, ExternalLink, Mail, Phone } from 'lucide-react';
+import { Users as UsersIcon, FileText, Loader2, ExternalLink, Mail, Phone, Eye, AlertCircle, CheckCircle2, Search as SearchIcon } from 'lucide-react';
+import { CandidateDetailsModal } from '../../components/CandidateDetailsModal';
 import { getCandidatesByJob, getMyCandidates, updateCandidateStatus } from '../../api/hr/candidates.api';
 import { getSingleJob } from '../../api/hr/jobs.api';
 import { toast } from 'react-toastify';
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -21,47 +23,109 @@ const Candidates = () => {
   const jobId = searchParams.get('jobId');
   const [candidates, setCandidates] = useState<any[]>([]);
   const [jobDetails, setJobDetails] = useState<any>(null);
+
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Filter & Pagination State
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [minAtsFilter, setMinAtsFilter] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, minAtsFilter]);
+
+  const filteredCandidates = candidates
+    .filter(candidate => {
+      const matchesSearch = (
+        (candidate.basicInfo?.fullName || candidate.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (candidate.basicInfo?.email || candidate.email || "").toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      const matchesStatus = statusFilter === "ALL" || (candidate.hrFeedback || "PENDING") === statusFilter;
+      const matchesAts = (candidate.atsScore || 0) >= minAtsFilter;
+
+      return matchesSearch && matchesStatus && matchesAts;
+    })
+    .sort((a, b) => {
+      // Default Sort: Latest Created First
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+  const totalPages = Math.ceil(filteredCandidates.length / itemsPerPage);
+  const paginatedCandidates = filteredCandidates.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const fetchCandidates = async (isSilent = false) => {
+    try {
+      if (!isSilent) setIsLoading(true);
+
+      let newCandidates = [];
+
+      if (jobId) {
+        const candidatesResponse = await getCandidatesByJob(jobId);
+        if (candidatesResponse.data.success) {
+          newCandidates = candidatesResponse.data.candidates || [];
+        }
+      } else {
+        const candidatesResponse = await getMyCandidates();
+        if (candidatesResponse.data.success) {
+          newCandidates = candidatesResponse.data.candidates || [];
+        }
+      }
+      setCandidates(newCandidates);
+    } catch (error: any) {
+      console.error('Error fetching data:', error);
+      if (!isSilent) toast.error(error.response?.data?.message || 'Failed to load candidates');
+    } finally {
+      if (!isSilent) setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-
-        if (jobId) {
-          // Fetch candidates for this job
-          const candidatesResponse = await getCandidatesByJob(jobId);
-          if (candidatesResponse.data.success) {
-            setCandidates(candidatesResponse.data.candidates || []);
+    const initData = async () => {
+      await fetchCandidates(false);
+      // Fetch job details separately
+      if (jobId) {
+        try {
+          const jobResponse = await getSingleJob(jobId);
+          if (jobResponse.data.success) {
+            setJobDetails(jobResponse.data.job);
           }
-
-          // Fetch job details for header
-          try {
-            const jobResponse = await getSingleJob(jobId);
-            if (jobResponse.data.success) {
-              setJobDetails(jobResponse.data.job);
-            }
-          } catch (e) {
-            console.log("Error fetching job details", e);
-          }
-        } else {
-          // Fetch all candidates for the current HR
-          const candidatesResponse = await getMyCandidates();
-          if (candidatesResponse.data.success) {
-            setCandidates(candidatesResponse.data.candidates || []);
-            setJobDetails(null);
-          }
+        } catch (e) {
+          console.log("Error fetching job details", e);
         }
-      } catch (error: any) {
-        console.error('Error fetching data:', error);
-        toast.error(error.response?.data?.message || 'Failed to load candidates');
-      } finally {
-        setIsLoading(false);
+      } else {
+        setJobDetails(null);
       }
     };
-
-    fetchData();
+    initData();
   }, [jobId]);
+
+  // Polling for processing candidates
+  useEffect(() => {
+    const isProcessing = candidates.some(
+      (c) => c.parsingStatus && c.parsingStatus !== 'COMPLETED' && c.parsingStatus !== 'FAILED'
+    );
+
+    let intervalId: NodeJS.Timeout;
+
+    if (isProcessing) {
+      intervalId = setInterval(() => {
+        fetchCandidates(true);
+      }, 3000);
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [candidates, jobId]);
 
   const handleStatusChange = async (candidateId: string, newStatus: string) => {
     try {
@@ -93,6 +157,34 @@ const Candidates = () => {
     } catch (err) {
       console.error('Failed to open CV:', err);
       toast.error('Failed to open CV');
+    }
+  };
+
+  const openCandidateModal = (candidate: any) => {
+    setSelectedCandidate(candidate);
+    setIsModalOpen(true);
+  };
+
+  const getStatusBadge = (status: string = 'PENDING') => {
+    switch (status) {
+      case 'COMPLETED':
+        return (
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 gap-1">
+            <CheckCircle2 className="w-3 h-3" /> Parsed
+          </Badge>
+        );
+      case 'FAILED':
+        return (
+          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 gap-1">
+            <AlertCircle className="w-3 h-3" /> Failed
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 gap-1">
+            <Loader2 className="w-3 h-3 animate-spin" /> Processing
+          </Badge>
+        );
     }
   };
 
@@ -144,95 +236,194 @@ const Candidates = () => {
                 <p className="text-gray-500">Candidates who apply for this job will appear here.</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">#</th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">Name</th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">Job Title</th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">Email</th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">Phone</th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">Status</th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">Update Status</th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">CV</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {candidates.map((candidate, index) => (
-                      <tr
-                        key={candidate._id}
-                        className="border-b border-gray-100 hover:bg-indigo-50 transition-colors"
-                      >
-                        <td className="py-4 px-4 text-gray-600">{index + 1}</td>
-                        <td className="py-4 px-4">
-                          <div className="font-semibold text-gray-900">{candidate.name}</div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="text-sm font-medium text-indigo-600">{candidate.jobId?.jobTitle || 'N/A'}</div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <Mail className="h-4 w-4" />
-                            <span className="text-sm">{candidate.email}</span>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <Phone className="h-4 w-4" />
-                            <span className="text-sm">{candidate.phoneNumber || 'N/A'}</span>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 border-indigo-100">
-                            {candidate.hrFeedback || 'Pending Review'}
-                          </Badge>
-                        </td>
-                        <td className="py-4 px-4">
-                          <Select
-                            value={candidate.hrFeedback || "Pending Review"}
-                            onValueChange={(val) => handleStatusChange(candidate._id, val)}
-                          >
-                            <SelectTrigger className="w-[180px] text-gray-700 border-gray-200 h-8 text-xs font-medium">
-                              <SelectValue placeholder="Change Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Pending Review">Pending Review</SelectItem>
-                              <SelectItem value="Shortlisted by HR">Shortlisted by HR</SelectItem>
-                              <SelectItem value="Interviewed">Interviewed</SelectItem>
-                              <SelectItem value="Rejected">Rejected</SelectItem>
-                              <SelectItem value="Hired">Hired</SelectItem>
-                              <SelectItem value="Engaged">Engaged</SelectItem>
-                              <SelectItem value="Taken">Taken</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </td>
-                        <td className="py-4 px-4">
-                          {candidate.resumeUrl ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewCV(candidate.resumeUrl)}
-                              className="gap-2"
-                            >
-                              <FileText className="h-4 w-4" />
-                              View CV
-                              <ExternalLink className="h-3 w-3" />
-                            </Button>
-                          ) : (
-                            <span className="text-sm text-gray-400">No CV</span>
-                          )}
-                        </td>
+              <>
+                {/* Filters and Search Toolbar */}
+                <div className="flex flex-col md:flex-row gap-4 mb-6 justify-between items-end md:items-center">
+                  <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto flex-1">
+                    <div className="relative w-full md:w-64">
+                      <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Search by name or email..."
+                        className="pl-10"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="w-full md:w-[150px]">
+                        <SelectValue placeholder="Filter Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ALL">All Statuses</SelectItem>
+                        <div className="mb-1 px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">HR Status</div>
+                        <SelectItem value="PENDING">Pending</SelectItem>
+                        <SelectItem value="SHORTLISTED">Shortlisted</SelectItem>
+                        <SelectItem value="INTERVIEW_SCHEDULED">Interview</SelectItem>
+                        <SelectItem value="REJECTED">Rejected</SelectItem>
+                        <div className="mt-2 mb-1 px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Admin Status</div>
+                        <SelectItem value="Pending Review">Pending Review</SelectItem>
+                        <SelectItem value="Shortlisted by HB">Shortlisted by HB</SelectItem>
+                        <SelectItem value="Engaged">Engaged</SelectItem>
+                        <SelectItem value="Taken">Taken</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={minAtsFilter.toString()} onValueChange={(val) => setMinAtsFilter(Number(val))}>
+                      <SelectTrigger className="w-full md:w-[150px]">
+                        <SelectValue placeholder="ATS Score" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">All Scores</SelectItem>
+                        <SelectItem value="50">ATS &gt; 50%</SelectItem>
+                        <SelectItem value="70">ATS &gt; 70%</SelectItem>
+                        <SelectItem value="90">ATS &gt; 90%</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Showing {paginatedCandidates.length} of {filteredCandidates.length} candidates
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-4 px-4 font-semibold text-gray-700">#</th>
+                        <th className="text-left py-4 px-4 font-semibold text-gray-700">Name</th>
+                        <th className="text-left py-4 px-4 font-semibold text-gray-700">Score</th>
+                        <th className="text-left py-4 px-4 font-semibold text-gray-700">Job Title</th>
+                        <th className="text-left py-4 px-4 font-semibold text-gray-700">Status</th>
+                        <th className="text-left py-4 px-4 font-semibold text-gray-700">Email</th>
+                        <th className="text-left py-4 px-4 font-semibold text-gray-700">Phone</th>
+                        <th className="text-left py-4 px-4 font-semibold text-gray-700 sticky right-0 bg-white shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)] z-10">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {paginatedCandidates.map((candidate, index) => (
+                        <tr
+                          key={candidate._id}
+                          className="border-b border-gray-100 hover:bg-indigo-50 transition-colors"
+                        >
+                          <td className="py-4 px-4 text-gray-600">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                          <td className="py-4 px-4">
+                            <div className="font-semibold text-gray-900">{candidate.basicInfo?.fullName || candidate.name}</div>
+                            <div className="text-[10px] text-gray-400 max-w-xs truncate">{candidate.executiveSummary}</div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <Badge className={`${(candidate.atsScore || 0) > 70 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                              {candidate.atsScore || 0}%
+                            </Badge>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="text-sm font-medium text-indigo-600">{candidate.jobId?.jobTitle || jobDetails?.jobTitle || 'N/A'}</div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <Select
+                              value={candidate.hrFeedback || "PENDING"}
+                              onValueChange={(value) => handleStatusChange(candidate._id, value)}
+                              disabled={candidate.parsingStatus !== 'COMPLETED'}
+                            >
+                              <SelectTrigger className="w-[140px] h-8 text-xs bg-white">
+                                <SelectValue placeholder="Status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <div className="mb-1 px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">HR Actions</div>
+                                <SelectItem value="PENDING">Pending</SelectItem>
+                                <SelectItem value="SHORTLISTED">Shortlisted</SelectItem>
+                                <SelectItem value="INTERVIEW_SCHEDULED">Interview</SelectItem>
+                                <SelectItem value="REJECTED">Rejected</SelectItem>
+
+                                <div className="mt-2 mb-1 px-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Admin Status (Read Only)</div>
+                                <SelectItem value="Pending Review" disabled>Pending Review</SelectItem>
+                                <SelectItem value="Shortlisted by HB" disabled>Shortlisted by HB</SelectItem>
+                                <SelectItem value="Engaged" disabled>Engaged</SelectItem>
+                                <SelectItem value="Taken" disabled>Taken</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-2 text-gray-600">
+                              <Mail className="h-4 w-4" />
+                              <span className="text-sm">{candidate.basicInfo?.email || candidate.email}</span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-2 text-gray-600 whitespace-nowrap">
+                              <Phone className="h-4 w-4" />
+                              <span className="text-sm">{candidate.basicInfo?.phone || candidate.phoneNumber || 'N/A'}</span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 sticky right-0 bg-white shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)] z-10">
+                            <div className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50"
+                                onClick={() => openCandidateModal(candidate)}
+                                disabled={candidate.parsingStatus !== 'COMPLETED'}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              {candidate.resumeUrl ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleViewCV(candidate.resumeUrl)}
+                                  className="gap-2"
+                                >
+                                  <FileText className="h-4 w-4" />
+                                  <span className="sr-only">View CV</span>
+                                </Button>
+                              ) : (
+                                <span className="text-sm text-gray-400">No CV</span>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+
+                {/* Pagination Controls */}
+                {
+                  totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-6">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </Button>
+                      <div className="text-sm font-medium text-gray-600">
+                        Page {currentPage} of {totalPages}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  )
+                }
+              </>
             )}
-          </CardContent>
-        </Card>
-      </main>
-    </div>
+          </CardContent >
+        </Card >
+      </main >
+
+      <CandidateDetailsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        candidate={selectedCandidate}
+      />
+    </div >
   );
 };
 

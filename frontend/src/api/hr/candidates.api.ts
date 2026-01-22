@@ -19,3 +19,14 @@ export const getMyCandidates = () =>
 
 export const updateCandidateStatus = (id: string, feedback: string) =>
   api.put(`/candidates/${id}/feedback`, { feedback });
+
+export const bulkUploadCandidates = (jobId: string, resumes: File[]) => {
+  const formData = new FormData();
+  formData.append("jobId", jobId);
+  resumes.forEach((file) => {
+    formData.append("resumes", file);
+  });
+  return api.post("/candidates/bulk", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};

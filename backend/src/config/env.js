@@ -16,6 +16,11 @@ const envSchema = z.object({
   EMAIL_USER: z.string().email().optional(),
   EMAIL_PASS: z.string().optional(),
   FRONTEND_URL: z.string().url().default('http://localhost:5173'),
+
+  // AI & Redis
+  OPENROUTER_API_KEY: z.string().optional(),
+  REDIS_HOST: z.string().default('127.0.0.1'),
+  REDIS_PORT: z.string().default('6379'),
 });
 
 const _env = envSchema.safeParse(process.env);

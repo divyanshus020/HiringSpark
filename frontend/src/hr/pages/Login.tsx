@@ -29,11 +29,11 @@ const Login = () => {
       return "Please enter a valid email address (e.g., user@gmail.com)";
     }
 
-    // Check if it's a Gmail address (optional - can be removed if other emails are allowed)
-    const gmailRegex = /^[a-zA-Z0-9._-]+@gmail\.com$/;
-    if (!gmailRegex.test(email)) {
-      return "Please use a valid Gmail address (e.g., user@gmail.com)";
-    }
+    // // Check if it's a Gmail address (optional - can be removed if other emails are allowed)
+    // const gmailRegex = /^[a-zA-Z0-9._-]+@gmail\.com$/;
+    // if (!gmailRegex.test(email)) {
+    //   return "Please use a valid Gmail address (e.g., user@gmail.com)";
+    // }
 
     return "";
   };
