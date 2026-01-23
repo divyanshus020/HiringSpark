@@ -226,6 +226,7 @@ const Login = () => {
                       onChange={handlePasswordChange}
                       onBlur={handlePasswordBlur}
                       disabled={isLoading}
+                      autoComplete="current-password"
                       className={`pl-10 pr-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed ${passwordError && passwordTouched
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                         : password && !passwordError && passwordTouched
