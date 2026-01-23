@@ -20,7 +20,7 @@ export default function Auth() {
 
     try {
       const response = await loginAPI({ email, password });
-      
+
       // Store token and user data
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
@@ -50,7 +50,7 @@ export default function Auth() {
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary mb-4">
             <span className="text-primary-foreground font-bold text-lg">HS</span>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">HireSpark</h1>
+          <h1 className="text-2xl font-bold text-foreground">HiringBazaar</h1>
           <p className="text-muted-foreground mt-2">
             Sign in to your admin account
           </p>
@@ -63,7 +63,7 @@ export default function Auth() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@hirespark.com"
+                placeholder="admin@HiringBazaar.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

@@ -253,7 +253,7 @@ export const adminRegister = async (req, res) => {
       password: hashedPassword,
       role: 'ADMIN', // Auto-set to ADMIN
       phone: '0000000000', // Default for admin
-      companyName: 'HireSpark Admin',
+      companyName: 'HiringBazaar Admin',
       address: 'Admin Office'
     });
 

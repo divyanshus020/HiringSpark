@@ -36,7 +36,7 @@ const Header = (): JSX.Element => {
         <div className="flex items-center gap-12">
           <Link to="/hr/dashboard" className="flex items-center gap-2 group">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent transition-all group-hover:scale-105">
-              HireSpark
+              HiringBazaar
             </h1>
           </Link>
 

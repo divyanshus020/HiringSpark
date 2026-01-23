@@ -13,7 +13,7 @@ const useHrTour = () => {
                 {
                     element: "#welcome-section",
                     popover: {
-                        title: "Welcome to HireSpark! 👋",
+                        title: "Welcome to HiringBazaar! 👋",
                         description: "We're excited to help you streamline your hiring process. Let's take a quick tour of your new dashboard.",
                         side: "bottom",
                         align: "start",

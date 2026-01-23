@@ -310,7 +310,7 @@ export const updateJobStatus = async (req, res) => {
           );
 
           await transporter.sendMail({
-            from: `"HireSpark Admin" <${env.EMAIL_USER}>`,
+            from: `"HiringBazaar Admin" <${env.EMAIL_USER}>`,
             to: hrEmail,
             subject: `✅ Job Approved - ${jobTitle}`,
             html: emailHtml

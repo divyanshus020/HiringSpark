@@ -5,8 +5,8 @@ dotenv.config();
 
 const envSchema = z.object({
   PORT: z.string().default('5000'),
-  MONGO_URI: z.string().default('mongodb://localhost:27017/hirespark'),
-  JWT_SECRET: z.string().default('hirespark-jwt-secret-change-in-production'),
+  MONGO_URI: z.string().default('mongodb://localhost:27017/HiringBazaar'),
+  JWT_SECRET: z.string().default('HiringBazaar-jwt-secret-change-in-production'),
 
   // Admin Credentials (optional - only needed for seeding)
   ADMIN_EMAIL: z.string().email().optional(),

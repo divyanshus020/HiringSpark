@@ -1,6 +1,6 @@
-# 🚀 HireSpark - KVM Deployment Guide
+# 🚀 HiringBazaar - KVM Deployment Guide
 
-Complete step-by-step guide to deploy HireSpark (MERN Stack) on KVM server.
+Complete step-by-step guide to deploy HiringBazaar (MERN Stack) on KVM server.
 
 ---
 
@@ -89,26 +89,26 @@ sudo apt install -y git
 ### 1. Create Application Directory
 
 ```bash
-sudo mkdir -p /var/www/hirespark
-sudo chown -R $USER:$USER /var/www/hirespark
-cd /var/www/hirespark
+sudo mkdir -p /var/www/HiringBazaar
+sudo chown -R $USER:$USER /var/www/HiringBazaar
+cd /var/www/HiringBazaar
 ```
 
 ### 2. Clone Your Repository
 
 ```bash
 # If using Git
-git clone https://github.com/your-username/hirespark.git .
+git clone https://github.com/your-username/HiringBazaar.git .
 
 # OR upload files via SCP from local machine
 # From your local machine (Windows):
-# scp -r C:\Divyanshu\Divyanshu\Project\HiringBazar\HireSpark\HiringSpark\* username@server-ip:/var/www/hirespark/
+# scp -r C:\Divyanshu\Divyanshu\Project\HiringBazar\HiringBazaar\HiringSpark\* username@server-ip:/var/www/HiringBazaar/
 ```
 
 ### 3. Setup Backend
 
 ```bash
-cd /var/www/hirespark/backend
+cd /var/www/HiringBazaar/backend
 
 # Install dependencies
 npm install --production
@@ -121,11 +121,11 @@ nano .env
 ```env
 PORT=5000
 NODE_ENV=production
-MONGO_URI=mongodb://localhost:27017/hirespark
+MONGO_URI=mongodb://localhost:27017/HiringBazaar
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 
 # Admin Seed Data
-ADMIN_EMAIL=admin@hirespark.com
+ADMIN_EMAIL=admin@HiringBazaar.com
 ADMIN_PASSWORD=admin123
 
 # Email Configuration
@@ -141,7 +141,7 @@ FRONTEND_URL=http://your-domain.com
 ### 4. Setup Frontend
 
 ```bash
-cd /var/www/hirespark/frontend
+cd /var/www/HiringBazaar/frontend
 
 # Install dependencies
 npm install
@@ -160,7 +160,7 @@ VITE_API_URL=http://your-domain.com/api
 ### 5. Build Frontend
 
 ```bash
-cd /var/www/hirespark/frontend
+cd /var/www/HiringBazaar/frontend
 npm run build
 ```
 
@@ -171,13 +171,13 @@ npm run build
 ### 1. Start Backend
 
 ```bash
-cd /var/www/hirespark/backend
+cd /var/www/HiringBazaar/backend
 
 # Start with PM2
-pm2 start npm --name "hirespark-backend" -- start
+pm2 start npm --name "HiringBazaar-backend" -- start
 
 # OR if you have a server.js file
-pm2 start server.js --name "hirespark-backend"
+pm2 start server.js --name "HiringBazaar-backend"
 ```
 
 ### 2. Serve Frontend with PM2 (using serve)
@@ -187,8 +187,8 @@ pm2 start server.js --name "hirespark-backend"
 sudo npm install -g serve
 
 # Start frontend
-cd /var/www/hirespark/frontend
-pm2 start "serve -s dist -l 3000" --name "hirespark-frontend"
+cd /var/www/HiringBazaar/frontend
+pm2 start "serve -s dist -l 3000" --name "HiringBazaar-frontend"
 ```
 
 ### 3. Save PM2 Configuration
@@ -203,8 +203,8 @@ pm2 startup
 
 ```bash
 pm2 status
-pm2 logs hirespark-backend
-pm2 logs hirespark-frontend
+pm2 logs HiringBazaar-backend
+pm2 logs HiringBazaar-frontend
 ```
 
 ---
@@ -214,7 +214,7 @@ pm2 logs hirespark-frontend
 ### 1. Create Nginx Configuration
 
 ```bash
-sudo nano /etc/nginx/sites-available/hirespark
+sudo nano /etc/nginx/sites-available/HiringBazaar
 ```
 
 **Nginx Configuration:**
@@ -251,7 +251,7 @@ server {
 
     # Uploaded files
     location /uploads {
-        alias /var/www/hirespark/backend/uploads;
+        alias /var/www/HiringBazaar/backend/uploads;
         expires 30d;
         add_header Cache-Control "public, immutable";
     }
@@ -264,7 +264,7 @@ server {
 
 ```bash
 # Create symbolic link
-sudo ln -s /etc/nginx/sites-available/hirespark /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/HiringBazaar /etc/nginx/sites-enabled/
 
 # Remove default site
 sudo rm /etc/nginx/sites-enabled/default
@@ -301,7 +301,7 @@ Follow the prompts and select option 2 to redirect HTTP to HTTPS.
 ### 1. Seed Admin User
 
 ```bash
-cd /var/www/hirespark/backend
+cd /var/www/HiringBazaar/backend
 node src/seeds/mainSeed.js
 ```
 
@@ -318,11 +318,11 @@ db.createUser({
   roles: [ { role: "userAdminAnyDatabase", db: "admin" } ]
 })
 
-use hirespark
+use HiringBazaar
 db.createUser({
-  user: "hirespark_user",
+  user: "HiringBazaar_user",
   pwd: "your-strong-password",
-  roles: [ { role: "readWrite", db: "hirespark" } ]
+  roles: [ { role: "readWrite", db: "HiringBazaar" } ]
 })
 
 exit
@@ -330,12 +330,12 @@ exit
 
 Update `MONGO_URI` in backend `.env`:
 ```env
-MONGO_URI=mongodb://hirespark_user:your-strong-password@localhost:27017/hirespark
+MONGO_URI=mongodb://HiringBazaar_user:your-strong-password@localhost:27017/HiringBazaar
 ```
 
 Restart backend:
 ```bash
-pm2 restart hirespark-backend
+pm2 restart HiringBazaar-backend
 ```
 
 ---
@@ -371,8 +371,8 @@ pm2 monit
 
 # Restart apps
 pm2 restart all
-pm2 restart hirespark-backend
-pm2 restart hirespark-frontend
+pm2 restart HiringBazaar-backend
+pm2 restart HiringBazaar-frontend
 
 # Stop apps
 pm2 stop all
@@ -418,7 +418,7 @@ sudo tail -f /var/log/mongodb/mongod.log
 ### Update Code
 
 ```bash
-cd /var/www/hirespark
+cd /var/www/HiringBazaar
 
 # Pull latest changes
 git pull origin main
@@ -426,13 +426,13 @@ git pull origin main
 # Update backend
 cd backend
 npm install --production
-pm2 restart hirespark-backend
+pm2 restart HiringBazaar-backend
 
 # Update frontend
 cd ../frontend
 npm install
 npm run build
-pm2 restart hirespark-frontend
+pm2 restart HiringBazaar-frontend
 ```
 
 ---
@@ -449,8 +449,8 @@ sudo netstat -tulpn | grep :3000
 ### Check application logs
 
 ```bash
-pm2 logs hirespark-backend --lines 100
-pm2 logs hirespark-frontend --lines 100
+pm2 logs HiringBazaar-backend --lines 100
+pm2 logs HiringBazaar-frontend --lines 100
 ```
 
 ### Restart everything
@@ -479,8 +479,8 @@ free -m
 
 ### Important Directories
 
-- Application: `/var/www/hirespark`
-- Nginx config: `/etc/nginx/sites-available/hirespark`
+- Application: `/var/www/HiringBazaar`
+- Nginx config: `/etc/nginx/sites-available/HiringBazaar`
 - Nginx logs: `/var/log/nginx/`
 - MongoDB data: `/var/lib/mongodb`
 - PM2 logs: `~/.pm2/logs/`
@@ -511,7 +511,7 @@ free -m
 
 ## 🎉 Deployment Complete!
 
-Your HireSpark application is now live!
+Your HiringBazaar application is now live!
 
 **Access your application:**
 - Frontend: http://your-domain.com
@@ -519,7 +519,7 @@ Your HireSpark application is now live!
 - HR Panel: http://your-domain.com/hr
 
 **Default Admin Credentials:**
-- Email: admin@hirespark.com
+- Email: admin@HiringBazaar.com
 - Password: admin123
 
 **⚠️ Important:** Change admin password immediately after first login!

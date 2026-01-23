@@ -22,7 +22,7 @@ Content-Type: application/json
 ```json
 {
   "fullName": "Admin User",
-  "email": "admin@hirespark.com",
+  "email": "admin@HiringBazaar.com",
   "password": "Admin@123"
 }
 ```
@@ -36,7 +36,7 @@ Content-Type: application/json
   "user": {
     "id": "65f1a2b3c4d5e6f7g8h9i0j1",
     "fullName": "Admin User",
-    "email": "admin@hirespark.com",
+    "email": "admin@HiringBazaar.com",
     "role": "ADMIN"
   }
 }
@@ -59,7 +59,7 @@ Content-Type: application/json
 ### **Body (JSON)**
 ```json
 {
-  "email": "admin@hirespark.com",
+  "email": "admin@HiringBazaar.com",
   "password": "Admin@123"
 }
 ```
@@ -72,7 +72,7 @@ Content-Type: application/json
   "user": {
     "id": "65f1a2b3c4d5e6f7g8h9i0j1",
     "fullName": "Admin User",
-    "email": "admin@hirespark.com",
+    "email": "admin@HiringBazaar.com",
     "role": "ADMIN"
   }
 }
@@ -87,7 +87,7 @@ After creating admin via Postman, you can login through the frontend:
 **URL:** `http://localhost:5173/admin`
 
 **Credentials:**
-- Email: `admin@hirespark.com`
+- Email: `admin@HiringBazaar.com`
 - Password: `Admin@123`
 
 ---
@@ -105,7 +105,7 @@ curl -X POST http://localhost:5000/api/auth/admin/register \
   -H "Content-Type: application/json" \
   -d '{
     "fullName": "Admin User",
-    "email": "admin@hirespark.com",
+    "email": "admin@HiringBazaar.com",
     "password": "YourStrongPassword123!"
   }'
 ```
@@ -174,7 +174,7 @@ curl -X POST http://localhost:5000/api/auth/admin/register \
   -H "Content-Type: application/json" \
   -d '{
     "fullName": "John Doe",
-    "email": "john@hirespark.com",
+    "email": "john@HiringBazaar.com",
     "password": "SecurePass123!"
   }'
 
@@ -183,7 +183,7 @@ curl -X POST http://localhost:5000/api/auth/admin/register \
   -H "Content-Type: application/json" \
   -d '{
     "fullName": "Jane Smith",
-    "email": "jane@hirespark.com",
+    "email": "jane@HiringBazaar.com",
     "password": "SecurePass456!"
   }'
 ```

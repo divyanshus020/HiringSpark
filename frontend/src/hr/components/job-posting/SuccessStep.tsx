@@ -28,7 +28,7 @@ const SuccessStep = () => {
     const platforms = state.platforms;
     let receiptContent = `
 =====================================
-           HIRESPARK RECEIPT
+           HiringBazaar RECEIPT
 =====================================
 
 Receipt Date: ${format(new Date(), 'PPP')}
@@ -92,7 +92,7 @@ Email: ${state.schedule.companyEmail}
 Phone: ${state.schedule.phoneNumber}
 
 =====================================
-     Thank you for choosing HireSpark!
+     Thank you for choosing HiringBazaar!
 =====================================
 `;
 
@@ -100,7 +100,7 @@ Phone: ${state.schedule.phoneNumber}
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `HireSpark_Receipt_${format(new Date(), 'yyyy-MM-dd')}.txt`;
+    a.download = `HiringBazaar_Receipt_${format(new Date(), 'yyyy-MM-dd')}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -241,7 +241,7 @@ Phone: ${state.schedule.phoneNumber}
       {/* Thank You Message */}
       <div className="mt-8 text-center">
         <p className="text-muted-foreground">
-          Thank you for choosing <span className="font-semibold text-primary">HireSpark</span>!
+          Thank you for choosing <span className="font-semibold text-primary">HiringBazaar</span>!
           We're excited to help you find the perfect candidates.
         </p>
       </div>

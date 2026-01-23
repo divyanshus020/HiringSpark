@@ -1,4 +1,4 @@
-# 🚀 HireSpark Deployment Checklist
+# 🚀 HiringBazaar Deployment Checklist
 
 ## ✅ Pre-Deployment Checklist
 
@@ -75,7 +75,7 @@ cp .env.example .env
 nano .env
 
 # Update these values:
-# MONGODB_URI=mongodb://localhost:27017/hirespark
+# MONGODB_URI=mongodb://localhost:27017/HiringBazaar
 # JWT_SECRET=<generate-strong-secret>
 # FRONTEND_URL=https://your-domain.com
 # EMAIL_USER=your-email
@@ -108,11 +108,11 @@ npm run build
 ```bash
 # Start backend
 cd /var/www/HiringSpark/backend
-pm2 start src/server.js --name "hirespark-backend"
+pm2 start src/server.js --name "HiringBazaar-backend"
 
 # Start frontend
 cd /var/www/HiringSpark/frontend
-pm2 start "serve -s dist -l 3001" --name "hirespark-frontend"
+pm2 start "serve -s dist -l 3001" --name "HiringBazaar-frontend"
 
 # Save PM2 config
 pm2 save
@@ -122,7 +122,7 @@ pm2 startup
 
 ### **6. Configure Nginx**
 ```bash
-sudo nano /etc/nginx/sites-available/hirespark
+sudo nano /etc/nginx/sites-available/HiringBazaar
 ```
 
 **Paste this configuration:**
@@ -168,7 +168,7 @@ server {
 
 **Enable site:**
 ```bash
-sudo ln -s /etc/nginx/sites-available/hirespark /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/HiringBazaar /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t
 sudo systemctl restart nginx
@@ -203,8 +203,8 @@ sudo systemctl status nginx
 sudo systemctl status mongod
 
 # Check logs
-pm2 logs hirespark-backend --lines 20
-pm2 logs hirespark-frontend --lines 20
+pm2 logs HiringBazaar-backend --lines 20
+pm2 logs HiringBazaar-frontend --lines 20
 ```
 
 ### **Test Endpoints**
@@ -239,13 +239,13 @@ git pull origin main
 # Update backend
 cd backend
 npm install --production
-pm2 restart hirespark-backend
+pm2 restart HiringBazaar-backend
 
 # Update frontend
 cd ../frontend
 npm install
 npm run build
-pm2 restart hirespark-frontend
+pm2 restart HiringBazaar-frontend
 
 # Check status
 pm2 status
@@ -257,7 +257,7 @@ pm2 status
 
 ### **Backend not starting**
 ```bash
-pm2 logs hirespark-backend --err
+pm2 logs HiringBazaar-backend --err
 # Check .env file exists and has correct values
 cat backend/.env
 ```
@@ -273,10 +273,10 @@ cd frontend && npm run build
 ### **Login not working**
 ```bash
 # Check backend logs
-pm2 logs hirespark-backend
+pm2 logs HiringBazaar-backend
 
 # Test database connection
-mongosh hirespark --eval "db.users.find({ email: 'admin@recruit.com' })"
+mongosh HiringBazaar --eval "db.users.find({ email: 'admin@recruit.com' })"
 
 # Reseed if needed
 cd backend && node src/seeds/mainSeed.js

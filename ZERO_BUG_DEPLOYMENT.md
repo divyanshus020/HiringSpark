@@ -38,7 +38,7 @@
 ```
 POST /api/auth/admin/register
 Body: { fullName, email, password }
-Auto-sets: role="ADMIN", phone="0000000000", companyName="HireSpark Admin"
+Auto-sets: role="ADMIN", phone="0000000000", companyName="HiringBazaar Admin"
 
 POST /api/auth/admin/login
 Body: { email, password }
@@ -110,7 +110,7 @@ npm run dev
 POST http://localhost:5000/api/auth/admin/register
 {
   "fullName": "Admin User",
-  "email": "admin@hirespark.com",
+  "email": "admin@HiringBazaar.com",
   "password": "Admin@123"
 }
 ```
@@ -120,13 +120,13 @@ POST http://localhost:5000/api/auth/admin/register
 # Via Postman
 POST http://localhost:5000/api/auth/admin/login
 {
-  "email": "admin@hirespark.com",
+  "email": "admin@HiringBazaar.com",
   "password": "Admin@123"
 }
 
 # Via Frontend
 Visit: http://localhost:5173/admin
-Login with: admin@hirespark.com / Admin@123
+Login with: admin@HiringBazaar.com / Admin@123
 ```
 
 ### **4. Test HR Flow**
@@ -147,9 +147,9 @@ Login at: http://localhost:5173/hr/login
 ```env
 PORT=5000
 NODE_ENV=production
-MONGODB_URI=mongodb://localhost:27017/hirespark
+MONGODB_URI=mongodb://localhost:27017/HiringBazaar
 JWT_SECRET=your-super-secret-key-change-this
-ADMIN_EMAIL=admin@hirespark.com
+ADMIN_EMAIL=admin@HiringBazaar.com
 ADMIN_PASSWORD=admin123
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-app-password
@@ -172,7 +172,7 @@ cd HiringSpark/backend
 cp .env.example .env
 nano .env  # Update values
 npm install --production
-pm2 start src/server.js --name "hirespark-backend"
+pm2 start src/server.js --name "HiringBazaar-backend"
 
 # 3. Frontend setup
 cd ../frontend
@@ -180,12 +180,12 @@ cp .env.example .env
 nano .env  # Update VITE_API_URL
 npm install
 npm run build
-pm2 start "serve -s dist -l 3001" --name "hirespark-frontend"
+pm2 start "serve -s dist -l 3001" --name "HiringBazaar-frontend"
 
 # 4. Create admin
 curl -X POST http://localhost:5000/api/auth/admin/register \
   -H "Content-Type: application/json" \
-  -d '{"fullName":"Admin","email":"admin@hirespark.com","password":"YourStrongPass123!"}'
+  -d '{"fullName":"Admin","email":"admin@HiringBazaar.com","password":"YourStrongPass123!"}'
 
 # 5. Save PM2
 pm2 save
@@ -334,7 +334,7 @@ db.users.updateOne({email: "user@example.com"}, {$set: {isActive: false}})
 
 ## 🎉 **Deployment Complete!**
 
-Your HireSpark application is now **ZERO-BUG READY** for deployment!
+Your HiringBazaar application is now **ZERO-BUG READY** for deployment!
 
 **Key Achievements:**
 - ✅ Separate Admin & HR authentication

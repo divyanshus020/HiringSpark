@@ -40,7 +40,7 @@ export default function Dashboard() {
           transition={{ duration: 0.5 }}
         >
           <div className="bg-gradient-to-r from-primary to-primary/80 rounded-lg p-6 text-primary-foreground">
-            <h2 className="text-2xl font-bold mb-2">Welcome to HireSpark Admin</h2>
+            <h2 className="text-2xl font-bold mb-2">Welcome to HiringBazaar Admin</h2>
             <p className="text-primary-foreground/90">
               Monitor and manage your recruitment platform from here
             </p>

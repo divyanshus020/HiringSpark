@@ -100,5 +100,5 @@ app.listen(PORT, async () => {
   }
 
   console.log(`📡 API Base URL: http://localhost:${PORT}`);
-  console.log(`📦 MongoDB: ${env.MONGO_URI || 'mongodb://127.0.0.1:27017/hirespark'}`);
+  console.log(`📦 MongoDB: ${env.MONGO_URI || 'mongodb://127.0.0.1:27017/HiringBazaar'}`);
 });

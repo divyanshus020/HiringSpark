@@ -62,7 +62,7 @@ export default function Auth() {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-            HireSpark
+            HiringBazaar
           </h1>
           <p className="text-gray-600 text-lg font-medium">Admin Portal</p>
           <p className="text-gray-500 mt-2">
@@ -79,7 +79,7 @@ export default function Auth() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@hirespark.com"
+                placeholder="admin@HiringBazaar.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

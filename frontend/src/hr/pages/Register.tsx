@@ -295,7 +295,7 @@ const Register = () => {
               <div className="mb-8">
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-3xl mb-2 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    HireSpark
+                    HiringBazaar
                   </span>
                 </div>
 

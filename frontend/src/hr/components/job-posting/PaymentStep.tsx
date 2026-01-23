@@ -60,9 +60,9 @@ const PaymentStep = () => {
           </div>
 
           <div className="text-center space-y-2">
-            <p className="text-sm font-medium text-foreground">UPI ID: hirespark@upi</p>
+            <p className="text-sm font-medium text-foreground">UPI ID: HiringBazaar@upi</p>
             <p className="text-xs text-muted-foreground">
-              Or pay to: HireSpark Pvt Ltd
+              Or pay to: HiringBazaar Pvt Ltd
             </p>
           </div>
 

@@ -34,7 +34,7 @@ export function DashboardHeader({ title }: DashboardHeaderProps) {
               </div>
               <div className="hidden md:flex flex-col items-start">
                 <span className="text-sm font-medium text-foreground">Admin</span>
-                <span className="text-xs text-muted-foreground">admin@hirespark.com</span>
+                <span className="text-xs text-muted-foreground">admin@HiringBazaar.com</span>
               </div>
             </Button>
           </DropdownMenuTrigger>
@@ -42,7 +42,7 @@ export function DashboardHeader({ title }: DashboardHeaderProps) {
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium">Admin</p>
-                <p className="text-xs text-muted-foreground">admin@hirespark.com</p>
+                <p className="text-xs text-muted-foreground">admin@HiringBazaar.com</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

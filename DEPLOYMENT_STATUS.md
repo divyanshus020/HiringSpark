@@ -1,8 +1,8 @@
-# 🚀 HireSpark KVM Deployment Status
+# 🚀 HiringBazaar KVM Deployment Status
 
 **Date:** January 3, 2026  
 **Server IP:** 69.62.72.18  
-**Domain:** hirespark.hiringbazaar.in
+**Domain:** HiringBazaar.hiringbazaar.in
 
 ---
 
@@ -19,15 +19,15 @@
 - ✅ Repository cloned to `/var/www/HiringSpark/backend`
 - ✅ Dependencies installed
 - ✅ Environment variables configured (`.env`)
-- ✅ PM2 process running (`hirespark-backend`)
-- ✅ Connected to MongoDB (`hirespark` database)
+- ✅ PM2 process running (`HiringBazaar-backend`)
+- ✅ Connected to MongoDB (`HiringBazaar` database)
 - ✅ Running on port 5000
 
 ### **3. Frontend Deployment**
 - ✅ Repository cloned to `/var/www/HiringSpark/frontend`
 - ✅ Dependencies installed
 - ✅ Production build created (`dist/`)
-- ✅ PM2 process running (`hirespark-frontend`)
+- ✅ PM2 process running (`HiringBazaar-frontend`)
 - ✅ Serving on port 3001
 - ✅ API URL configured to use domain
 
@@ -36,11 +36,11 @@
 - ✅ Frontend proxied from port 3001
 - ✅ Backend API proxied from port 5000
 - ✅ Static file serving configured (`/uploads`)
-- ✅ Domain configured: `hirespark.hiringbazaar.in`
+- ✅ Domain configured: `HiringBazaar.hiringbazaar.in`
 
 ### **5. Database Setup**
 - ✅ MongoDB running on port 27017
-- ✅ Database: `hirespark`
+- ✅ Database: `HiringBazaar`
 - ✅ Admin user created in `users` collection
 - ✅ Platforms and plans seeded
 
@@ -85,8 +85,8 @@ pm2 list
 ```
 | ID | Name | Status | CPU | Memory |
 |----|------|--------|-----|--------|
-| 10 | hirespark-backend | online | 0% | ~50MB |
-| 7 | hirespark-frontend | online | 0% | ~30MB |
+| 10 | HiringBazaar-backend | online | 0% | ~50MB |
+| 7 | HiringBazaar-frontend | online | 0% | ~30MB |
 
 ### **Services**
 - ✅ MongoDB: Active (running)
@@ -106,12 +106,12 @@ pm2 list
 ### **Admin User**
 - **Email:** `admin@recruit.com`
 - **Password:** `admin123`
-- **Database:** `hirespark.users`
+- **Database:** `HiringBazaar.users`
 - **Role:** `ADMIN`
 
 ### **Database Access**
 ```bash
-mongosh hirespark
+mongosh HiringBazaar
 db.users.find({ email: 'admin@recruit.com' })
 ```
 
@@ -123,17 +123,17 @@ db.users.find({ email: 'admin@recruit.com' })
 - **Path:** `/var/www/HiringSpark/backend`
 - **Entry:** `src/server.js`
 - **Config:** `.env`
-- **Logs:** `pm2 logs hirespark-backend`
+- **Logs:** `pm2 logs HiringBazaar-backend`
 
 ### **Frontend**
 - **Path:** `/var/www/HiringSpark/frontend`
 - **Build:** `dist/`
 - **Config:** `.env`
-- **Logs:** `pm2 logs hirespark-frontend`
+- **Logs:** `pm2 logs HiringBazaar-frontend`
 
 ### **Nginx**
-- **Config:** `/etc/nginx/sites-available/hirespark`
-- **Enabled:** `/etc/nginx/sites-enabled/hirespark`
+- **Config:** `/etc/nginx/sites-available/HiringBazaar`
+- **Enabled:** `/etc/nginx/sites-enabled/HiringBazaar`
 - **Logs:** `/var/log/nginx/`
 
 ---
@@ -146,12 +146,12 @@ db.users.find({ email: 'admin@recruit.com' })
 pm2 list
 
 # View logs
-pm2 logs hirespark-backend
-pm2 logs hirespark-frontend
+pm2 logs HiringBazaar-backend
+pm2 logs HiringBazaar-frontend
 
 # Restart services
-pm2 restart hirespark-backend
-pm2 restart hirespark-frontend
+pm2 restart HiringBazaar-backend
+pm2 restart HiringBazaar-frontend
 
 # Save configuration
 pm2 save
@@ -172,7 +172,7 @@ sudo tail -f /var/log/nginx/error.log
 ### **MongoDB Management**
 ```bash
 # Connect to database
-mongosh hirespark
+mongosh HiringBazaar
 
 # View users
 db.users.find()
@@ -187,14 +187,14 @@ db.users.findOne({ email: 'admin@recruit.com' })
 cd /var/www/HiringSpark/backend
 git pull
 npm install --production
-pm2 restart hirespark-backend
+pm2 restart HiringBazaar-backend
 
 # Frontend
 cd /var/www/HiringSpark/frontend
 git pull
 npm install
 npm run build
-pm2 restart hirespark-frontend
+pm2 restart HiringBazaar-frontend
 ```
 
 ---
@@ -245,10 +245,10 @@ ssh root@69.62.72.18
 ```
 
 ### **Application URLs**
-- **Frontend:** http://hirespark.hiringbazaar.in
-- **Admin:** http://hirespark.hiringbazaar.in/admin
-- **HR:** http://hirespark.hiringbazaar.in/hr
-- **API:** http://hirespark.hiringbazaar.in/api
+- **Frontend:** http://HiringBazaar.hiringbazaar.in
+- **Admin:** http://HiringBazaar.hiringbazaar.in/admin
+- **HR:** http://HiringBazaar.hiringbazaar.in/hr
+- **API:** http://HiringBazaar.hiringbazaar.in/api
 
 ### **Monitoring**
 ```bash
