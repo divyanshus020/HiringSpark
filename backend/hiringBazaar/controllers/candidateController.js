@@ -76,7 +76,7 @@ export const addCandidate = async (req, res) => {
         );
 
         await transporter.sendMail({
-          from: `"HireSpark Admin" <${env.EMAIL_USER}>`,
+          from: `"HiringBazaar Admin" <${env.EMAIL_USER}>`,
           to: hrEmail,
           subject: `🎯 New Candidate Added - ${jobTitle}`,
           html: emailHtml
@@ -298,11 +298,11 @@ export const updateCandidateFeedback = async (req, res) => {
           const emailHtml = candidateShortlistedEmailTemplate(
             candidate.name,
             jobTitle,
-            'HireSpark'
+            'HiringBazaar'
           );
 
           await transporter.sendMail({
-            from: `"HireSpark Team" <${env.EMAIL_USER}>`,
+            from: `"HiringBazaar Team" <${env.EMAIL_USER}>`,
             to: candidate.email,
             subject: `🎉 Application Update: Shortlisted for ${jobTitle}`,
             html: emailHtml

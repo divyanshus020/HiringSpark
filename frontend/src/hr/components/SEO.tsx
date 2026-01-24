@@ -5,9 +5,9 @@ interface SEOProps {
   description?: string;
 }
 
-const SEO = ({ 
-  title = 'HireSpark - HR Dashboard for Smart Hiring',
-  description = 'Post jobs across multiple platforms with HireSpark. Reach candidates on LinkedIn, Naukri, and more with one simple dashboard.'
+const SEO = ({
+  title = 'HiringBazaar - HR Dashboard for Smart Hiring',
+  description = 'Post jobs across multiple platforms with HiringBazaar. Reach candidates on LinkedIn, Naukri, and more with one simple dashboard.'
 }: SEOProps) => {
   return (
     <Helmet>

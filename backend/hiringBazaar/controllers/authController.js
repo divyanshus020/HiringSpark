@@ -11,8 +11,11 @@ export const register = async (req, res) => {
   try {
     const { fullName, email, phone, password, companyName, address } = req.body;
 
+    console.log('📝 Registration attempt:', { fullName, email, phone, companyName, address });
+
     // Basic validation - only email and password required
     if (!email || !password) {
+      console.log('❌ Validation failed: Missing email or password');
       return res.status(400).json({
         success: false,
         message: 'Email and password are required'
@@ -20,8 +23,10 @@ export const register = async (req, res) => {
     }
 
     // Check if user exists
+    console.log('🔍 Checking if user exists...');
     const userExists = await User.findOne({ $or: [{ email }, { phone }] });
     if (userExists) {
+      console.log('❌ User already exists:', { email, phone });
       return res.status(400).json({
         success: false,
         message: 'User already exists with this email or phone'
@@ -29,10 +34,12 @@ export const register = async (req, res) => {
     }
 
     // Hash password
+    console.log('🔐 Hashing password...');
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create HR user with auto-set role
+    console.log('👤 Creating user...');
     const user = await User.create({
       fullName,
       email,
@@ -42,6 +49,8 @@ export const register = async (req, res) => {
       address,
       role: 'HR' // Auto-set to HR
     });
+
+    console.log('✅ User created successfully:', user._id);
 
     // Generate token
     const token = jwt.sign(
@@ -64,10 +73,12 @@ export const register = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('HR registration error:', error);
+    console.error('❌ HR registration error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message || 'Registration failed. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
@@ -253,7 +264,7 @@ export const adminRegister = async (req, res) => {
       password: hashedPassword,
       role: 'ADMIN', // Auto-set to ADMIN
       phone: '0000000000', // Default for admin
-      companyName: 'HireSpark Admin',
+      companyName: 'HiringBazaar Admin',
       address: 'Admin Office'
     });
 

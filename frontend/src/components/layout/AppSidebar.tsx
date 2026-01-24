@@ -57,7 +57,7 @@ export function AppSidebar() {
           <div className="flex items-center gap-2">
 
             <span className="font-bold text-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              HireSpark
+              HiringBazaar
             </span>
           </div>
         )}

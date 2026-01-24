@@ -1,4 +1,4 @@
-// Mock data for HireSpark Admin Dashboard
+// Mock data for HiringBazaar Admin Dashboard
 
 export interface HRAccount {
   id: string;
@@ -64,9 +64,9 @@ export const jobPostings: JobPosting[] = [
 ];
 
 export const platformSettings: PlatformSettings = {
-  platformName: 'HireSpark',
+  platformName: 'HiringBazaar',
   commissionRate: 15,
-  supportEmail: 'support@hirespark.com',
+  supportEmail: 'support@HiringBazaar.com',
 };
 
 export const dashboardStats = {

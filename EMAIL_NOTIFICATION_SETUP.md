@@ -1,4 +1,4 @@
-# 📧 Email Notification System - HireSpark
+# 📧 Email Notification System - HiringBazaar
 
 ## ✅ Implementation Complete
 

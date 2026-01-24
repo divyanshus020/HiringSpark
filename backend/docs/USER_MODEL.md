@@ -100,10 +100,10 @@ const userJSON = user.toJSON();
 {
   "_id": "65f1a2b3c4d5e6f7g8h9i0j1",
   "fullName": "Admin User",
-  "email": "admin@hirespark.com",
+  "email": "admin@HiringBazaar.com",
   "role": "ADMIN",
   "phone": "0000000000",
-  "companyName": "HireSpark Admin",
+  "companyName": "HiringBazaar Admin",
   "address": "Admin Office",
   "isActive": true,
   "lastLogin": "2026-01-04T00:00:00.000Z",
@@ -151,7 +151,7 @@ const hrs = await User.find({ role: 'HR', isActive: true });
 
 ### **Find User by Email**
 ```javascript
-const user = await User.findOne({ email: 'admin@hirespark.com' });
+const user = await User.findOne({ email: 'admin@HiringBazaar.com' });
 ```
 
 ### **Count Total Users by Role**
@@ -189,11 +189,11 @@ const hrCount = await User.countDocuments({ role: 'HR' });
 ```javascript
 const admin = await User.create({
   fullName: 'Admin User',
-  email: 'admin@hirespark.com',
+  email: 'admin@HiringBazaar.com',
   password: hashedPassword,
   role: 'ADMIN',
   phone: '0000000000', // Default
-  companyName: 'HireSpark Admin',
+  companyName: 'HiringBazaar Admin',
   address: 'Admin Office'
 });
 ```
@@ -238,7 +238,7 @@ await User.updateMany(
   {
     $set: {
       phone: '0000000000',
-      companyName: 'HireSpark Admin',
+      companyName: 'HiringBazaar Admin',
       address: 'Admin Office'
     }
   }

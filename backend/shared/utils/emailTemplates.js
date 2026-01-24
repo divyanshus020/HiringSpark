@@ -1,5 +1,5 @@
 /**
- * Email Templates for HireSpark Notifications
+ * Email Templates for HiringBazaar Notifications
  * Classic and professional design
  */
 
@@ -199,7 +199,7 @@ export const jobApprovedEmailTemplate = (hrName, jobTitle, jobLocation, jobType,
         <!-- Header -->
         <div class="header">
           <h1>✅ Job Post Approved!</h1>
-          <p>HireSpark - Recruitment Management System</p>
+          <p>HiringBazaar - Recruitment Management System</p>
           <div class="success-badge">🎉 Congratulations</div>
         </div>
 
@@ -261,13 +261,13 @@ export const jobApprovedEmailTemplate = (hrName, jobTitle, jobLocation, jobType,
 
         <!-- Footer -->
         <div class="footer">
-          <span class="brand">HireSpark</span>
+          <span class="brand">HiringBazaar</span>
           <p>Streamlining your recruitment process</p>
           <p style="margin-top: 15px; font-size: 12px;">
             This is an automated notification. Please do not reply to this email.
           </p>
           <p style="font-size: 12px; margin-top: 5px;">
-            © ${new Date().getFullYear()} HireSpark. All rights reserved.
+            © ${new Date().getFullYear()} HiringBazaar. All rights reserved.
           </p>
         </div>
       </div>
@@ -441,7 +441,7 @@ export const candidateAddedEmailTemplate = (hrName, candidateName, jobTitle, can
         <!-- Header -->
         <div class="header">
           <h1>🎯 New Candidate Added</h1>
-          <p>HireSpark - Recruitment Management System</p>
+          <p>HiringBazaar - Recruitment Management System</p>
         </div>
 
         <!-- Content -->
@@ -501,13 +501,13 @@ export const candidateAddedEmailTemplate = (hrName, candidateName, jobTitle, can
 
         <!-- Footer -->
         <div class="footer">
-          <span class="brand">HireSpark</span>
+          <span class="brand">HiringBazaar</span>
           <p>Streamlining your recruitment process</p>
           <p style="margin-top: 15px; font-size: 12px;">
             This is an automated notification. Please do not reply to this email.
           </p>
           <p style="font-size: 12px; margin-top: 5px;">
-            © ${new Date().getFullYear()} HireSpark. All rights reserved.
+            © ${new Date().getFullYear()} HiringBazaar. All rights reserved.
           </p>
         </div>
       </div>
@@ -544,7 +544,7 @@ export const candidateShortlistedEmailTemplate = (candidateName, jobTitle, compa
       <div class="email-container">
         <div class="header">
           <h1>🎉 You're Shortlisted!</h1>
-          <p>HireSpark Recruitment Update</p>
+          <p>HiringBazaar Recruitment Update</p>
         </div>
         <div class="content">
           <p class="greeting">Dear ${candidateName},</p>
@@ -566,7 +566,7 @@ export const candidateShortlistedEmailTemplate = (candidateName, jobTitle, compa
           </p>
         </div>
         <div class="footer">
-          <p>© ${new Date().getFullYear()} HireSpark. All rights reserved.</p>
+          <p>© ${new Date().getFullYear()} HiringBazaar. All rights reserved.</p>
         </div>
       </div>
     </body>

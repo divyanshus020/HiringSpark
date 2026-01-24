@@ -295,7 +295,7 @@ const Register = () => {
               <div className="mb-8">
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-3xl mb-2 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    HireSpark
+                    HiringBazaar
                   </span>
                 </div>
 
@@ -529,6 +529,7 @@ const Register = () => {
                       onChange={handleChange}
                       onBlur={() => handleBlur("password")}
                       disabled={isLoading}
+                      autoComplete="new-password"
                       className={`pl-10 pr-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed ${errors.password && touched.password
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                         : formData.password && !errors.password && touched.password
@@ -577,6 +578,7 @@ const Register = () => {
                       onChange={handleChange}
                       onBlur={() => handleBlur("confirmPassword")}
                       disabled={isLoading}
+                      autoComplete="new-password"
                       className={`pl-10 pr-10 h-12 bg-gray-50 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed ${errors.confirmPassword && touched.confirmPassword
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                         : formData.confirmPassword && !errors.confirmPassword && touched.confirmPassword
