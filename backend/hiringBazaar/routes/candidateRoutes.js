@@ -8,7 +8,7 @@ import {
   deleteCandidate
 } from '../controllers/candidateController.js';
 import { protect, isAdmin, isHR } from '../middlewares/auth.js';
-import { upload } from '../middlewares/upload.js';
+import { upload } from '../../shared/middlewares/upload.js';
 
 const router = express.Router();
 

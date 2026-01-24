@@ -2,8 +2,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 import crypto from 'crypto';
-import { transporter } from '../config/mail.js';
-import { env } from '../config/env.js';
+import { transporter } from '../../shared/config/mail.js';
+import { env } from '../../shared/config/env.js';
 
 // @desc    Register HR
 // @route   POST /api/auth/register

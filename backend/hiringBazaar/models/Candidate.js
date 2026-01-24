@@ -10,6 +10,29 @@ const candidateSchema = new mongoose.Schema({
   resumeUrl: { type: String, required: true },
   source: String,
 
+  // 🔥 NEW: Source tracking for multi-system integration
+  uploadSource: {
+    type: String,
+    enum: ['admin', 'hr', 'partner'],
+    default: 'admin'
+  },
+  uploaderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    refPath: 'uploaderModel'
+  },
+  uploaderModel: {
+    type: String,
+    required: true,
+    enum: ['User', 'Partner'],
+    default: 'User'
+  },
+  uploaderDetails: {
+    name: String,
+    organizationName: String,  // For partners
+    uploaderType: String  // 'admin' | 'hr' | 'partner'
+  },
+
   isParsed: { type: Boolean, default: false },
   parsingStatus: {
     type: String,

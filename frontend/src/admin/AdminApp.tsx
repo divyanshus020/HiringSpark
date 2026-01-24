@@ -15,6 +15,7 @@ import JobPostings from "./JobPostings";
 import NotFound from "./NotFound";
 import HRDetail from "./HRDetail";
 import JobPostingDetail from "./JobPostingDetail";
+import Partners from "./Partners";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const AdminApp = () => {
                         <Route path="/candidates" element={<Candidates />} />
                         <Route path="/job-postings" element={<JobPostings />} />
                         <Route path="/job-postings/:id" element={<JobPostingDetail />} />
+                        <Route path="/partners" element={<Partners />} />
 
 
                         <Route path="/*" element={<NotFound />} />

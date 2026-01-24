@@ -1,9 +1,9 @@
 import { Candidate } from '../models/Candidate.js';
 import { Job } from '../models/Job.js';
 import { User } from '../models/User.js';
-import { transporter } from '../config/mail.js';
-import { env } from '../config/env.js';
-import { candidateAddedEmailTemplate, candidateShortlistedEmailTemplate } from '../utils/emailTemplates.js';
+import { transporter } from '../../shared/config/mail.js';
+import { env } from '../../shared/config/env.js';
+import { candidateAddedEmailTemplate, candidateShortlistedEmailTemplate } from '../../shared/utils/emailTemplates.js';
 
 
 
@@ -49,7 +49,14 @@ export const addCandidate = async (req, res) => {
       email,
       phoneNumber,
       resumeUrl,
-      source,
+      source: source || 'MANUAL_UPLOAD',
+      uploadSource: req.user.role.toLowerCase(), // 'admin' or 'hr'
+      uploaderId: req.user.id,
+      uploaderModel: 'User',
+      uploaderDetails: {
+        name: req.user.fullName,
+        uploaderType: req.user.role.toLowerCase()
+      },
       hrFeedback: 'PENDING'
     });
 
@@ -119,7 +126,7 @@ export const bulkUploadCandidates = async (req, res) => {
     }
 
     const results = [];
-    const { pdfQueue } = await import('../services/queueService.js');
+    const { pdfQueue } = await import('../../shared/services/queueService.js');
 
     for (const file of files) {
       const resumeUrl = `/uploads/resumes/${file.filename}`;
@@ -131,6 +138,13 @@ export const bulkUploadCandidates = async (req, res) => {
         email: 'pending@parsing.com', // Placeholder
         resumeUrl,
         source: source || 'BULK_UPLOAD',
+        uploadSource: req.user.role.toLowerCase(),
+        uploaderId: req.user.id,
+        uploaderModel: 'User',
+        uploaderDetails: {
+          name: req.user.fullName,
+          uploaderType: req.user.role.toLowerCase()
+        },
         parsingStatus: 'PENDING'
       });
       // Add to queue

@@ -1,7 +1,7 @@
 import { Worker } from 'bullmq';
 import { redisConnection } from '../config/redis.js';
-import { Candidate } from '../models/Candidate.js';
-import { Job } from '../models/Job.js';
+import { Candidate } from '../../hiringBazaar/models/Candidate.js';
+import { Job } from '../../hiringBazaar/models/Job.js';
 import { extractPdfTextAndLinks } from '../services/pdfService.js';
 import { extractResumeInfo } from '../services/aiService.js';
 import path from 'path';

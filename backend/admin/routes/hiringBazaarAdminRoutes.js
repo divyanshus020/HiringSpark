@@ -1,8 +1,8 @@
 import express from 'express';
-import { protect, isAdmin } from '../middlewares/auth.js';
-import { upload } from '../middlewares/upload.js';
-import * as adminCtrl from '../controllers/adminController.js';
-import { addCandidate, updateCandidateFeedback } from '../controllers/candidateController.js';
+import { protect, isAdmin } from '../../hiringBazaar/middlewares/auth.js';
+import { upload } from '../../shared/middlewares/upload.js';
+import * as adminCtrl from '../controllers/hiringBazaarAdminController.js';
+import { addCandidate, updateCandidateFeedback } from '../../hiringBazaar/controllers/candidateController.js';
 
 const router = express.Router();
 

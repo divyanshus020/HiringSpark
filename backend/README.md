@@ -1,4 +1,44 @@
-# **Hiring Spark API - Complete Documentation**
+# ⚙️ Hiring Spark Backend
+
+Unified server for HireSpark, PartnerHB, and Admin management.
+
+---
+
+## 📂 Backend Folder Structure
+
+```text
+/backend
+├── admin/              # 👑 Centralized Admin Logic
+│   ├── controllers/    # API logic for Admin operations
+│   ├── routes/         # Endpoint definitions (/api/admin)
+│   └── index.js        # Sub-router registry
+│
+├── hiringBazaar/       # 🏢 Core HiringBazaar Module
+│   ├── controllers/    # Job, Candidate, Auth logic
+│   ├── models/         # Mongoose Schemas (User, Job, Candidate, etc.)
+│   ├── routes/         # Endpoint definitions (/api)
+│   └── middlewares/    # Custom auth/validation logic
+│
+├── partnerHB/          # 🤝 Partner Integration Module
+│   ├── controllers/    # Partner-specific logic
+│   ├── models/         # Partner and Job Mapping schemas
+│   └── routes/         # Endpoint definitions (/api/partner)
+│
+├── shared/             # 🛠 Common Utilities (Used by all modules)
+│   ├── config/         # DB, Mail, and Env configuration
+│   ├── middlewares/    # Global middlewares (Upload, Error handler)
+│   ├── services/       # External service integrations (Queues)
+│   └── workers/        # Background processing (Resume parsing)
+│
+├── uploads/            # 📁 Storage for resumes and profiles
+├── docs/               # 📝 API Documentation
+├── server.js           # 🚀 Application entry point
+└── package.json        # Dependencies and scripts
+```
+
+---
+
+# **Hiring Spark API - Documentation**
 
 ## **📌 Base URL**
 ```
@@ -686,15 +726,6 @@ Import this JSON to Postman:
 
 ---
 
-## **✅ TEST CREDENTIALS**
 
-```
-Admin: admin@recruit.com / Admin@123
-HR 1: rahul@techcorp.com / Password@123
-HR 2: priya@innovate.com / Password@123
-HR 3: amit@globaltech.com / Password@123
-```
 
 **Note:** All HR routes require `Bearer Token` in Authorization header.
-
-**Complete API documentation hai bhai! Har endpoint ka method, body, params aur response clear diya hai. 🚀**

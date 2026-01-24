@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, UserCheck, Briefcase, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, UserCheck, Briefcase, Settings, LogOut, Handshake } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 const menuItems = [
   { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
   { title: "HR Accounts", url: "/admin/hr-accounts", icon: Users },
+  { title: "Partners", url: "/admin/partners", icon: Handshake },
   { title: "Candidates", url: "/admin/candidates", icon: UserCheck },
   { title: "Job Postings", url: "/admin/job-postings", icon: Briefcase },
   // { title: "Settings", url: "/admin/settings", icon: Settings },
