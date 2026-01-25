@@ -38,27 +38,38 @@ app.get('/', (req, res) => {
 });
 
 // ============================================
-// HiringBazaar Routes (existing functionality)
+// HiringBazaar Routes
 // ============================================
-app.use('/api/auth', hiringBazaarRoutes.auth);
-app.use('/api/dashboard', hiringBazaarRoutes.dashboard);
-app.use('/api/platforms', hiringBazaarRoutes.platforms);
-app.use('/api/jobs', hiringBazaarRoutes.jobs);
-app.use('/api/candidates', hiringBazaarRoutes.candidates);
-app.use('/api/plans', hiringBazaarRoutes.plans);
-// app.use('/api/admin', hiringBazaarRoutes.admin); // Moved to centralized admin folder
+try {
+    app.use('/api/auth', hiringBazaarRoutes.auth);
+    app.use('/api/dashboard', hiringBazaarRoutes.dashboard);
+    app.use('/api/platforms', hiringBazaarRoutes.platforms);
+    app.use('/api/jobs', hiringBazaarRoutes.jobs);
+    app.use('/api/candidates', hiringBazaarRoutes.candidates);
+    app.use('/api/plans', hiringBazaarRoutes.plans);
+} catch (error) {
+    console.error('❌ Error loading HiringBazaar routes:', error);
+}
 
 // ============================================
-// PartnerHB Routes (new partner functionality)
+// PartnerHB Routes
 // ============================================
-app.use('/api/partner/auth', partnerHBRoutes.auth);
-app.use('/api/partner', partnerHBRoutes.partner);
-app.use('/api/partner/jobs', partnerHBRoutes.jobs);
+try {
+    app.use('/api/partner/auth', partnerHBRoutes.auth);
+    app.use('/api/partner', partnerHBRoutes.partner);
+    app.use('/api/partner/jobs', partnerHBRoutes.jobs);
+} catch (error) {
+    console.error('❌ Error loading PartnerHB routes:', error);
+}
 
 // ============================================
 // Admin Routes (centralized admin)
 // ============================================
-app.use('/api/hb-admin', adminRoutes);
+try {
+    app.use('/api/hb-admin', adminRoutes);
+} catch (error) {
+    console.error('❌ Error loading Admin routes:', error);
+}
 
 // 404 handler
 app.use((req, res) => {
