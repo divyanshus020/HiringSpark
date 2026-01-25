@@ -19,8 +19,8 @@ const __dirname = path.dirname(__filename);
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -75,7 +75,7 @@ app.use((err, req, res, next) => {
     if (err.code === 'LIMIT_FILE_SIZE') {
         return res.status(400).json({
             success: false,
-            message: 'File size too large. Maximum size is 10MB'
+            message: 'File size too large. Maximum size is 100MB'
         });
     }
 
