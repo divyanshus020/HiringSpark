@@ -11,6 +11,7 @@ router.use(protect, isAdmin);
 
 // Admin Dashboard Stats
 router.get('/dashboard-data', adminCtrl.getAdminStats);
+router.get('/stats', adminCtrl.getAdminStats); // Alias for compatibility
 
 router.get('/jobs', adminCtrl.getAllJobsMaster);
 

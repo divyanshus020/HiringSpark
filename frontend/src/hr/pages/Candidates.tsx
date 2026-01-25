@@ -151,7 +151,7 @@ const Candidates = () => {
     // open it from the backend host so the browser can fetch the file.
     try {
       const isFullUrl = /^https?:\/\//i.test(cvUrl);
-      const backendHost = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+      const backendHost = import.meta.env.VITE_API_URL?.replace('/api', '') || window.location.origin;
       const openUrl = isFullUrl ? cvUrl : `${backendHost}${cvUrl}`;
       window.open(openUrl, '_blank');
     } catch (err) {
