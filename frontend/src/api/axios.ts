@@ -6,9 +6,9 @@ const getBaseURL = () => {
     return import.meta.env.VITE_API_URL || "http://localhost:5000/api";
   }
 
-  // In production (e.g. hirespark.hiringbazaar.in), use /api relative to the domain
-  // This is standard for deployments where the backend is reached via proxy /api
-  return "/api";
+  // In production (e.g. hirespark.hiringbazaar.in), use full URL /api
+  // This is more explicit for proxy configurations
+  return `${window.location.origin}/api`;
 };
 
 const api = axios.create({
