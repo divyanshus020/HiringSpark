@@ -58,7 +58,7 @@ app.use('/api/partner/jobs', partnerHBRoutes.jobs);
 // ============================================
 // Admin Routes (centralized admin)
 // ============================================
-app.use('/api/admin', adminRoutes);
+app.use('/api/hb-admin', adminRoutes);
 
 // 404 handler
 app.use((req, res) => {

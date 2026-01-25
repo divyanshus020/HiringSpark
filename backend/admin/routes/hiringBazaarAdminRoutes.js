@@ -10,7 +10,7 @@ const router = express.Router();
 router.use(protect, isAdmin);
 
 // Admin Dashboard Stats
-router.get('/stats', adminCtrl.getAdminStats);
+router.get('/dashboard-data', adminCtrl.getAdminStats);
 
 router.get('/jobs', adminCtrl.getAllJobsMaster);
 
