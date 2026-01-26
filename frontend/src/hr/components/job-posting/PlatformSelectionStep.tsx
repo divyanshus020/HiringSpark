@@ -377,6 +377,40 @@ const PlatformSelectionStep = () => {
                     Free
                   </span>
                 </div>
+
+                {/* Apna */}
+                <div
+                  className={cn(
+                    "flex items-center justify-between p-5 rounded-xl border-2 transition-all duration-300 hover:shadow-md cursor-pointer",
+                    platforms.apna
+                      ? "border-teal-500 bg-teal-50"
+                      : "border-gray-200 bg-white hover:border-teal-300"
+                  )}
+                >
+                  <div className="flex items-center gap-4">
+                    <Checkbox
+                      checked={platforms.apna}
+                      onCheckedChange={(checked) =>
+                        updatePlatforms({ ...platforms, apna: checked as boolean })
+                      }
+                      className="data-[state=checked]:bg-teal-500 data-[state=checked]:border-teal-500"
+                    />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-md">
+                      <Users className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 text-base">Apna</p>
+                      <p className="text-sm text-gray-600">
+                        India's largest blue-collar hiring platform
+                      </p>
+                    </div>
+                  </div>
+                  {state.planType !== 'premium' && (
+                    <span className="text-teal-600 font-bold text-base">
+                      ₹{PRICING.apna}
+                    </span>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
@@ -470,39 +504,7 @@ const PlatformSelectionStep = () => {
                   )}
                 </div>
 
-                {/* Apna */}
-                <div
-                  className={cn(
-                    "flex items-center justify-between p-5 rounded-xl border-2 transition-all duration-300 hover:shadow-md cursor-pointer",
-                    platforms.apna
-                      ? "border-teal-500 bg-teal-50"
-                      : "border-gray-200 bg-white hover:border-teal-300"
-                  )}
-                >
-                  <div className="flex items-center gap-4">
-                    <Checkbox
-                      checked={platforms.apna}
-                      onCheckedChange={(checked) =>
-                        updatePlatforms({ ...platforms, apna: checked as boolean })
-                      }
-                      className="data-[state=checked]:bg-teal-500 data-[state=checked]:border-teal-500"
-                    />
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-md">
-                      <Users className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 text-base">Apna</p>
-                      <p className="text-sm text-gray-600">
-                        India's largest blue-collar hiring platform
-                      </p>
-                    </div>
-                  </div>
-                  {state.planType !== 'premium' && (
-                    <span className="text-teal-600 font-bold text-base">
-                      ₹{PRICING.apna}
-                    </span>
-                  )}
-                </div>
+
               </CardContent>
             </Card>
           </div>
