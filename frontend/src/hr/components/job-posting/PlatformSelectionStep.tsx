@@ -307,7 +307,7 @@ const PlatformSelectionStep = () => {
                   </div>
                   {state.planType !== 'premium' && (
                     <span className="text-purple-600 font-bold text-base">
-                      ₹{PRICING.timesJob}/month
+                      ₹{PRICING.timesJob}
                     </span>
                   )}
                 </div>
@@ -431,7 +431,7 @@ const PlatformSelectionStep = () => {
                   </div>
                   {state.planType !== 'premium' && (
                     <span className="text-amber-600 font-bold text-base">
-                      ₹{PRICING.collegeNetwork}/month
+                      ₹{PRICING.collegeNetwork}
                     </span>
                   )}
                 </div>
@@ -465,7 +465,7 @@ const PlatformSelectionStep = () => {
                   </div>
                   {state.planType !== 'premium' && (
                     <span className="text-indigo-600 font-bold text-base">
-                      ₹{PRICING.trainingCentreNetwork}/month
+                      ₹{PRICING.trainingCentreNetwork}
                     </span>
                   )}
                 </div>
@@ -499,7 +499,7 @@ const PlatformSelectionStep = () => {
                   </div>
                   {state.planType !== 'premium' && (
                     <span className="text-teal-600 font-bold text-base">
-                      ₹{PRICING.apna}/month
+                      ₹{PRICING.apna}
                     </span>
                   )}
                 </div>
@@ -549,6 +549,12 @@ const PlatformSelectionStep = () => {
                       <span className="font-semibold text-gray-900">₹{PRICING.timesJob}</span>
                     </div>
                   )}
+                  {platforms.apna && (
+                    <div className="flex justify-between text-sm p-2 rounded-lg bg-teal-50">
+                      <span className="text-gray-700">Apna</span>
+                      <span className="font-semibold text-gray-900">₹{PRICING.apna}</span>
+                    </div>
+                  )}
                   {platforms.iimJobs && (
                     <div className="flex justify-between text-sm p-2 rounded-lg bg-emerald-50">
                       <span className="text-gray-700">IIM Jobs</span>
@@ -573,12 +579,7 @@ const PlatformSelectionStep = () => {
                       <span className="font-semibold text-gray-900">₹{PRICING.trainingCentreNetwork}</span>
                     </div>
                   )}
-                  {platforms.apna && (
-                    <div className="flex justify-between text-sm p-2 rounded-lg bg-teal-50">
-                      <span className="text-gray-700">Apna</span>
-                      <span className="font-semibold text-gray-900">₹{PRICING.apna}</span>
-                    </div>
-                  )}
+
                 </div>
 
                 {state.planType !== 'premium' && (
