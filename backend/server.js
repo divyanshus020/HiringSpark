@@ -40,7 +40,7 @@ app.get('/', (req, res) => {
 // ============================================
 // HiringBazaar Routes
 // ============================================
-<<<<<<< HEAD
+
 app.use('/api/auth', hiringBazaarRoutes.auth);
 app.use('/api/dashboard', hiringBazaarRoutes.dashboard);
 app.use('/api/platforms', hiringBazaarRoutes.platforms);
@@ -49,18 +49,7 @@ app.use('/api/candidates', hiringBazaarRoutes.candidates);
 app.use('/api/plans', hiringBazaarRoutes.plans);
 app.use('/api/chat', hiringBazaarRoutes.chat);
 // app.use('/api/admin', hiringBazaarRoutes.admin); // Moved to centralized admin folder
-=======
-try {
-    app.use('/api/auth', hiringBazaarRoutes.auth);
-    app.use('/api/dashboard', hiringBazaarRoutes.dashboard);
-    app.use('/api/platforms', hiringBazaarRoutes.platforms);
-    app.use('/api/jobs', hiringBazaarRoutes.jobs);
-    app.use('/api/candidates', hiringBazaarRoutes.candidates);
-    app.use('/api/plans', hiringBazaarRoutes.plans);
-} catch (error) {
-    console.error('❌ Error loading HiringBazaar routes:', error);
-}
->>>>>>> f301416a5fe711be39cb02b924b0ee5bb66dde08
+
 
 // ============================================
 // PartnerHB Routes
