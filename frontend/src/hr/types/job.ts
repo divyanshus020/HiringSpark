@@ -67,8 +67,8 @@ export const PRICING = {
   timesJob: 500, // per month
   iimJobs: 0, // free
   unstop: 0, // free
-  collegeNetwork: 200, // per month
-  trainingCentreNetwork: 200, // per month
+  collegeNetwork: 0, // free
+  trainingCentreNetwork: 0, // free
   apna: 500, // per month
   premiumPlan: 1500, // Fixed price for premium
   totalSavings: 950, // Display savings

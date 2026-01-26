@@ -463,11 +463,10 @@ const PlatformSelectionStep = () => {
                       </p>
                     </div>
                   </div>
-                  {state.planType !== 'premium' && (
-                    <span className="text-amber-600 font-bold text-base">
-                      ₹{PRICING.collegeNetwork}
-                    </span>
-                  )}
+                  <span className="text-emerald-600 font-bold text-base flex items-center gap-1">
+                    <Sparkles className="h-4 w-4" />
+                    Free
+                  </span>
                 </div>
 
                 {/* Training Centre Network */}
@@ -497,11 +496,10 @@ const PlatformSelectionStep = () => {
                       </p>
                     </div>
                   </div>
-                  {state.planType !== 'premium' && (
-                    <span className="text-indigo-600 font-bold text-base">
-                      ₹{PRICING.trainingCentreNetwork}
-                    </span>
-                  )}
+                  <span className="text-emerald-600 font-bold text-base flex items-center gap-1">
+                    <Sparkles className="h-4 w-4" />
+                    Free
+                  </span>
                 </div>
 
 
@@ -572,13 +570,13 @@ const PlatformSelectionStep = () => {
                   {platforms.collegeNetwork && (
                     <div className="flex justify-between text-sm p-2 rounded-lg bg-amber-50">
                       <span className="text-gray-700">College Network</span>
-                      <span className="font-semibold text-gray-900">₹{PRICING.collegeNetwork}</span>
+                      <span className="font-semibold text-emerald-600">Free</span>
                     </div>
                   )}
                   {platforms.trainingCentreNetwork && (
                     <div className="flex justify-between text-sm p-2 rounded-lg bg-indigo-50">
                       <span className="text-gray-700">Training Centre</span>
-                      <span className="font-semibold text-gray-900">₹{PRICING.trainingCentreNetwork}</span>
+                      <span className="font-semibold text-emerald-600">Free</span>
                     </div>
                   )}
 
