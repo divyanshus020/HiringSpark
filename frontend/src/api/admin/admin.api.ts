@@ -20,4 +20,6 @@ export const getAllPartners = () => api.get("/admin/partners");
 export const getPartnerById = (id: string) => api.get(`/admin/partners/${id}`);
 export const approvePartner = (id: string) => api.post(`/admin/partners/${id}/approve`);
 export const rejectPartner = (id: string, reason: string) => api.post(`/admin/partners/${id}/reject`, { reason });
+export const shareJobWithPartners = (jobId: string, partnerIds: string[]) => api.post(`/admin/job-sharing/${jobId}/share`, { partnerIds });
+export const getAllJobAssignments = () => api.get("/admin/job-sharing/assignments");
 

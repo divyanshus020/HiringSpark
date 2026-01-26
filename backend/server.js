@@ -46,6 +46,7 @@ app.use('/api/platforms', hiringBazaarRoutes.platforms);
 app.use('/api/jobs', hiringBazaarRoutes.jobs);
 app.use('/api/candidates', hiringBazaarRoutes.candidates);
 app.use('/api/plans', hiringBazaarRoutes.plans);
+app.use('/api/chat', hiringBazaarRoutes.chat);
 // app.use('/api/admin', hiringBazaarRoutes.admin); // Moved to centralized admin folder
 
 // ============================================

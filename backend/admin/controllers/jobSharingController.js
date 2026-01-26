@@ -216,3 +216,41 @@ export const getAvailableJobsForSharing = async (req, res) => {
         });
     }
 };
+
+// @desc    Get all job assignments (active mappings)
+// @route   GET /api/admin/job-sharing/assignments
+export const getAllJobAssignments = async (req, res) => {
+    try {
+        const mappings = await JobPartnerMapping.find({ isActive: true })
+            .populate({
+                path: 'jobId',
+                select: 'jobTitle companyName location status minExp maxExp'
+            })
+            .populate({
+                path: 'partnerId',
+                select: 'partnerName organizationName email phone status'
+            })
+            .populate('sharedBy', 'fullName email')
+            .sort({ createdAt: -1 });
+
+        // Filter out any mappings where job or partner might have been hard deleted
+        const validMappings = mappings.filter(m => m.jobId && m.partnerId);
+
+        res.json({
+            success: true,
+            count: validMappings.length,
+            assignments: validMappings.map(m => ({
+                id: m._id, // Mapping ID
+                job: m.jobId,
+                partner: m.partnerId,
+                sharedAt: m.createdAt,
+                sharedBy: m.sharedBy
+            }))
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};

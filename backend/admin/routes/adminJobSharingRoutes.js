@@ -4,7 +4,8 @@ import {
     shareJobWithPartners,
     getJobPartners,
     removeJobSharing,
-    getAvailableJobsForSharing
+    getAvailableJobsForSharing,
+    getAllJobAssignments
 } from '../controllers/jobSharingController.js';
 
 const router = express.Router();
@@ -15,6 +16,10 @@ router.use(protect, isAdmin);
 // @route   GET /api/admin/job-sharing/available-jobs
 // @desc    Get all jobs that can be shared
 router.get('/available-jobs', getAvailableJobsForSharing);
+
+// @route   GET /api/admin/job-sharing/assignments
+// @desc    Get all active job pairs
+router.get('/assignments', getAllJobAssignments);
 
 // @route   POST /api/admin/job-sharing/:jobId/share
 // @desc    Share job with partners

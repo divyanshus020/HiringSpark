@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, UserCheck, Briefcase, Settings, LogOut, Handshake } from "lucide-react";
+import { LayoutDashboard, Users, UserCheck, Briefcase, Settings, LogOut, Handshake, ChevronRight } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -14,16 +14,26 @@ import {
   SidebarMenuItem,
   SidebarFooter,
   useSidebar,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 
 const menuItems = [
   { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
   { title: "HR Accounts", url: "/admin/hr-accounts", icon: Users },
-  { title: "Partners", url: "/admin/partners", icon: Handshake },
+  {
+    title: "PartnerHB",
+    icon: Handshake,
+    items: [
+      { title: "Partner List", url: "/admin/partners" },
+      { title: "Job Assignments", url: "/admin/job-assignments" },
+    ]
+  },
   { title: "Candidates", url: "/admin/candidates", icon: UserCheck },
   { title: "Job Postings", url: "/admin/job-postings", icon: Briefcase },
-  // { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -55,7 +65,6 @@ export function AppSidebar() {
       <div className="flex h-16 items-center px-4 border-b border-sidebar-border">
         {!collapsed && (
           <div className="flex items-center gap-2">
-
             <span className="font-bold text-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
               HiringBazaar
             </span>
@@ -75,13 +84,50 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => {
+              {menuItems.map((item: any) => {
+                // If item has sub-items, render collapsible
+                if (item.items) {
+                  return (
+                    <Collapsible key={item.title} asChild defaultOpen={true} className="group/collapsible">
+                      <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton tooltip={item.title}>
+                            {item.icon && <item.icon className="h-5 w-5 shrink-0" />}
+                            {!collapsed && (
+                              <>
+                                <span className="truncate flex-1 text-left">{item.title}</span>
+                                <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                              </>
+                            )}
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {item.items.map((subItem: any) => {
+                              const isSubActive = location.pathname === subItem.url;
+                              return (
+                                <SidebarMenuSubItem key={subItem.title}>
+                                  <SidebarMenuSubButton asChild isActive={isSubActive}>
+                                    <NavLink to={subItem.url}>
+                                      <span>{subItem.title}</span>
+                                    </NavLink>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              )
+                            })}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  )
+                }
+
                 const isActive = location.pathname === item.url;
                 const isJobPostings = item.title === "Job Postings";
 
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive}>
+                    <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
                       <NavLink
                         to={item.url}
                         className={`flex items-center justify-between gap-3 px-3 py-2 rounded-md transition-colors w-full ${isActive
@@ -90,7 +136,7 @@ export function AppSidebar() {
                           }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <item.icon className="h-5 w-5 shrink-0" />
+                          {item.icon && <item.icon className="h-5 w-5 shrink-0" />}
                           {!collapsed && <span className="truncate">{item.title}</span>}
                         </div>
 

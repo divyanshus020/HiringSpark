@@ -4,6 +4,7 @@ import candidateRoutes from './candidateRoutes.js';
 import dashboardRoutes from './dashboardRoutes.js';
 import planRoutes from './planRoutes.js';
 import platformRoutes from './platformRoutes.js';
+import chatRoutes from './chatRoutes.js';
 
 export default {
     auth: authRoutes,
@@ -11,5 +12,6 @@ export default {
     candidates: candidateRoutes,
     dashboard: dashboardRoutes,
     plans: planRoutes,
-    platforms: platformRoutes
+    platforms: platformRoutes,
+    chat: chatRoutes
 };

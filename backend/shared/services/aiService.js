@@ -136,3 +136,84 @@ export async function generateExecutiveSummary(text) {
     return "Summary unavailable";
   }
 }
+
+const PLATFORM_KNOWLEDGE = `
+PLATFORM GUIDE & NAVIGATION:
+
+1. ADMIN SIDEBAR MENU:
+   - Dashboard (/admin/dashboard): Overview of platform statistics.
+   - HR Accounts (/admin/hr-accounts): Manage HR users.
+   - PartnerHB (Dropdown Menu):
+     * Partner List (/admin/partners): View, Approve, or Reject partner applications.
+     * Job Assignments (/admin/job-assignments): View table of jobs shared with partners.
+   - Candidates (/admin/candidates): Global candidate pool.
+     * Features: Filter by Company (Sidebar), Status update, View CV.
+   - Job Postings (/admin/job-postings): Manage jobs.
+     * Actions: Approve/Reject pending jobs, Share jobs with Partners.
+
+2. KEY WORKFLOWS (HOW-TO):
+   
+   [How to Share a Job with Partners?]
+   1. Navigate to "Job Postings".
+   2. Find the active job you want to share.
+   3. Click the "Share" icon (Purple Users icon) in the Actions column.
+   4. In the dialog, select one or more partners from the list.
+   5. Click "Share".
+   
+   [How to See Assigned Jobs?]
+   1. Go to the Sidebar -> "PartnerHB" -> "Job Assignments".
+   2. You will see a table with Job Title, Company, Assigned Partner, and Date.
+
+   [How to Filter Candidates by Company?]
+   1. Go to "Candidates".
+   2. On the left sidebar, you will see a list of Companies.
+   3. Click on any company name to filter the candidate list.
+
+   [How to Approve a Partner?]
+   1. Go to "PartnerHB" -> "Partner List".
+   2. Find partners with status "Pending".
+   3. Click "Approve".
+`;
+
+export async function chatWithDoc(message, context, role) {
+  try {
+    const systemPrompt = `You are a helpful AI assistant for the HiringSpark platform.
+    
+    Current User Role: ${role}
+    
+    About HiringSpark:
+    HiringSpark is a recruitment platform connecting Companies (Admins), HRs, and Candidates.
+    
+    ${PLATFORM_KNOWLEDGE}
+    
+    Rules:
+    1. If the user is 'admin', you can discuss anything about the platform, navigation, and workflows.
+    2. If the user is 'hr', you can ONLY discuss public job postings and general platform usage. DO NOT reveal admin routes or sensitive data.
+    3. Use the PLATFORM GUIDE above to answer "How do I..." questions accurately.
+    4. Be concise, professional, and helpful.
+    
+    User Context/Query: "${message}"`;
+
+    const completion = await openRouter.chat.send({
+      model: DEFAULT_MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt
+        },
+        {
+          role: 'user',
+          content: message
+        }
+      ],
+      stream: false,
+    });
+
+    const choice = completion.choices[0];
+    return choice?.message?.content || "I couldn't generate a response.";
+
+  } catch (error) {
+    console.error('AI Chat error:', error);
+    throw new Error("Failed to chat with AI");
+  }
+}

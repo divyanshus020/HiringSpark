@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { getAllJobPostings, updateJobStatus, deleteJobAdmin } from "../api/admin/admin.api";
+// @ts-ignore
+import { getAllJobPostings, updateJobStatus, deleteJobAdmin, getAllPartners, shareJobWithPartners } from "../api/admin/admin.api";
 import { toast } from "react-toastify";
 import { Check, X, Trash2 } from "lucide-react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
@@ -15,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Building2 } from "lucide-react";
+import { Search, MapPin, Building2, Users } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function JobPostings() {
   const navigate = useNavigate();
@@ -34,6 +42,7 @@ export default function JobPostings() {
   const [searchTerm, setSearchTerm] = useState("");
   const [jobToDelete, setJobToDelete] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [jobToShare, setJobToShare] = useState<string | null>(null);
 
   const fetchJobs = async () => {
     setIsLoading(true);
@@ -235,6 +244,16 @@ export default function JobPostings() {
                         >
                           View
                         </Button>
+                        {/* Share Button */}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 w-8 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                          onClick={() => setJobToShare(job._id)}
+                          title="Share with Partner"
+                        >
+                          <Users className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -264,7 +283,103 @@ export default function JobPostings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ShareJobDialog
+        jobId={jobToShare}
+        isOpen={!!jobToShare}
+        onClose={() => setJobToShare(null)}
+      />
     </DashboardLayout>
+  );
+}
+
+// Share Job Dialog Component
+function ShareJobDialog({ jobId, isOpen, onClose }: { jobId: string | null; isOpen: boolean; onClose: () => void }) {
+  const [partners, setPartners] = useState<any[]>([]);
+  const [selectedPartners, setSelectedPartners] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchPartners();
+      setSelectedPartners([]); // Reset selection on open
+    }
+  }, [isOpen]);
+
+  const fetchPartners = async () => {
+    try {
+      const res = await getAllPartners();
+      console.log(res.data.partners);
+      // Ensure unique partners by ID
+      const uniquePartners = Array.from(new Map((res.data.partners || []).map((item: any) => [item._id, item])).values());
+      setPartners(uniquePartners);
+    } catch (error) {
+      console.error("Failed to fetch partners", error);
+    }
+  };
+
+  const handleTogglePartner = (partnerId: string) => {
+    setSelectedPartners(prev =>
+      prev.includes(partnerId)
+        ? prev.filter(id => id !== partnerId)
+        : [...prev, partnerId]
+    );
+  };
+
+  const handleShare = async () => {
+    if (!jobId || selectedPartners.length === 0) return;
+    setIsLoading(true);
+    try {
+      await shareJobWithPartners(jobId, selectedPartners);
+      toast.success(`Job shared with ${selectedPartners.length} partner(s) successfully`);
+      onClose();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to share job");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <AlertDialog open={isOpen} onOpenChange={onClose}>
+      <AlertDialogContent className="max-w-md">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Share Job with Partners</AlertDialogTitle>
+          <AlertDialogDescription>
+            Select PartnerHB users to list this job on their board.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="py-4">
+          <div className="max-h-[300px] overflow-y-auto space-y-2 border rounded-md p-2">
+            {partners.length === 0 ? (
+              <div className="text-center text-sm text-gray-500 py-4">No approved partners found.</div>
+            ) : (
+              partners.map(p => (
+                <div key={p._id} className="flex items-center space-x-2 p-2 hover:bg-slate-50 rounded cursor-pointer" onClick={() => handleTogglePartner(p._id)}>
+                  <div className={`w-4 h-4 rounded border flex items-center justify-center ${selectedPartners.includes(p._id) ? 'bg-primary border-primary' : 'border-gray-300'}`}>
+                    {selectedPartners.includes(p._id) && <Check className="h-3 w-3 text-white" />}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">{p.organizationName}</div>
+                    <div className="text-xs text-gray-500">{p.partnerName}</div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="mt-2 text-xs text-muted-foreground text-right">
+            {selectedPartners.length} partner(s) selected
+          </div>
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <Button onClick={handleShare} disabled={selectedPartners.length === 0 || isLoading}>
+            {isLoading ? "Sharing..." : "Share"}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 

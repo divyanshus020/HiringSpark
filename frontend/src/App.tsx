@@ -3,12 +3,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ChatBot } from "./components/ChatBot";
 
 // Import Admin App
 import AdminApp from "./admin/AdminApp";
 
 // Import HR App
 import HRApp from "./hr/HRApp";
+
 
 const queryClient = new QueryClient();
 
@@ -36,6 +38,7 @@ const App = () => (
           {/* 404 Not Found - redirect to admin */}
           <Route path="*" element={<Navigate to="/admin" replace />} />
         </Routes>
+        <ChatBot />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
