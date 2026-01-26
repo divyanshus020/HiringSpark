@@ -307,7 +307,7 @@ const PlatformSelectionStep = () => {
                   </div>
                   {state.planType !== 'premium' && (
                     <span className="text-purple-600 font-bold text-base">
-                      ₹{PRICING.timesJob}/month
+                      ₹{PRICING.timesJob}
                     </span>
                   )}
                 </div>
@@ -377,6 +377,40 @@ const PlatformSelectionStep = () => {
                     Free
                   </span>
                 </div>
+
+                {/* Apna */}
+                <div
+                  className={cn(
+                    "flex items-center justify-between p-5 rounded-xl border-2 transition-all duration-300 hover:shadow-md cursor-pointer",
+                    platforms.apna
+                      ? "border-teal-500 bg-teal-50"
+                      : "border-gray-200 bg-white hover:border-teal-300"
+                  )}
+                >
+                  <div className="flex items-center gap-4">
+                    <Checkbox
+                      checked={platforms.apna}
+                      onCheckedChange={(checked) =>
+                        updatePlatforms({ ...platforms, apna: checked as boolean })
+                      }
+                      className="data-[state=checked]:bg-teal-500 data-[state=checked]:border-teal-500"
+                    />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-md">
+                      <Users className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 text-base">Apna</p>
+                      <p className="text-sm text-gray-600">
+                        India's largest blue-collar hiring platform
+                      </p>
+                    </div>
+                  </div>
+                  {state.planType !== 'premium' && (
+                    <span className="text-teal-600 font-bold text-base">
+                      ₹{PRICING.apna}
+                    </span>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
@@ -429,11 +463,10 @@ const PlatformSelectionStep = () => {
                       </p>
                     </div>
                   </div>
-                  {state.planType !== 'premium' && (
-                    <span className="text-amber-600 font-bold text-base">
-                      ₹{PRICING.collegeNetwork}/month
-                    </span>
-                  )}
+                  <span className="text-emerald-600 font-bold text-base flex items-center gap-1">
+                    <Sparkles className="h-4 w-4" />
+                    Free
+                  </span>
                 </div>
 
                 {/* Training Centre Network */}
@@ -463,46 +496,13 @@ const PlatformSelectionStep = () => {
                       </p>
                     </div>
                   </div>
-                  {state.planType !== 'premium' && (
-                    <span className="text-indigo-600 font-bold text-base">
-                      ₹{PRICING.trainingCentreNetwork}/month
-                    </span>
-                  )}
+                  <span className="text-emerald-600 font-bold text-base flex items-center gap-1">
+                    <Sparkles className="h-4 w-4" />
+                    Free
+                  </span>
                 </div>
 
-                {/* Apna */}
-                <div
-                  className={cn(
-                    "flex items-center justify-between p-5 rounded-xl border-2 transition-all duration-300 hover:shadow-md cursor-pointer",
-                    platforms.apna
-                      ? "border-teal-500 bg-teal-50"
-                      : "border-gray-200 bg-white hover:border-teal-300"
-                  )}
-                >
-                  <div className="flex items-center gap-4">
-                    <Checkbox
-                      checked={platforms.apna}
-                      onCheckedChange={(checked) =>
-                        updatePlatforms({ ...platforms, apna: checked as boolean })
-                      }
-                      className="data-[state=checked]:bg-teal-500 data-[state=checked]:border-teal-500"
-                    />
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-md">
-                      <Users className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 text-base">Apna</p>
-                      <p className="text-sm text-gray-600">
-                        India's largest blue-collar hiring platform
-                      </p>
-                    </div>
-                  </div>
-                  {state.planType !== 'premium' && (
-                    <span className="text-teal-600 font-bold text-base">
-                      ₹{PRICING.apna}/month
-                    </span>
-                  )}
-                </div>
+
               </CardContent>
             </Card>
           </div>
@@ -549,6 +549,12 @@ const PlatformSelectionStep = () => {
                       <span className="font-semibold text-gray-900">₹{PRICING.timesJob}</span>
                     </div>
                   )}
+                  {platforms.apna && (
+                    <div className="flex justify-between text-sm p-2 rounded-lg bg-teal-50">
+                      <span className="text-gray-700">Apna</span>
+                      <span className="font-semibold text-gray-900">₹{PRICING.apna}</span>
+                    </div>
+                  )}
                   {platforms.iimJobs && (
                     <div className="flex justify-between text-sm p-2 rounded-lg bg-emerald-50">
                       <span className="text-gray-700">IIM Jobs</span>
@@ -564,21 +570,16 @@ const PlatformSelectionStep = () => {
                   {platforms.collegeNetwork && (
                     <div className="flex justify-between text-sm p-2 rounded-lg bg-amber-50">
                       <span className="text-gray-700">College Network</span>
-                      <span className="font-semibold text-gray-900">₹{PRICING.collegeNetwork}</span>
+                      <span className="font-semibold text-emerald-600">Free</span>
                     </div>
                   )}
                   {platforms.trainingCentreNetwork && (
                     <div className="flex justify-between text-sm p-2 rounded-lg bg-indigo-50">
                       <span className="text-gray-700">Training Centre</span>
-                      <span className="font-semibold text-gray-900">₹{PRICING.trainingCentreNetwork}</span>
+                      <span className="font-semibold text-emerald-600">Free</span>
                     </div>
                   )}
-                  {platforms.apna && (
-                    <div className="flex justify-between text-sm p-2 rounded-lg bg-teal-50">
-                      <span className="text-gray-700">Apna</span>
-                      <span className="font-semibold text-gray-900">₹{PRICING.apna}</span>
-                    </div>
-                  )}
+
                 </div>
 
                 {state.planType !== 'premium' && (

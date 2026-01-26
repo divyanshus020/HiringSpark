@@ -19,8 +19,8 @@ const __dirname = path.dirname(__filename);
 
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -38,8 +38,9 @@ app.get('/', (req, res) => {
 });
 
 // ============================================
-// HiringBazaar Routes (existing functionality)
+// HiringBazaar Routes
 // ============================================
+<<<<<<< HEAD
 app.use('/api/auth', hiringBazaarRoutes.auth);
 app.use('/api/dashboard', hiringBazaarRoutes.dashboard);
 app.use('/api/platforms', hiringBazaarRoutes.platforms);
@@ -48,18 +49,38 @@ app.use('/api/candidates', hiringBazaarRoutes.candidates);
 app.use('/api/plans', hiringBazaarRoutes.plans);
 app.use('/api/chat', hiringBazaarRoutes.chat);
 // app.use('/api/admin', hiringBazaarRoutes.admin); // Moved to centralized admin folder
+=======
+try {
+    app.use('/api/auth', hiringBazaarRoutes.auth);
+    app.use('/api/dashboard', hiringBazaarRoutes.dashboard);
+    app.use('/api/platforms', hiringBazaarRoutes.platforms);
+    app.use('/api/jobs', hiringBazaarRoutes.jobs);
+    app.use('/api/candidates', hiringBazaarRoutes.candidates);
+    app.use('/api/plans', hiringBazaarRoutes.plans);
+} catch (error) {
+    console.error('❌ Error loading HiringBazaar routes:', error);
+}
+>>>>>>> f301416a5fe711be39cb02b924b0ee5bb66dde08
 
 // ============================================
-// PartnerHB Routes (new partner functionality)
+// PartnerHB Routes
 // ============================================
-app.use('/api/partner/auth', partnerHBRoutes.auth);
-app.use('/api/partner', partnerHBRoutes.partner);
-app.use('/api/partner/jobs', partnerHBRoutes.jobs);
+try {
+    app.use('/api/partner/auth', partnerHBRoutes.auth);
+    app.use('/api/partner', partnerHBRoutes.partner);
+    app.use('/api/partner/jobs', partnerHBRoutes.jobs);
+} catch (error) {
+    console.error('❌ Error loading PartnerHB routes:', error);
+}
 
 // ============================================
 // Admin Routes (centralized admin)
 // ============================================
-app.use('/api/admin', adminRoutes);
+try {
+    app.use('/api/hb-admin', adminRoutes);
+} catch (error) {
+    console.error('❌ Error loading Admin routes:', error);
+}
 
 // 404 handler
 app.use((req, res) => {
@@ -76,7 +97,7 @@ app.use((err, req, res, next) => {
     if (err.code === 'LIMIT_FILE_SIZE') {
         return res.status(400).json({
             success: false,
-            message: 'File size too large. Maximum size is 5MB'
+            message: 'File size too large. Maximum size is 100MB'
         });
     }
 

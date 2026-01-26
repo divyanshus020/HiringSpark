@@ -199,8 +199,16 @@ Phone: ${state.schedule.phoneNumber}
 
           {/* Total Paid */}
           <div className="flex items-center justify-between border-t border-border pt-4">
-            <span className="font-medium text-foreground">Total Paid</span>
-            <span className="text-xl font-bold text-primary">₹{Math.round(total)}</span>
+            {state.planType === 'premium' ? (
+              <span className="text-lg font-bold text-primary w-full text-center uppercase">
+                HB TEAM WILL CONNECT YOU SOON
+              </span>
+            ) : (
+              <>
+                <span className="font-medium text-foreground">Total Paid</span>
+                <span className="text-xl font-bold text-primary">₹{Math.round(total)}</span>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>

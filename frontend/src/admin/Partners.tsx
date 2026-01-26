@@ -211,7 +211,10 @@ export default function Partners() {
                                                             variant="outline"
                                                             size="sm"
                                                             className="h-8 gap-1.5 hidden md:flex"
-                                                            onClick={() => window.open(`http://localhost:5000${partner.resumeUrl}`, '_blank')}
+                                                            onClick={() => {
+                                                                const backendHost = import.meta.env.VITE_API_URL?.replace('/api', '') || window.location.origin;
+                                                                window.open(`${backendHost}${partner.resumeUrl}`, '_blank');
+                                                            }}
                                                         >
                                                             <FileText className="h-3.5 w-3.5" />
                                                             Resume
@@ -228,7 +231,10 @@ export default function Partners() {
                                                             <DropdownMenuLabel>Manage Partner</DropdownMenuLabel>
                                                             <DropdownMenuSeparator />
 
-                                                            <DropdownMenuItem onClick={() => window.open(`http://localhost:5000${partner.resumeUrl}`, '_blank')}>
+                                                            <DropdownMenuItem onClick={() => {
+                                                                const backendHost = import.meta.env.VITE_API_URL?.replace('/api', '') || window.location.origin;
+                                                                window.open(`${backendHost}${partner.resumeUrl}`, '_blank');
+                                                            }}>
                                                                 <Eye className="mr-2 h-4 w-4 text-blue-500" /> View Resume
                                                             </DropdownMenuItem>
 

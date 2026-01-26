@@ -1,7 +1,18 @@
 import axios from "axios";
 
+const getBaseURL = () => {
+  // In development (localhost), use the env var or local fallback
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  }
+
+  // In production (e.g. hirespark.hiringbazaar.in), use full URL /api
+  // This is more explicit for proxy configurations
+  return `${window.location.origin}/api`;
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
+  baseURL: getBaseURL(),
 });
 
 api.interceptors.request.use((config) => {
