@@ -13,36 +13,55 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
     const { candidateId } = job.data;
 
     try {
-        const candidate = await Candidate.findById(candidateId).populate('jobId');
-        if (!candidate) return;
+        const currentCandidate = await Candidate.findById(candidateId).populate('jobId');
+        if (!currentCandidate) return;
 
-        candidate.parsingStatus = 'PROCESSING';
-        await candidate.save();
+        currentCandidate.parsingStatus = 'PROCESSING';
+        await currentCandidate.save();
 
-        // 1. Extract Text
-        // resumeUrl is like /uploads/resumes/filename.pdf
-        const absolutePath = path.join(process.cwd(), candidate.resumeUrl);
+        const absolutePath = path.join(process.cwd(), currentCandidate.resumeUrl);
         const { text, links } = await extractPdfTextAndLinks(absolutePath);
 
-        if (!text) {
-            throw new Error('Could not extract text from PDF');
-        }
+        if (!text) throw new Error('Could not extract text from PDF');
 
-        // 2. AI Parse
         const jobContext = {
-            title: candidate.jobId.jobTitle,
-            skillsRequired: candidate.jobId.skills || [],
-            description: candidate.jobId.description || ''
+            title: currentCandidate.jobId.jobTitle,
+            skillsRequired: currentCandidate.jobId.skills || [],
+            description: currentCandidate.jobId.description || ''
         };
 
         const parsedData = await extractResumeInfo(text, links, jobContext);
+        const extractedEmail = parsedData.basic_info.email?.toLowerCase();
 
-        // 3. Update Candidate
-        if (parsedData.basic_info.email) candidate.email = parsedData.basic_info.email;
-        if (parsedData.basic_info.full_name) candidate.name = parsedData.basic_info.full_name;
-        if (parsedData.basic_info.phone) candidate.phoneNumber = parsedData.basic_info.phone;
+        // Duplicate handling
+        let targetCandidate = currentCandidate;
+        if (extractedEmail) {
+            const existingCandidate = await Candidate.findOne({
+                jobId: currentCandidate.jobId._id,
+                email: extractedEmail,
+                _id: { $ne: candidateId }
+            });
 
-        candidate.basicInfo = {
+            if (existingCandidate) {
+                console.log(`🔗 Duplicate found for ${extractedEmail}. Merging into original.`);
+                
+                // Update file reference on the old record
+                existingCandidate.resumeUrl = currentCandidate.resumeUrl;
+                
+                // Switch target to original record
+                targetCandidate = existingCandidate;
+
+                // Remove the extra placeholder record
+                await Candidate.findByIdAndDelete(candidateId);
+            }
+        }
+
+        // Update the candidate (New or Original) with fresh AI data
+        targetCandidate.email = extractedEmail || targetCandidate.email;
+        targetCandidate.name = parsedData.basic_info.full_name || targetCandidate.name;
+        targetCandidate.phoneNumber = parsedData.basic_info.phone || targetCandidate.phoneNumber;
+
+        targetCandidate.basicInfo = {
             fullName: parsedData.basic_info.full_name,
             jobTitle: parsedData.basic_info.job_title,
             location: parsedData.basic_info.location,
@@ -52,54 +71,39 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
             github: parsedData.basic_info.github,
             experienceYears: parsedData.basic_info.experience_years
         };
-        candidate.executiveSummary = parsedData.executive_summary.ai_generated_summary;
-        candidate.education = parsedData.education.map(e => ({
-            degree: e.degree,
-            institution: e.institution,
-            year: e.year
-        }));
-        candidate.workExperience = parsedData.work_experience.map(w => ({
-            role: w.role,
-            company: w.company,
-            startDate: w.start_date,
-            endDate: w.end_date,
-            responsibilities: w.responsibilities
-        }));
-        candidate.skills = {
-            technicalSkills: {
-                advanced: parsedData.skills.technical_skills.advanced,
-                intermediate: parsedData.skills.technical_skills.intermediate,
-                beginner: parsedData.skills.technical_skills.beginner
-            },
+        
+        targetCandidate.executiveSummary = parsedData.executive_summary.ai_generated_summary;
+        targetCandidate.education = parsedData.education;
+        targetCandidate.workExperience = parsedData.work_experience;
+        targetCandidate.skills = {
+            technicalSkills: parsedData.skills.technical_skills,
             softSkills: parsedData.skills.soft_skills
         };
-        candidate.aiAssessment = {
+        
+        targetCandidate.aiAssessment = {
             technicalFit: parsedData.ai_assessment.technical_fit,
             culturalFit: parsedData.ai_assessment.cultural_fit,
             overallScore: parsedData.ai_assessment.overall_score,
             strengths: parsedData.ai_assessment.strengths,
             areasForGrowth: parsedData.ai_assessment.areas_for_growth
         };
-        candidate.atsScore = parsedData.ai_assessment.overall_score;
-        candidate.certifications = parsedData.certifications;
-
-        candidate.isParsed = true;
-        candidate.parsingStatus = 'COMPLETED';
-        await candidate.save();
-
-        console.log(`✅ Candidate ${candidate.name} parsed successfully`);
+        
+        targetCandidate.atsScore = parsedData.ai_assessment.overall_score;
+        targetCandidate.isParsed = true;
+        targetCandidate.parsingStatus = 'COMPLETED';
+        
+        await targetCandidate.save();
+        console.log(`✅ Record processed for ${targetCandidate.name}`);
 
     } catch (error) {
-        console.error(`❌ Error parsing candidate ${candidateId}:`, error);
-        await Candidate.findByIdAndUpdate(candidateId, { parsingStatus: 'FAILED' });
+        console.error(`❌ Error processing candidate ${candidateId}:`, error.message);
+        // Fallback to safe enum values on error
+        await Candidate.findByIdAndUpdate(candidateId, { 
+            parsingStatus: 'FAILED'
+        });
         throw error;
     }
 }, { connection: redisConnection });
 
-pdfWorker.on('completed', (job) => {
-    console.log(`Job ${job.id} completed!`);
-});
-
-pdfWorker.on('failed', (job, err) => {
-    console.log(`Job ${job.id} failed with ${err.message}`);
-});
+pdfWorker.on('completed', (job) => console.log(`Job ${job.id} completed!`));
+pdfWorker.on('failed', (job, err) => console.log(`Job ${job.id} failed: ${err.message}`));
