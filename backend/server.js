@@ -66,7 +66,7 @@ try {
 // Admin Routes (centralized admin)
 // ============================================
 try {
-    app.use('/api/hb-admin', adminRoutes);
+    app.use('/api/admin', adminRoutes);
 } catch (error) {
     console.error('❌ Error loading Admin routes:', error);
 }

@@ -92,9 +92,17 @@ export const uploadResumeForJob = async (req, res) => {
     try {
         const { jobId } = req.params;
         const partnerId = req.partner.id;
-        const { name, email, phoneNumber, source } = req.body;
+        const { source } = req.body;
+        const files = req.files; // Expecting multiple files from multer
 
-        // Verify partner has access to this job
+        if (!files || files.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'No resumes provided'
+            });
+        }
+
+        // 1. Security Check: Verify partner has access to this job
         const mapping = await JobPartnerMapping.findOne({
             jobId,
             partnerId,
@@ -104,11 +112,11 @@ export const uploadResumeForJob = async (req, res) => {
         if (!mapping) {
             return res.status(403).json({
                 success: false,
-                message: 'You do not have access to this job'
+                message: 'You do not have access to share candidates for this job'
             });
         }
 
-        // Check if job exists
+        // 2. Data Check: Check if job exists
         const job = await Job.findById(jobId);
         if (!job) {
             return res.status(404).json({
@@ -117,60 +125,56 @@ export const uploadResumeForJob = async (req, res) => {
             });
         }
 
-        // Handle file upload
-        const resumeUrl = req.file ? `/uploads/candidates/partner/${req.file.filename}` : null;
+        // 3. Setup Queue and Partner Info
+        const { pdfQueue } = await import('../../shared/services/queueService.js');
+        const partner = await Partner.findById(partnerId);
+        const results = [];
 
-        if (!resumeUrl) {
-            return res.status(400).json({
-                success: false,
-                message: 'Resume file is required'
+        // 4. Loop through files and create candidates
+        for (const file of files) {
+            const resumeUrl = `/uploads/candidates/partner/${file.filename}`;
+
+            const candidate = await Candidate.create({
+                jobId,
+                addedBy: partnerId,
+                // Placeholders: AI worker will overwrite these
+                name: file.originalname.split('.')[0], 
+                email: `pending_${Date.now()}_${Math.random().toString(36).substring(7)}@parsing.com`,
+                phoneNumber: '0000000000',
+                resumeUrl,
+                source: source || 'PARTNER_BULK_UPLOAD',
+                uploadSource: 'partner',
+                uploaderId: partnerId,
+                uploaderModel: 'Partner',
+                uploaderDetails: {
+                    name: partner.partnerName,
+                    organizationName: partner.organizationName,
+                    uploaderType: 'partner'
+                },
+                parsingStatus: 'PENDING',
+                hrFeedback: 'Pending Review'
+            });
+
+            // 5. Add specific candidate to AI Parsing Queue
+            await pdfQueue.add('process-resume', {
+                candidateId: candidate._id
+            });
+
+            results.push({
+                id: candidate._id,
+                fileName: file.originalname,
+                status: 'QUEUED'
             });
         }
 
-        // Get partner details
-        const partner = await Partner.findById(partnerId);
-
-        // Create candidate with partner source tracking
-        const candidate = await Candidate.create({
-            jobId,
-            addedBy: partnerId,
-            name,
-            email,
-            phoneNumber,
-            resumeUrl,
-            source: source || 'PARTNER_UPLOAD',
-            uploadSource: 'partner',
-            uploaderId: partnerId,
-            uploaderModel: 'Partner',
-            uploaderDetails: {
-                name: partner.partnerName,
-                organizationName: partner.organizationName,
-                uploaderType: 'partner'
-            },
-            parsingStatus: 'PENDING',
-            hrFeedback: 'Pending Review'
-        });
-
-        // Add to parsing queue
-        const { pdfQueue } = await import('../../shared/services/queueService.js');
-        await pdfQueue.add('process-resume', {
-            candidateId: candidate._id
-        });
-
         res.status(201).json({
             success: true,
-            message: 'Resume uploaded successfully and queued for processing',
-            candidate: {
-                id: candidate._id,
-                name: candidate.name,
-                email: candidate.email,
-                jobId: candidate.jobId,
-                uploadSource: candidate.uploadSource,
-                uploaderDetails: candidate.uploaderDetails
-            }
+            message: `${files.length} resumes uploaded and queued for AI parsing`,
+            results
         });
+
     } catch (error) {
-        console.error('Partner resume upload error:', error);
+        console.error('Partner Bulk Upload Error:', error.message);
         res.status(500).json({
             success: false,
             message: error.message

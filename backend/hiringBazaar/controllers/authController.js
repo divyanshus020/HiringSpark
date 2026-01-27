@@ -234,13 +234,13 @@ export const resetPassword = async (req, res) => {
 // @route   POST /api/auth/admin/register
 export const adminRegister = async (req, res) => {
   try {
-    const { fullName, email, password } = req.body;
+    const { fullName, email, password,phone } = req.body;
 
     // Validation
-    if (!fullName || !email || !password) {
+    if (!fullName || !email || !password || !phone) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide fullName, email, and password'
+        message: 'Please provide fullName, email, phone and password'
       });
     }
 
@@ -263,7 +263,7 @@ export const adminRegister = async (req, res) => {
       email,
       password: hashedPassword,
       role: 'ADMIN', // Auto-set to ADMIN
-      phone: '0000000000', // Default for admin
+      phone: phone, // Default for admin
       companyName: 'HiringBazaar Admin',
       address: 'Admin Office'
     });
