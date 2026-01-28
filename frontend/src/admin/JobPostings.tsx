@@ -302,7 +302,7 @@ function ShareJobDialog({ jobId, isOpen, onClose }: { jobId: string | null; isOp
   useEffect(() => {
     if (isOpen) {
       fetchPartners();
-      setSelectedPartners([]); // Reset selection on open
+      setSelectedPartners([]); 
     }
   }, [isOpen]);
 
