@@ -447,6 +447,50 @@ export default function JobPostingDetail() {
         {/* Availability Card */}
         <Card className="border-gray-100 shadow-sm">
           <CardContent className="p-6">
+            <h3 className="font-semibold text-gray-800 mb-4">Job Description</h3>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                {job.description || 'No description provided'}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        {/* Requirements Card */}
+        <Card className="border-gray-100 shadow-sm">
+          <CardContent className="p-6">
+            <h3 className="font-semibold text-gray-800 mb-4">Requirements</h3>
+            <div className="space-y-2">
+              {job.requirements && job.requirements.length > 0 ? (
+                <ul className="list-disc list-inside space-y-1">
+                  {job.requirements.map((req: string, idx: number) => (
+                    <li key={idx} className="text-gray-700">{req}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-500">No requirements specified</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Skills Card */}
+        <Card className="border-gray-100 shadow-sm">
+          <CardContent className="p-6">
+            <h3 className="font-semibold text-gray-800 mb-4">Required Skills</h3>
+            <div className="flex flex-wrap gap-2">
+              {job.skills && job.skills.length > 0 ? (
+                job.skills.map((skill: string, idx: number) => (
+                  <Badge key={idx} className="bg-blue-100 text-blue-800 hover:bg-blue-200">{skill}</Badge>
+                ))
+              ) : (
+                <p className="text-gray-500">No skills specified</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        {/* Availability Card */}
+        <Card className="border-gray-100 shadow-sm">
+          <CardContent className="p-6">
             <h3 className="font-semibold text-gray-800 mb-4">Availability for Calls</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex items-center gap-2 text-sm text-gray-600">

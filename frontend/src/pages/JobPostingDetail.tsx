@@ -1,9 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { jobPostings, candidates } from "@/data/mockData";
+import { candidates } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Linkedin, Plus } from "lucide-react";
+import { ArrowLeft, Calendar, Linkedin, Plus, Loader2 } from "lucide-react";
 import {
     Select,
     SelectContent,
@@ -22,8 +22,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { getSingleJob } from "@/api/hr/jobs.api";
 
 const planStyles = {
     'Premium': 'bg-primary/10 text-primary border-primary/20',
@@ -41,12 +42,34 @@ export default function JobPostingDetail() {
     const navigate = useNavigate();
     const { toast } = useToast();
 
-    const job = jobPostings.find(j => j.id === id);
-    const jobCandidates = job ? candidates.filter(c => c.jobTitle === job.position) : [];
+    const [job, setJob] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const jobCandidates = job ? candidates.filter(c => c.jobTitle === job.jobTitle || c.jobTitle === job.position) : [];
 
     const [candidateStatuses, setCandidateStatuses] = useState(
         jobCandidates.reduce((acc, c) => ({ ...acc, [c.id]: c.status }), {} as Record<string, string>)
     );
+
+    useEffect(() => {
+        const fetchJob = async () => {
+            if (!id) return;
+            try {
+                setIsLoading(true);
+                const res = await getSingleJob(id);
+                setJob(res.data.job || res.data.data || res.data);
+            } catch (error) {
+                console.error("Error fetching job details:", error);
+                toast({
+                    title: "Error",
+                    description: "Failed to load job details",
+                    variant: "destructive",
+                });
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchJob();
+    }, [id, toast]);
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [newCandidate, setNewCandidate] = useState({
@@ -56,6 +79,16 @@ export default function JobPostingDetail() {
         resume: null as File | null,
         initialStatus: "Pending Review" as string,
     });
+
+    if (isLoading) {
+        return (
+            <DashboardLayout title="Loading...">
+                <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+            </DashboardLayout>
+        );
+    }
 
     if (!job) {
         return (
@@ -137,6 +170,43 @@ export default function JobPostingDetail() {
                                     <h4 className="text-sm font-medium text-muted-foreground mb-2">POSTED DATE</h4>
                                     <p className="text-foreground">{job.createdAt}</p>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div className="pt-6 border-t border-border">
+                            <h3 className="text-lg font-semibold text-foreground mb-4">Job Description</h3>
+                            <div className="bg-muted/50 p-4 rounded-lg">
+                                <p className="text-foreground whitespace-pre-wrap leading-relaxed">
+                                    {job.description || 'No description provided'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="pt-6 border-t border-border">
+                            <h3 className="text-lg font-semibold text-foreground mb-4">Requirements</h3>
+                            <div className="space-y-2">
+                                {job.requirements && job.requirements.length > 0 ? (
+                                    <ul className="list-disc list-inside space-y-1">
+                                        {job.requirements.map((req: string, idx: number) => (
+                                            <li key={idx} className="text-foreground">{req}</li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="text-muted-foreground">No requirements specified</p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="pt-6 border-t border-border">
+                            <h3 className="text-lg font-semibold text-foreground mb-4">Required Skills</h3>
+                            <div className="flex flex-wrap gap-2">
+                                {job.skills && job.skills.length > 0 ? (
+                                    job.skills.map((skill: string, idx: number) => (
+                                        <Badge key={idx} variant="secondary">{skill}</Badge>
+                                    ))
+                                ) : (
+                                    <p className="text-muted-foreground">No skills specified</p>
+                                )}
                             </div>
                         </div>
 
