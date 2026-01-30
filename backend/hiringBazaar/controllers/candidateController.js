@@ -365,3 +365,5 @@ export const getMyCandidates = async (req, res) => {
     });
   }
 };
+
+// controllers/candidate.controller.js

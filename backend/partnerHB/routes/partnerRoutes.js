@@ -1,5 +1,5 @@
 import express from 'express';
-import { getPartnerUploads } from '../controllers/partnerJobController.js';
+import { getCandidateById, getPartnerUploads } from '../controllers/partnerJobController.js';
 import { protectPartner } from '../middlewares/partnerAuth.js';
 
 const router = express.Router();
@@ -8,5 +8,6 @@ const router = express.Router();
 router.use(protectPartner);
 
 router.get('/uploads', getPartnerUploads);
+router.get('/uploads/:id', getCandidateById);
 
 export default router;
