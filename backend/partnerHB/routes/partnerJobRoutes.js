@@ -50,4 +50,5 @@ router.get('/', getSharedJobs);
 router.get('/:jobId', getJobDetails);
 router.post('/:jobId/upload', upload.array('resumes'), uploadResumeForJob);
 
+
 export default router;

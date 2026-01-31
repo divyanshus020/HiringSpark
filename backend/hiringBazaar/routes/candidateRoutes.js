@@ -26,4 +26,5 @@ router.put('/:id/feedback', protect, updateCandidateFeedback);
 router.delete('/:id', protect, isAdmin, deleteCandidate);
 
 
+
 export default router;

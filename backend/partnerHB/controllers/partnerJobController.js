@@ -207,3 +207,27 @@ export const getPartnerUploads = async (req, res) => {
         });
     }
 };
+
+
+// controllers/candidate.controller.js
+
+export const getCandidateById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const partnerId = req.partner.id; // From your auth middleware
+
+    const candidate = await Candidate.findOne({ 
+      _id: id, 
+      uploaderId: partnerId // Security: Only fetch if this partner uploaded them
+    }).populate('jobId', 'jobTitle companyName');
+
+    if (!candidate) {
+      return res.status(404).json({ message: "Candidate not found or unauthorized access" });
+    }
+
+    res.json({ success: true, candidate });
+  } catch (error) {
+    console.error("Error fetching candidate:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

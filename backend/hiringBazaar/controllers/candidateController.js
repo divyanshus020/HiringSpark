@@ -416,6 +416,7 @@ export const getMyCandidates = async (req, res) => {
     });
   }
 };
+
 // @desc    Get single candidate by ID
 // @route   GET /api/candidates/:id
 export const getCandidateById = async (req, res) => {
