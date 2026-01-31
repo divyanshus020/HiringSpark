@@ -25,6 +25,9 @@ import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { getSingleJob } from "@/api/hr/jobs.api";
+import { toggleJobContactVisibility } from "@/api/admin/admin.api";
+import { Switch } from "@/components/ui/switch";
+
 
 const planStyles = {
     'Premium': 'bg-primary/10 text-primary border-primary/20',
@@ -50,13 +53,17 @@ export default function JobPostingDetail() {
         jobCandidates.reduce((acc, c) => ({ ...acc, [c.id]: c.status }), {} as Record<string, string>)
     );
 
+    const [idForVisibility, setIdForVisibility] = useState<string | null>(null);
+    const [isVisibilityLoading, setIsVisibilityLoading] = useState(false);
+
     useEffect(() => {
         const fetchJob = async () => {
             if (!id) return;
             try {
                 setIsLoading(true);
                 const res = await getSingleJob(id);
-                setJob(res.data.job || res.data.data || res.data);
+                const jobData = res.data.job || res.data.data || res.data;
+                setJob(jobData);
             } catch (error) {
                 console.error("Error fetching job details:", error);
                 toast({
@@ -89,6 +96,7 @@ export default function JobPostingDetail() {
             </DashboardLayout>
         );
     }
+
 
     if (!job) {
         return (
@@ -131,14 +139,10 @@ export default function JobPostingDetail() {
     return (
         <DashboardLayout title="HR Accounts">
             <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <Button
-                        variant="ghost"
-                        onClick={() => window.history.back()}
-                        className="gap-2"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                        Back to HR Details
+                <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Add Candidates
                     </Button>
                 </div>
 

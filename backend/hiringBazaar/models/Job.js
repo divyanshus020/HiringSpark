@@ -115,6 +115,10 @@ const jobSchema = new mongoose.Schema({
   totalAmount: {
     type: Number,
     default: 0
+  },
+  contactDetailsVisible: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

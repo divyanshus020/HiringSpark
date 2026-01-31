@@ -20,6 +20,7 @@ router.get('/hrs', adminCtrl.getAllHRs);
 router.get('/hrs/:id', adminCtrl.getHRById);
 router.get('/hrs/:hrId/jobs', adminCtrl.getJobsByHR); // Get all jobs for specific HR
 router.put('/jobs/:id/status', adminCtrl.updateJobStatus); // Approve/Reject job
+router.put('/jobs/:id/toggle-contact-visibility', adminCtrl.toggleContactVisibility); // Toggle contact visibility
 router.delete('/jobs/:id', adminCtrl.deleteJobAdmin); // Delete job
 router.put('/hrs/:id', adminCtrl.updateHR);
 

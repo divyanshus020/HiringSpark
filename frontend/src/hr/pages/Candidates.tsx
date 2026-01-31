@@ -4,7 +4,9 @@ import Header from '../components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { Users as UsersIcon, FileText, Loader2, ExternalLink, Mail, Phone, Eye, AlertCircle, CheckCircle2, Search as SearchIcon } from 'lucide-react';
+import { Users as UsersIcon, FileText, Loader2, ExternalLink, Mail, Phone, Eye, AlertCircle, CheckCircle2, Search as SearchIcon, Lock } from 'lucide-react';
+
+
 import { CandidateDetailsModal } from '../../components/CandidateDetailsModal';
 import { getCandidatesByJob, getMyCandidates, updateCandidateStatus } from '../../api/hr/candidates.api';
 import { getSingleJob } from '../../api/hr/jobs.api';
@@ -344,15 +346,30 @@ const Candidates = () => {
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-2 text-gray-600">
                               <Mail className="h-4 w-4" />
-                              <span className="text-sm">{candidate.basicInfo?.email || candidate.email}</span>
+                              <div className="relative">
+                                <span className={`text-sm ${(candidate.jobId?.contactDetailsVisible === false) ? 'blur-[4px] select-none opacity-40' : ''}`}>
+                                  {candidate.basicInfo?.email || candidate.email}
+                                </span>
+                                {(candidate.jobId?.contactDetailsVisible === false) && (
+                                  <Lock className="h-3 w-3 text-gray-400 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+                                )}
+                              </div>
                             </div>
                           </td>
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-2 text-gray-600 whitespace-nowrap">
                               <Phone className="h-4 w-4" />
-                              <span className="text-sm">{candidate.basicInfo?.phone || candidate.phoneNumber || 'N/A'}</span>
+                              <div className="relative">
+                                <span className={`text-sm ${(candidate.jobId?.contactDetailsVisible === false) ? 'blur-[4px] select-none opacity-40' : ''}`}>
+                                  {candidate.basicInfo?.phone || candidate.phoneNumber || 'N/A'}
+                                </span>
+                                {(candidate.jobId?.contactDetailsVisible === false) && (
+                                  <Lock className="h-3 w-3 text-gray-400 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+                                )}
+                              </div>
                             </div>
                           </td>
+
                           <td className="py-4 px-4 sticky right-0 bg-white shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)] z-10">
                             <div className="flex gap-2">
                               <Button
@@ -365,15 +382,22 @@ const Candidates = () => {
                                 <Eye className="h-4 w-4" />
                               </Button>
                               {candidate.resumeUrl ? (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleViewCV(candidate.resumeUrl)}
-                                  className="gap-2"
-                                >
-                                  <FileText className="h-4 w-4" />
-                                  <span className="sr-only">View CV</span>
-                                </Button>
+                                <div className="relative group/resume">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleViewCV(candidate.resumeUrl)}
+                                    className={`gap-2 ${candidate.jobId?.contactDetailsVisible === false ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
+                                    disabled={candidate.jobId?.contactDetailsVisible === false}
+                                    title={candidate.jobId?.contactDetailsVisible === false ? "Resume view restricted by admin" : "View CV"}
+                                  >
+                                    <FileText className="h-4 w-4" />
+                                    <span className="sr-only">View CV</span>
+                                    {candidate.jobId?.contactDetailsVisible === false && (
+                                      <Lock className="h-3 w-3 text-gray-500 absolute -top-1 -right-1 bg-white rounded-full border shadow-sm" />
+                                    )}
+                                  </Button>
+                                </div>
                               ) : (
                                 <span className="text-sm text-gray-400">No CV</span>
                               )}

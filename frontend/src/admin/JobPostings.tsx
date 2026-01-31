@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 // @ts-ignore
-import { getAllJobPostings, updateJobStatus, deleteJobAdmin, getAllPartners, shareJobWithPartners } from "../api/admin/admin.api";
+import { getAllJobPostings, updateJobStatus, deleteJobAdmin, getAllPartners, shareJobWithPartners, toggleJobContactVisibility } from "../api/admin/admin.api";
+import { Switch } from "@/components/ui/switch";
+
 import { toast } from "react-toastify";
 import { Check, X, Trash2 } from "lucide-react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
@@ -90,6 +92,19 @@ export default function JobPostings() {
     }
   };
 
+  const handleToggleVisibility = async (jobId: string, checked: boolean) => {
+    try {
+      const res = await toggleJobContactVisibility(jobId, checked);
+      if (res.data.success) {
+        toast.success(`Contact visibility ${res.data.contactDetailsVisible ? 'enabled' : 'disabled'}`);
+        setJobs(prev => prev.map(j => j._id === jobId ? { ...j, contactDetailsVisible: res.data.contactDetailsVisible } : j));
+      }
+    } catch (error) {
+      toast.error("Failed to toggle visibility");
+    }
+  };
+
+
   const handleDelete = async (id: string) => {
     setJobToDelete(id);
     setIsDeleteDialogOpen(true);
@@ -145,7 +160,9 @@ export default function JobPostings() {
                 <TableHead>Location</TableHead>
                 <TableHead>Experience</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Visibility</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
+
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -204,6 +221,19 @@ export default function JobPostings() {
                             job.status.charAt(0).toUpperCase() + job.status.slice(1)}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={job.contactDetailsVisible}
+                          onCheckedChange={(checked) => handleToggleVisibility(job._id, checked)}
+                          className="scale-75"
+                        />
+                        <span className="text-[10px] font-bold text-gray-500 uppercase">
+                          {job.contactDetailsVisible ? 'On' : 'Off'}
+                        </span>
+                      </div>
+                    </TableCell>
+
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         {job.status === 'pending' && (
@@ -302,7 +332,7 @@ function ShareJobDialog({ jobId, isOpen, onClose }: { jobId: string | null; isOp
   useEffect(() => {
     if (isOpen) {
       fetchPartners();
-      setSelectedPartners([]); 
+      setSelectedPartners([]);
     }
   }, [isOpen]);
 

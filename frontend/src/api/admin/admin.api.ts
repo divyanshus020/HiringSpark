@@ -11,6 +11,7 @@ export const deleteCandidate = (id: string) => api.delete(`/candidates/${id}`);
 export const getAllPlatforms = () => api.get("/platforms");
 export const deleteHR = (id: string) => api.delete(`/admin/hrs/${id}`);
 export const updateJobStatus = (id: string, status: string) => api.put(`/admin/jobs/${id}/status`, { status });
+export const toggleJobContactVisibility = (id: string, visible?: boolean) => api.put(`/admin/jobs/${id}/toggle-contact-visibility`, { visible });
 export const deleteJobAdmin = (id: string) => api.delete(`/admin/jobs/${id}`);
 
 // Partner Management APIs

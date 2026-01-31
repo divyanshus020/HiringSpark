@@ -1,6 +1,10 @@
 import api from "../axios";
 
+export const getSingleCandidate = (id: string) =>
+  api.get(`/candidates/${id}`);
+
 export const addCandidate = (formData: FormData) =>
+
   api.post("/candidates", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });

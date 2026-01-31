@@ -231,12 +231,31 @@ export const getCandidatesByJob = async (req, res) => {
     }
 
     const candidates = await Candidate.find(filter)
+      .populate('jobId', 'jobTitle contactDetailsVisible')
       .sort({ atsScore: -1, createdAt: -1 });
 
-    const formattedCandidates = candidates.map(c => ({
-      ...c._doc,
-      status: c.hrFeedback
-    }));
+
+    const formattedCandidates = candidates.map(c => {
+      const doc = { ...c._doc, status: c.hrFeedback };
+      const isVisible = c.jobId && c.jobId.contactDetailsVisible === true;
+      const isAdmin = req.user.role === 'ADMIN';
+
+      if (!isAdmin && !isVisible) {
+        doc.email = '[HIDDEN]';
+        doc.phoneNumber = '[HIDDEN]';
+        if (doc.basicInfo) {
+          doc.basicInfo = {
+            ...doc.basicInfo,
+            email: '[HIDDEN]',
+            phone: '[HIDDEN]',
+            linkedin: '[HIDDEN]',
+            github: '[HIDDEN]'
+          };
+        }
+        doc.resumeUrl = '#'; // Redact resume URL
+      }
+      return doc;
+    });
 
     res.json({
       success: true,
@@ -264,7 +283,7 @@ export const updateCandidateFeedback = async (req, res) => {
       });
     }
     const candidate = await Candidate.findById(req.params.id)
-      .populate('jobId', 'userId');
+      .populate('jobId', 'userId contactDetailsVisible');
 
     if (!candidate) {
       return res.status(404).json({
@@ -316,12 +335,27 @@ export const updateCandidateFeedback = async (req, res) => {
       }
     }
 
+    let responseDoc = { ...candidate._doc, status: candidate.hrFeedback };
+    const isVisible = candidate.jobId && candidate.jobId.contactDetailsVisible === true;
+
+    if (!isAdmin && !isVisible) {
+      responseDoc.email = '[HIDDEN]';
+      responseDoc.phoneNumber = '[HIDDEN]';
+      if (responseDoc.basicInfo) {
+        responseDoc.basicInfo = {
+          ...responseDoc.basicInfo,
+          email: '[HIDDEN]',
+          phone: '[HIDDEN]',
+          linkedin: '[HIDDEN]',
+          github: '[HIDDEN]'
+        };
+      }
+      responseDoc.resumeUrl = '#'; // Redact resume URL
+    }
+
     res.json({
       success: true,
-      candidate: {
-        ...candidate._doc,
-        status: candidate.hrFeedback
-      }
+      candidate: responseDoc
     });
   } catch (error) {
     res.status(500).json({
@@ -345,18 +379,80 @@ export const getMyCandidates = async (req, res) => {
     };
 
     const candidates = await Candidate.find(filter)
-      .populate('jobId', 'jobTitle')
+      .populate('jobId', 'jobTitle contactDetailsVisible')
       .sort({ atsScore: -1, createdAt: -1 });
 
-    const formattedCandidates = candidates.map(c => ({
-      ...c._doc,
-      status: c.hrFeedback
-    }));
+    const formattedCandidates = candidates.map(c => {
+      const doc = { ...c._doc, status: c.hrFeedback };
+      const isVisible = c.jobId && c.jobId.contactDetailsVisible === true;
+      const isAdmin = req.user.role === 'ADMIN';
+
+      if (!isAdmin && !isVisible) {
+        doc.email = '[HIDDEN]';
+        doc.phoneNumber = '[HIDDEN]';
+        if (doc.basicInfo) {
+          doc.basicInfo = {
+            ...doc.basicInfo,
+            email: '[HIDDEN]',
+            phone: '[HIDDEN]',
+            linkedin: '[HIDDEN]',
+            github: '[HIDDEN]'
+          };
+        }
+        doc.resumeUrl = '#'; // Redact resume URL
+      }
+      return doc;
+    });
 
     res.json({
       success: true,
       count: candidates.length,
       candidates: formattedCandidates
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+// @desc    Get single candidate by ID
+// @route   GET /api/candidates/:id
+export const getCandidateById = async (req, res) => {
+  try {
+    const candidate = await Candidate.findById(req.params.id)
+      .populate('jobId', 'jobTitle contactDetailsVisible position')
+      .populate('addedBy', 'fullName email');
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: 'Candidate not found'
+      });
+    }
+
+    let responseData = { ...candidate._doc };
+    const isVisible = candidate.jobId && candidate.jobId.contactDetailsVisible === true;
+    const isAdmin = req.user.role === 'ADMIN';
+
+    if (!isAdmin && !isVisible) {
+      responseData.email = '[HIDDEN]';
+      responseData.phoneNumber = '[HIDDEN]';
+      if (responseData.basicInfo) {
+        responseData.basicInfo = {
+          ...responseData.basicInfo,
+          email: '[HIDDEN]',
+          phone: '[HIDDEN]',
+          linkedin: '[HIDDEN]',
+          github: '[HIDDEN]'
+        };
+      }
+      responseData.resumeUrl = '#'; // Redact resume URL
+    }
+
+    res.json({
+      success: true,
+      candidate: responseData
     });
   } catch (error) {
     res.status(500).json({

@@ -7,6 +7,7 @@ import {
 } from "./ui/dialog";
 import { Badge } from "./ui/badge";
 import { ScrollArea } from "./ui/scroll-area";
+import { Button } from "./ui/button";
 import {
     User,
     Mail,
@@ -20,20 +21,27 @@ import {
     CheckCircle2,
     AlertCircle,
     FileText,
-    Target
+    Target,
+    Lock
 } from "lucide-react";
+
+
 
 interface CandidateDetailsModalProps {
     isOpen: boolean;
     onClose: () => void;
     candidate: any;
+    showAllDetails?: boolean;
 }
+
 
 export const CandidateDetailsModal = ({
     isOpen,
     onClose,
     candidate,
+    showAllDetails = false,
 }: CandidateDetailsModalProps) => {
+
     if (!candidate) return null;
 
     const {
@@ -45,8 +53,31 @@ export const CandidateDetailsModal = ({
         aiAssessment,
         atsScore,
         certifications = [],
-        parsingStatus
+        parsingStatus,
+        jobId: jobInfo
     } = candidate;
+
+    // Determine visibility - only blur for HR if contactDetailsVisible is false
+    // If showAllDetails is true (Admin), we don't blur.
+    const isContactVisible = showAllDetails || jobInfo?.contactDetailsVisible !== false;
+
+    const BlurredValue = ({ value, label }: { value: string; label: string }) => (
+
+        <div className="relative group">
+            <div className={`transition-all duration-300 ${!isContactVisible ? 'select-none blur-[4px] opacity-40' : ''}`}>
+                {value}
+            </div>
+            {!isContactVisible && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white/80 rounded border border-gray-200 shadow-sm">
+                        <Lock className="h-3 w-3 text-gray-500" />
+                        <span className="text-[10px] font-bold text-gray-500 tracking-tight">LOCKED</span>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+
 
     const InfoItem = ({ icon: Icon, label, value }: { icon: any; label: string; value: string }) => (
         <div className="flex items-center gap-2 text-sm">
@@ -91,8 +122,9 @@ export const CandidateDetailsModal = ({
                                             <Mail className="h-4 w-4 text-indigo-500 shrink-0" /> Email
                                         </div>
                                         <div className="text-gray-900 break-all pl-6">
-                                            {basicInfo?.email || candidate.email || "N/A"}
+                                            <BlurredValue value={basicInfo?.email || candidate.email || "N/A"} label="Email" />
                                         </div>
+
                                     </div>
 
                                     <div className="flex flex-col gap-1 text-sm bg-gray-50 p-2 rounded-md">
@@ -100,8 +132,9 @@ export const CandidateDetailsModal = ({
                                             <Phone className="h-4 w-4 text-indigo-500 shrink-0" /> Phone
                                         </div>
                                         <div className="text-gray-900 pl-6">
-                                            {basicInfo?.phone || candidate.phoneNumber || "N/A"}
+                                            <BlurredValue value={basicInfo?.phone || candidate.phoneNumber || "N/A"} label="Phone" />
                                         </div>
+
                                     </div>
 
                                     <div className="flex flex-col gap-1 text-sm bg-gray-50 p-2 rounded-md">
@@ -109,12 +142,17 @@ export const CandidateDetailsModal = ({
                                             <Linkedin className="h-4 w-4 text-indigo-500 shrink-0" /> LinkedIn
                                         </div>
                                         <div className="text-gray-900 break-all pl-6">
-                                            {basicInfo?.linkedin ? (
-                                                <a href={basicInfo.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                                    {basicInfo.linkedin}
-                                                </a>
-                                            ) : "N/A"}
+                                            {isContactVisible ? (
+                                                basicInfo?.linkedin ? (
+                                                    <a href={basicInfo.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                                        {basicInfo.linkedin}
+                                                    </a>
+                                                ) : "N/A"
+                                            ) : (
+                                                <BlurredValue value="https://linkedin.com/in/..." label="LinkedIn" />
+                                            )}
                                         </div>
+
                                     </div>
 
                                     <div className="flex flex-col gap-1 text-sm bg-gray-50 p-2 rounded-md">
@@ -127,6 +165,40 @@ export const CandidateDetailsModal = ({
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Resume Section */}
+                            {candidate.resumeUrl && (
+                                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-3">
+                                    <h3 className="font-semibold text-gray-900 border-b pb-2 flex items-center gap-2">
+                                        <FileText className="h-4 w-4 text-indigo-500" /> Resume / CV
+                                    </h3>
+                                    <Button
+                                        variant={isContactVisible ? "default" : "outline"}
+                                        className={`w-full gap-2 ${!isContactVisible ? 'opacity-50 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+                                        disabled={!isContactVisible}
+                                        onClick={() => {
+                                            const backendHost = import.meta.env.VITE_API_URL?.replace('/api', '') || window.location.origin;
+                                            const openUrl = candidate.resumeUrl.startsWith('http') ? candidate.resumeUrl : `${backendHost}${candidate.resumeUrl}`;
+                                            window.open(openUrl, '_blank');
+                                        }}
+                                    >
+                                        {isContactVisible ? (
+                                            <>
+                                                <FileText className="h-4 w-4" /> View Full Resume
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Lock className="h-4 w-4" /> Resume Locked
+                                            </>
+                                        )}
+                                    </Button>
+                                    {!isContactVisible && (
+                                        <p className="text-[10px] text-gray-500 text-center italic">
+                                            Enable contact visibility to view resume
+                                        </p>
+                                    )}
+                                </div>
+                            )}
 
                             <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
                                 <h3 className="font-semibold text-gray-900 border-b pb-2 flex items-center gap-2">

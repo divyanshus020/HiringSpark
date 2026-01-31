@@ -7,14 +7,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useJobPosting } from '../../context/JobPostingContext';
 import { ArrowRight, Briefcase, MapPin, Clock, Users, Plus, X, Sparkles } from 'lucide-react';
-import { createJobDraft, updateJobStep1 } from '../../../api/hr/jobs.api';
+import { createJobDraft, updateJobStep1, generateAIJobDescription } from '../../../api/hr/jobs.api';
 import { toast } from 'react-toastify';
+import { Loader2 as Spinner } from 'lucide-react';
+
 
 const JobDetailsStep = () => {
   const { state, setJobDetails, setCurrentStep, setJobId } = useJobPosting();
   const [formData, setFormData] = useState(state.jobDetails);
   const [newSkill, setNewSkill] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+
 
   // Create draft on component mount if no jobId exists
   useEffect(() => {
@@ -67,6 +71,41 @@ const JobDetailsStep = () => {
       console.error('Error saving job details:', error);
       toast.error(error.response?.data?.message || 'Failed to save job details');
       setIsLoading(false);
+    }
+  };
+
+  const handleGenerateAI = async () => {
+    if (!formData.title) {
+      toast.warning('Please enter a job title first!');
+      return;
+    }
+
+    setIsAiGenerating(true);
+    try {
+      const response = await generateAIJobDescription({
+        jobTitle: formData.title,
+        companyName: formData.company,
+        location: formData.location,
+        jobType: formData.jobType
+      });
+
+      if (response.data.success) {
+        const { description, requirements, skills } = response.data.data;
+
+        setFormData({
+          ...formData,
+          description: description || formData.description,
+          requirements: Array.isArray(requirements) ? requirements.join('\n') : (requirements || formData.requirements),
+          skills: Array.isArray(skills) ? [...new Set([...formData.skills, ...skills])] : formData.skills
+        });
+
+        toast.success('Job details generated successfully! ✨');
+      }
+    } catch (error: any) {
+      console.error('Error generating AI job description:', error);
+      toast.error(error.response?.data?.message || 'Failed to generate job details');
+    } finally {
+      setIsAiGenerating(false);
     }
   };
 
@@ -191,7 +230,24 @@ const JobDetailsStep = () => {
               {/* Row 1: Job Title & Company Name */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="title" className="text-base font-semibold text-gray-700">Job Title *</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="title" className="text-base font-semibold text-gray-700">Job Title *</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleGenerateAI}
+                      disabled={isAiGenerating || !formData.title}
+                      className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 gap-2 h-8 px-3"
+                    >
+                      {isAiGenerating ? (
+                        <Spinner className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-3.5 w-3.5" />
+                      )}
+                      {isAiGenerating ? 'Generating...' : 'Auto-Generate with AI ✨'}
+                    </Button>
+                  </div>
                   <Input
                     id="title"
                     placeholder="e.g., Senior Software Engineer"

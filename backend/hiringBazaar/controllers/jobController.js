@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 import { Job } from '../models/Job.js';
 import { Platform } from '../models/Platform.js';
 import { User } from '../models/User.js';
+import * as aiService from '../../shared/services/aiService.js';
+
 
 // @desc    Create new job draft
 // @route   POST /api/jobs/draft
@@ -457,3 +459,31 @@ export const deleteJob = async (req, res) => {
     });
   }
 };
+
+// @desc    Generate job description using AI
+// @route   POST /api/jobs/generate-description
+export const generateJobDescriptionAI = async (req, res) => {
+  try {
+    const { jobTitle, companyName, location, jobType } = req.body;
+
+    if (!jobTitle) {
+      return res.status(400).json({
+        success: false,
+        message: 'Job title is required'
+      });
+    }
+
+    const result = await aiService.generateJobDescription(jobTitle, companyName, location, jobType);
+
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+

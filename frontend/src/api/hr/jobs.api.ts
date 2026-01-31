@@ -26,3 +26,7 @@ export const getSingleJob = (id: string) =>
 
 export const deleteJob = (id: string) =>
   api.delete(`/jobs/${id}`);
+
+export const generateAIJobDescription = (data: { jobTitle: string; companyName?: string; location?: string; jobType?: string }) =>
+  api.post("/jobs/generate-description", data);
+

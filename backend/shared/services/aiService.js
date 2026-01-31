@@ -217,3 +217,49 @@ export async function chatWithDoc(message, context, role) {
     throw new Error("Failed to chat with AI");
   }
 }
+
+/**
+ * Generate a job description, requirements, and skills based on job title
+ */
+export async function generateJobDescription(jobTitle, companyName, location, jobType) {
+  try {
+    const prompt = `You are a Senior Technical Recruiter. Based on the job title "${jobTitle}", generate a professional job description, a list of requirements, and a list of key skills.
+    
+    Context:
+    - Company: ${companyName || 'A growing company'}
+    - Location: ${location || 'Remote/Hybrid'}
+    - Job Type: ${jobType || 'Full-time'}
+    
+    Strictly return ONLY a JSON object in the following format:
+    {
+      "description": "A detailed 2-3 paragraph job description...",
+      "requirements": ["Requirement 1", "Requirement 2", "Requirement 3", "Requirement 4", "Requirement 5"],
+      "skills": ["Skill 1", "Skill 2", "Skill 3", "Skill 4", "Skill 5"]
+    }`;
+
+    const completion = await openRouter.chat.send({
+      model: DEFAULT_MODEL,
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      stream: false,
+    });
+
+    const choice = completion.choices[0];
+    if (!choice || !choice.message || !choice.message.content) {
+      throw new Error('AI returned an empty response');
+    }
+
+    const content = choice.message.content;
+    const jsonString = (typeof content === 'string' ? content : '').trim();
+    const cleanedJson = jsonString.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+
+    return JSON.parse(cleanedJson);
+  } catch (error) {
+    console.error('AI job description generation error:', error);
+    throw new Error(`AI generation failed: ${error.message}`);
+  }
+}

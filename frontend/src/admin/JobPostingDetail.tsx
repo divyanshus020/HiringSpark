@@ -1,11 +1,14 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getJobPostingDetail, updateJobStatus } from "../api/admin/admin.api";
+import { getJobPostingDetail, updateJobStatus, toggleJobContactVisibility } from "../api/admin/admin.api";
+import { Switch } from "@/components/ui/switch";
+
 import { getCandidatesByJob, addCandidate, updateCandidateStatus } from "../api/hr/candidates.api";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Calendar, Linkedin, ExternalLink, Check, X, Eye, Loader2, AlertCircle, CheckCircle2, SearchIcon } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, Linkedin, ExternalLink, Check, X, Eye, Loader2, AlertCircle, CheckCircle2, SearchIcon, Users as UsersIcon } from "lucide-react";
+
 import { CandidateDetailsModal } from "@/components/CandidateDetailsModal";
 import {
   Select,
@@ -57,7 +60,10 @@ export default function JobPostingDetail() {
     initialStatus: "Pending Review" as string,
   });
 
+  const [isVisibilityLoading, setIsVisibilityLoading] = useState(false);
+
   const fetchData = async () => {
+
     if (!id) return;
     setIsLoading(true);
     try {
@@ -137,7 +143,55 @@ export default function JobPostingDetail() {
     }
   };
 
+  const handleViewCV = (cvUrl: string) => {
+    if (!cvUrl || cvUrl === '#') {
+      toast({
+        title: "Info",
+        description: "CV not available or access restricted",
+      });
+      return;
+    }
+    try {
+      const isFullUrl = /^https?:\/\//i.test(cvUrl);
+      const backendHost = import.meta.env.VITE_API_URL?.replace('/api', '') || window.location.origin;
+      const openUrl = isFullUrl ? cvUrl : `${backendHost}${cvUrl}`;
+      window.open(openUrl, '_blank');
+    } catch (err) {
+      console.error('Failed to open CV:', err);
+      toast({
+        title: "Error",
+        description: "Failed to open CV",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleToggleVisibility = async (checked: boolean) => {
+    if (!id) return;
+    setIsVisibilityLoading(true);
+    try {
+      const res = await toggleJobContactVisibility(id, checked);
+      if (res.data.success) {
+        setJob((prev: any) => ({ ...prev, contactDetailsVisible: res.data.contactDetailsVisible }));
+        toast({
+          title: "Success",
+          description: `Contact visibility ${res.data.contactDetailsVisible ? 'enabled' : 'disabled'}`,
+        });
+      }
+    } catch (error: any) {
+      console.error("Error toggling visibility:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to update visibility",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVisibilityLoading(false);
+    }
+  };
+
   const handleUploadCandidate = async () => {
+
     // ... existing upload logic remains the same ...
     if (!newCandidate.name || !newCandidate.email || !newCandidate.phone || !id) {
       toast({
@@ -229,7 +283,7 @@ export default function JobPostingDetail() {
   return (
     <DashboardLayout title="Job Postings">
       <div className="space-y-6">
-        {/* Header Link */}
+        {/* Header Row */}
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
             {job.status === 'pending' && (
@@ -264,6 +318,7 @@ export default function JobPostingDetail() {
               </>
             )}
           </div>
+
           <div className="flex items-center gap-3">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
@@ -384,8 +439,35 @@ export default function JobPostingDetail() {
           </div>
         </div>
 
+        {/* Prominent Visibility Toggle Banner */}
+        <div className="flex items-center justify-between bg-indigo-50 border border-indigo-100 p-4 rounded-xl shadow-sm mb-6">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 bg-indigo-600 rounded-full flex items-center justify-center text-white shrink-0">
+              <UsersIcon className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-indigo-900">Candidate Contact Visibility</h3>
+              <p className="text-xs text-indigo-700 opacity-80">Control if HR can see candidate email and phone numbers for this job</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-lg border border-indigo-200">
+            <Label htmlFor="contact-visibility-prominent" className="text-sm font-bold text-gray-700 cursor-pointer whitespace-nowrap">
+              {job.contactDetailsVisible ? 'Contacts Visible' : 'Contacts Hidden'}
+            </Label>
+            <Switch
+              id="contact-visibility-prominent"
+              checked={job.contactDetailsVisible}
+              onCheckedChange={handleToggleVisibility}
+              disabled={isVisibilityLoading}
+              className="data-[state=checked]:bg-green-500"
+            />
+          </div>
+        </div>
+
         {/* Job Info Card */}
+
         <Card className="border-gray-100 shadow-sm">
+
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-6">
               <h2 className="text-xl font-bold text-gray-800">{job.jobTitle}</h2>
@@ -442,10 +524,10 @@ export default function JobPostingDetail() {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card >
 
         {/* Availability Card */}
-        <Card className="border-gray-100 shadow-sm">
+        < Card className="border-gray-100 shadow-sm" >
           <CardContent className="p-6">
             <h3 className="font-semibold text-gray-800 mb-4">Job Description</h3>
             <div className="bg-gray-50 p-4 rounded-lg">
@@ -454,9 +536,9 @@ export default function JobPostingDetail() {
               </p>
             </div>
           </CardContent>
-        </Card>
+        </Card >
         {/* Requirements Card */}
-        <Card className="border-gray-100 shadow-sm">
+        < Card className="border-gray-100 shadow-sm" >
           <CardContent className="p-6">
             <h3 className="font-semibold text-gray-800 mb-4">Requirements</h3>
             <div className="space-y-2">
@@ -471,10 +553,10 @@ export default function JobPostingDetail() {
               )}
             </div>
           </CardContent>
-        </Card>
+        </Card >
 
         {/* Skills Card */}
-        <Card className="border-gray-100 shadow-sm">
+        < Card className="border-gray-100 shadow-sm" >
           <CardContent className="p-6">
             <h3 className="font-semibold text-gray-800 mb-4">Required Skills</h3>
             <div className="flex flex-wrap gap-2">
@@ -487,9 +569,9 @@ export default function JobPostingDetail() {
               )}
             </div>
           </CardContent>
-        </Card>
+        </Card >
         {/* Availability Card */}
-        <Card className="border-gray-100 shadow-sm">
+        < Card className="border-gray-100 shadow-sm" >
           <CardContent className="p-6">
             <h3 className="font-semibold text-gray-800 mb-4">Availability for Calls</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -503,10 +585,10 @@ export default function JobPostingDetail() {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card >
 
         {/* Integrations Card */}
-        <Card className="border-gray-100 shadow-sm">
+        < Card className="border-gray-100 shadow-sm" >
           <CardContent className="p-6">
             <h3 className="font-semibold text-gray-800 mb-4">Selected Integrations</h3>
             <div className="flex gap-4">
@@ -522,10 +604,10 @@ export default function JobPostingDetail() {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card >
 
         {/* Candidates Section */}
-        <Card className="border-gray-100 shadow-sm">
+        < Card className="border-gray-100 shadow-sm" >
           <CardContent className="p-6">
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-semibold text-gray-800">Candidates for This Job</h3>
@@ -622,15 +704,13 @@ export default function JobPostingDetail() {
                         </p>
                         <div className="flex items-center gap-3 mt-2">
                           {candidate.resumeUrl && (
-                            <a
-                              href={candidate.resumeUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <button
+                              onClick={() => handleViewCV(candidate.resumeUrl)}
                               className="flex items-center gap-1 text-xs text-green-600 hover:underline"
                             >
                               <ExternalLink className="h-3 w-3" />
                               View Resume
-                            </a>
+                            </button>
                           )}
                           <button
                             onClick={() => {
@@ -705,15 +785,19 @@ export default function JobPostingDetail() {
               </>
             )}
           </CardContent>
-        </Card >
-      </div >
+        </Card>
+      </div>
+
 
 
       <CandidateDetailsModal
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
         candidate={selectedCandidate}
+        showAllDetails={true}
       />
-    </DashboardLayout >
+
+    </DashboardLayout>
+
   );
 }

@@ -363,3 +363,32 @@ export const deleteJobAdmin = async (req, res) => {
         });
     }
 };
+// @desc    Toggle contact visibility for a job
+// @route   PUT /api/admin/jobs/:id/toggle-contact-visibility
+export const toggleContactVisibility = async (req, res) => {
+    try {
+        const { visible } = req.body;
+
+        const job = await Job.findById(req.params.id);
+        if (!job) {
+            return res.status(404).json({
+                success: false,
+                message: 'Job not found'
+            });
+        }
+
+        job.contactDetailsVisible = visible !== undefined ? visible : !job.contactDetailsVisible;
+        await job.save();
+
+        res.json({
+            success: true,
+            message: `Contact visibility ${job.contactDetailsVisible ? 'enabled' : 'disabled'}`,
+            contactDetailsVisible: job.contactDetailsVisible
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};

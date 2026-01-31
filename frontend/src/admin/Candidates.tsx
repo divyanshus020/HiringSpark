@@ -279,7 +279,9 @@ export default function Candidates() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         candidate={selectedCandidate}
+        showAllDetails={true}
       />
+
     </DashboardLayout>
   );
 }
