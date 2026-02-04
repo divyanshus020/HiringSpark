@@ -19,7 +19,11 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
         currentCandidate.parsingStatus = 'PROCESSING';
         await currentCandidate.save();
 
-        const absolutePath = path.join(process.cwd(), currentCandidate.resumeUrl);
+        let normalizedPath = currentCandidate.resumeUrl;
+        if (normalizedPath.startsWith('/')) {
+            normalizedPath = normalizedPath.substring(1);
+        }
+        const absolutePath = path.join(process.cwd(), normalizedPath);
         const { text, links } = await extractTextFromFile(absolutePath);
 
         if (!text) throw new Error('Could not extract text from file');

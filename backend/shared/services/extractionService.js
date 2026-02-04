@@ -19,7 +19,16 @@ export async function extractTextFromFile(filePath) {
 
 async function extractPdfTextAndLinks(filePath) {
     try {
+        console.log(`📂 Attempting to extract text from: ${filePath}`);
+
+        if (!fs.existsSync(filePath)) {
+            console.error(`❌ File does not exist at path: ${filePath}`);
+            return { text: '', links: [] };
+        }
+
         const dataBuffer = fs.readFileSync(filePath);
+        console.log(`📄 File read successful, buffer size: ${dataBuffer.length} bytes`);
+
         const data = new Uint8Array(dataBuffer);
 
         const loadingTask = pdfjsLib.getDocument({
@@ -28,6 +37,7 @@ async function extractPdfTextAndLinks(filePath) {
             disableFontFace: true,
         });
         const pdf = await loadingTask.promise;
+        console.log(`📖 PDF loaded, total pages: ${pdf.numPages}`);
 
         let fullText = '';
         const links = new Set();
@@ -57,12 +67,15 @@ async function extractPdfTextAndLinks(filePath) {
             });
         }
 
+        const trimmedText = fullText.trim();
+        console.log(`✅ Extraction complete. Extracted text length: ${trimmedText.length}`);
+
         return {
-            text: fullText.trim() || '',
+            text: trimmedText || '',
             links: Array.from(links)
         };
     } catch (error) {
-        console.error('Error extracting PDF text:', error);
+        console.error('❌ Error extracting PDF text:', error);
         return { text: '', links: [] };
     }
 }
