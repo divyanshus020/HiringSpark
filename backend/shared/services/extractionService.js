@@ -1,59 +1,39 @@
-import { execFile } from 'child_process';
-import { promisify } from 'util';
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-const execFilePromise = promisify(execFile);
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PYTHON_SCRIPT = path.join(__dirname, '../scripts/resume_parser.py');
 
 export async function extractTextFromFile(filePath) {
+    const ext = path.extname(filePath).toLowerCase();
     try {
-        console.log(`🐍 Triggering Python Parser for: ${filePath}`);
-
-        if (!fs.existsSync(filePath)) {
-            throw new Error('File not found at path');
+        if (ext === '.pdf') {
+            return await extractPdfText(filePath);
+        } else if (ext === '.docx') {
+            return await extractDocxText(filePath);
+        } else {
+            throw new Error(`Unsupported format: ${ext}`);
         }
-
-        // Try 'python3' first as it's standard on Linux, fallback to 'python'
-        let pythonCmd = 'python3';
-        try {
-            await execFilePromise('python3', ['--version']);
-        } catch (e) {
-            pythonCmd = 'python';
-        }
-
-        // Call python script
-        const { stdout, stderr } = await execFilePromise(pythonCmd, [PYTHON_SCRIPT, filePath]);
-
-        if (stderr && !stdout) {
-            console.error('Python Error:', stderr);
-            throw new Error(`Python extraction failed: ${stderr}`);
-        }
-
-        const result = JSON.parse(stdout);
-
-        if (result.error) {
-            throw new Error(result.error);
-        }
-
-        // Combine links from PDF objects and regex in text
-        const extraLinks = result.text.match(/https?:\/\/[^\s<>"]+/g) || [];
-        const allLinks = Array.from(new Set([...(result.links || []), ...extraLinks]));
-
-        console.log(`✅ Python parsing complete. Length: ${result.text.length} chars. Links: ${allLinks.length}`);
-
-        return {
-            text: result.text || '',
-            links: allLinks,
-            emails: result.emails || [],
-            phones: result.phones || []
-        };
-
     } catch (error) {
-        console.error('❌ Extraction Service Error:', error);
-        // Fallback to minimal JS if python fails (empty result)
+        console.error('❌ Extraction Error:', error);
         return { text: '', links: [] };
     }
+}
+
+async function extractPdfText(filePath) {
+    const dataBuffer = fs.readFileSync(filePath);
+    const data = new Uint8Array(dataBuffer);
+    const pdf = await pdfjsLib.getDocument({ data, useSystemFonts: true }).promise;
+
+    let fullText = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        fullText += textContent.items.map(s => s.str).join(' ') + '\n';
+    }
+    return { text: fullText.trim(), links: [] };
+}
+
+async function extractDocxText(filePath) {
+    const mammoth = await import('mammoth');
+    const result = await mammoth.default.extractRawText({ path: filePath });
+    return { text: result.value, links: [] };
 }
