@@ -1,31 +1,45 @@
-import { OpenRouter } from '@openrouter/sdk';
+import Bytez from 'bytez.js';
 import { env } from '../config/env.js';
 
-// Initialize OpenRouter
+/* 
+// ==========================================
+// BACKUP: OpenRouter Configuration (Commented)
+// ==========================================
+import { OpenRouter } from '@openrouter/sdk';
 const openRouter = new OpenRouter({
   apiKey: env.OPENROUTER_API_KEY,
   httpReferer: 'https://hspark.com',
   xTitle: 'HiringSpark CRM',
 });
-
-// Using Gemini 2.0 Flash via OpenRouter for high speed and reliability
 const DEFAULT_MODEL = 'google/gemini-2.0-flash-001';
+
+export async function extractResumeInfo_OR(text, allLinks, jobContext) {
+  try {
+    let jdContext = jobContext ? `\nJD: ${jobContext.title}. Requirements: ${jobContext.skillsRequired.join(', ')}. Desc: ${jobContext.description}` : "No specific JD.";
+    const cleanedText = text.replace(/[\0-\x1F\x7F-\x9F]/g, "").substring(0, 12000);
+    const prompt = `...`; // (Original prompt logic)
+    const completion = await openRouter.chat.send({
+      model: DEFAULT_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      response_format: { type: 'json_object' }
+    });
+    return JSON.parse(completion.choices[0].message.content);
+  } catch (e) { console.error(e); throw e; }
+}
+*/
+
+// ==========================================
+// CURRENT: Bytez Configuration
+// ==========================================
+const sdk = new Bytez(env.BYTEZ_API_KEY);
+
+// Using a more capable model for extraction
+const EXTRACTION_MODEL = "Qwen/Qwen2.5-72B-Instruct";
 
 const SYSTEM_INSTRUCTION = `You are a Senior Technical Recruiter. Extract candidate data into the specified JSON format.
 If a Job Description (JD) is provided, calculate scores based on the fit.
-
-CRITICAL INSTRUCTION:
-1. ONLY include professional work experience (jobs, internships) in "work_experience" and "experience_years".
-2. ABSOLUTELY DO NOT include personal projects, academic projects, or freelance projects in the "work_experience" list.
-3. Projects should be ignored for the "experience_years" calculation.
-4. Calculate "experience_years" by summing the duration of professional jobs and internships only.
-
-Assessment:
-- Technical Fit: 0-100 based on skills/JD matching.
-- Cultural Fit: 0-100 based on soft skills/leadership.
-- Overall Score: 70% Technical + 30% General potential.
-Provide a 2-3 sentence executive summary.
-Strictly return ONLY the JSON object.`;
+ONLY include professional work experience. NO personal/academic projects in work_experience.
+Strictly return ONLY the JSON object. NO markdown, NO text before/after.`;
 
 const JSON_SCHEMA = `
 {
@@ -72,77 +86,56 @@ const JSON_SCHEMA = `
   "certifications": ["string"]
 }`;
 
-export async function extractResumeInfo(
-  text,
-  allLinks,
-  jobContext
-) {
+export async function extractResumeInfo(text, allLinks, jobContext) {
   try {
+    const model = sdk.model(EXTRACTION_MODEL);
     let jdContext = jobContext ? `\nJD: ${jobContext.title}. Requirements: ${jobContext.skillsRequired.join(', ')}. Desc: ${jobContext.description}` : "No specific JD.";
+    const cleanedText = text.replace(/[\0-\x1F\x7F-\x9F]/g, "").substring(0, 15000);
 
-    // Clean text to remove non-printable characters that can break JSON
-    const cleanedText = text.replace(/[\0-\x1F\x7F-\x9F]/g, "").substring(0, 12000);
+    const prompt = `${SYSTEM_INSTRUCTION}\n\nSchema:\n${JSON_SCHEMA}\n\nContext:\n${jdContext}\nLinks: ${allLinks.join(', ')}\n\nResume Text:\n${cleanedText}\n\nJSON Output:`;
 
-    const prompt = `${SYSTEM_INSTRUCTION}\n\nSchema:\n${JSON_SCHEMA}\n\nContext:\n${jdContext}\nLinks: ${allLinks.join(', ')}\n\nResume Text:\n${cleanedText}`;
+    console.log(`🧠 [Bytez] Starting AI Extraction with ${EXTRACTION_MODEL}...`);
 
-    const completion = await openRouter.chat.send({
-      model: DEFAULT_MODEL,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      stream: false,
-      response_format: { type: 'json_object' }
-    });
+    const { error, output } = await model.run([
+      { role: "user", content: prompt }
+    ]);
 
-    const choice = completion.choices[0];
-    if (!choice || !choice.message || !choice.message.content) {
-      throw new Error('AI returned an empty response');
+    if (error) {
+      console.error('❌ Bytez Error:', error);
+      throw new Error(`Bytez AI error: ${JSON.stringify(error)}`);
     }
 
-    const content = choice.message.content.trim();
+    const content = typeof output === 'string' ? output : (output?.[0]?.generated_text || '');
 
-    // Extract JSON block using standard markers or first/last braces
-    let jsonString = content;
+    // Extract JSON block
     const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      jsonString = jsonMatch[0];
-    }
+    const jsonString = jsonMatch ? jsonMatch[0] : content;
 
     try {
       return JSON.parse(jsonString);
     } catch (parseError) {
-      console.error('❌ AI JSON Parse Error. Raw content:', content);
+      console.error('❌ Bytez JSON Parse Error. Raw output:', content);
       throw new Error(`AI response truncated or malformed: ${parseError.message}`);
     }
   } catch (error) {
-    console.error('AI optimization extraction error:', error);
+    console.error('AI extraction error:', error);
     throw new Error(`AI extraction failed: ${error.message}`);
   }
 }
 
 export async function generateExecutiveSummary(text) {
   try {
-    const prompt = `Generate a 2-sentence professional summary for this resume:\n\n${text.substring(0, 3000)}`;
+    const model = sdk.model("Qwen/Qwen2.5-7B-Instruct");
+    const prompt = `Generate a 2-sentence professional summary for this resume text:\n\n${text.substring(0, 3000)}`;
 
-    const completion = await openRouter.chat.send({
-      model: DEFAULT_MODEL,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      stream: false,
-    });
+    const { error, output } = await model.run([
+      { role: "user", content: prompt }
+    ]);
 
-    const choice = completion.choices[0];
-    const content = choice?.message?.content;
-    return (typeof content === 'string' ? content : '') || "Summary unavailable";
+    if (error) throw new Error(JSON.stringify(error));
+    return (typeof output === 'string' ? output : output?.[0]?.generated_text) || "Summary unavailable";
   } catch (error) {
-    console.error('OpenRouter summary error:', error);
+    console.error('Bytez summary error:', error);
     return "Summary unavailable";
   }
 }
@@ -187,6 +180,7 @@ PLATFORM GUIDE & NAVIGATION:
 
 export async function chatWithDoc(message, context, role) {
   try {
+    const model = sdk.model("Qwen/Qwen2.5-7B-Instruct");
     const systemPrompt = `You are a helpful AI assistant for the HiringSpark platform.
     
     Current User Role: ${role}
@@ -200,39 +194,24 @@ export async function chatWithDoc(message, context, role) {
     1. If the user is 'admin', you can discuss anything about the platform, navigation, and workflows.
     2. If the user is 'hr', you can ONLY discuss public job postings and general platform usage. DO NOT reveal admin routes or sensitive data.
     3. Use the PLATFORM GUIDE above to answer "How do I..." questions accurately.
-    4. Be concise, professional, and helpful.
-    
-    User Context/Query: "${message}"`;
+    4. Be concise, professional, and helpful.`;
 
-    const completion = await openRouter.chat.send({
-      model: DEFAULT_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt
-        },
-        {
-          role: 'user',
-          content: message
-        }
-      ],
-      stream: false,
-    });
+    const { error, output } = await model.run([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: message }
+    ]);
 
-    const choice = completion.choices[0];
-    return choice?.message?.content || "I couldn't generate a response.";
-
+    if (error) throw new Error(JSON.stringify(error));
+    return (typeof output === 'string' ? output : output?.[0]?.generated_text) || "I couldn't generate a response.";
   } catch (error) {
     console.error('AI Chat error:', error);
     throw new Error("Failed to chat with AI");
   }
 }
 
-/**
- * Generate a job description, requirements, and skills based on job title
- */
 export async function generateJobDescription(jobTitle, companyName, location, jobType) {
   try {
+    const model = sdk.model("Qwen/Qwen2.5-72B-Instruct");
     const prompt = `You are a Senior Technical Recruiter. Based on the job title "${jobTitle}", generate a professional job description, a list of requirements, and a list of key skills.
     
     Context:
@@ -247,27 +226,17 @@ export async function generateJobDescription(jobTitle, companyName, location, jo
       "skills": ["Skill 1", "Skill 2", "Skill 3", "Skill 4", "Skill 5"]
     }`;
 
-    const completion = await openRouter.chat.send({
-      model: DEFAULT_MODEL,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      stream: false,
-    });
+    const { error, output } = await model.run([
+      { role: 'user', content: prompt }
+    ]);
 
-    const choice = completion.choices[0];
-    if (!choice || !choice.message || !choice.message.content) {
-      throw new Error('AI returned an empty response');
-    }
+    if (error) throw new Error(JSON.stringify(error));
 
-    const content = choice.message.content;
-    const jsonString = (typeof content === 'string' ? content : '').trim();
-    const cleanedJson = jsonString.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+    const content = typeof output === 'string' ? output : (output?.[0]?.generated_text || '');
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    const jsonString = jsonMatch ? jsonMatch[0] : content;
 
-    return JSON.parse(cleanedJson);
+    return JSON.parse(jsonString);
   } catch (error) {
     console.error('AI job description generation error:', error);
     throw new Error(`AI generation failed: ${error.message}`);
