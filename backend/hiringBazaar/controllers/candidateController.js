@@ -21,7 +21,6 @@ async function processDirectly(candidateId) {
 
     // 1. Extract Text
     const { text, links } = await extractTextFromFile(absPath);
-    if (!text || text.length < 100) throw new Error('Could not extract text');
 
     candidate.parsingProgress = 50;
     await candidate.save();

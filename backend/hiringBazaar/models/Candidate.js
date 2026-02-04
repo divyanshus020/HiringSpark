@@ -36,7 +36,7 @@ const candidateSchema = new mongoose.Schema({
   isParsed: { type: Boolean, default: false },
   parsingStatus: {
     type: String,
-    enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'MANUAL_REVIEW'],
+    enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED'],
     default: 'PENDING'
   },
   parsingProgress: {

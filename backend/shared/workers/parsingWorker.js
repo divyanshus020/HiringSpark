@@ -31,15 +31,6 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
         console.log(`[Worker] 📄 Extracting from: ${absolutePath}`);
         const { text, links } = await extractTextFromFile(absolutePath);
 
-        if (!text || text.trim().length < 150) {
-            console.warn(`[Worker] ⚠️ Low text in ${candidateId}. Marking for manual review.`);
-            currentCandidate.parsingStatus = 'MANUAL_REVIEW';
-            currentCandidate.parsingStatusMessage = 'Could not extract enough text. Manual review required.';
-            currentCandidate.parsingProgress = 0;
-            await currentCandidate.save();
-            return;
-        }
-
         console.log(`[Worker] 🤖 Sending to AI (OpenRouter)...`);
         currentCandidate.parsingProgress = 40;
         currentCandidate.parsingStatusMessage = 'AI analysis in progress...';
