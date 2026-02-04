@@ -688,9 +688,22 @@ export default function JobPostingDetail() {
                               <AlertCircle className="w-3 h-3" /> Manual Review
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-[10px] px-1 py-0 h-5 gap-1">
-                              <Loader2 className="w-3 h-3 animate-spin" /> Processing
-                            </Badge>
+                            <div className="flex flex-col gap-1 min-w-[120px]">
+                              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-[10px] px-1 py-0 h-5 gap-1 w-fit">
+                                <Loader2 className="w-3 h-3 animate-spin" /> Processing {candidate.parsingProgress}%
+                              </Badge>
+                              {candidate.parsingStatusMessage && (
+                                <span className="text-[9px] text-yellow-600 font-medium italic animate-pulse">
+                                  {candidate.parsingStatusMessage}
+                                </span>
+                              )}
+                              <div className="h-1 w-full bg-yellow-100 rounded-full overflow-hidden mt-0.5">
+                                <div
+                                  className="h-full bg-yellow-400 transition-all duration-500"
+                                  style={{ width: `${candidate.parsingProgress || 0}%` }}
+                                />
+                              </div>
+                            </div>
                           )}
                           {/* ATS Score Badge */}
                           {(candidate.atsScore !== undefined) && (

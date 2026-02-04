@@ -39,6 +39,14 @@ const candidateSchema = new mongoose.Schema({
     enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'MANUAL_REVIEW'],
     default: 'PENDING'
   },
+  parsingProgress: {
+    type: Number,
+    default: 0
+  },
+  parsingStatusMessage: {
+    type: String,
+    default: 'Waiting in queue...'
+  },
 
   // AI Extracted Data
   basicInfo: {

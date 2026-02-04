@@ -54,6 +54,7 @@ export const CandidateDetailsModal = ({
         atsScore,
         certifications = [],
         parsingStatus,
+        parsingStatusMessage,
         jobId: jobInfo
     } = candidate;
 
@@ -115,8 +116,10 @@ export const CandidateDetailsModal = ({
                             <div>
                                 <h4 className="font-bold text-orange-900 text-sm">AI Parsing Incomplete</h4>
                                 <p className="text-xs text-orange-700 mt-1">
-                                    This resume could not be fully analyzed by AI (likely a scanned image or complex layout).
-                                    Please review the original resume file for complete information.
+                                    {parsingStatusMessage || "This resume could not be fully analyzed by AI (likely a scanned image or complex layout)."}
+                                </p>
+                                <p className="text-[10px] text-orange-500 mt-2 font-medium">
+                                    Note: Please review the original resume file for complete information.
                                 </p>
                             </div>
                         </div>

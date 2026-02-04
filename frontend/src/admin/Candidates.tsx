@@ -220,13 +220,35 @@ export default function Candidates() {
                         <TableCell className="font-medium text-foreground">
                           <div className="flex flex-col">
                             <span>{candidate.name}</span>
-                            <div className="flex gap-1 mt-1">
+                            <div className="flex flex-col gap-1 mt-1">
                               {candidate.parsingStatus === 'COMPLETED' ? (
-                                <Badge className="bg-green-100 text-green-700 hover:bg-green-100 text-[10px] h-4 px-1">Parsed</Badge>
+                                <Badge className="bg-green-100 text-green-700 hover:bg-green-100 text-[10px] h-4 px-1 w-fit">Parsed</Badge>
                               ) : candidate.parsingStatus === 'FAILED' || candidate.parsingStatus === 'MANUAL_REVIEW' ? (
-                                <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 text-[10px] h-4 px-1">Manual Review</Badge>
+                                <div className="flex flex-col gap-0.5">
+                                  <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 text-[10px] h-4 px-1 w-fit">Manual Review</Badge>
+                                  {candidate.parsingStatusMessage && (
+                                    <span className="text-[9px] text-orange-600 font-medium leading-tight">
+                                      {candidate.parsingStatusMessage}
+                                    </span>
+                                  )}
+                                </div>
                               ) : (
-                                <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 text-[10px] h-4 px-1 animate-pulse">Processing</Badge>
+                                <div className="flex flex-col gap-1 min-w-[100px]">
+                                  <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 text-[10px] h-4 px-1 animate-pulse w-fit">
+                                    Processing {candidate.parsingProgress || 0}%
+                                  </Badge>
+                                  {candidate.parsingStatusMessage && (
+                                    <span className="text-[9px] text-yellow-600 italic font-medium leading-tight">
+                                      {candidate.parsingStatusMessage}
+                                    </span>
+                                  )}
+                                  <div className="h-1 w-full bg-yellow-100 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-yellow-400 transition-all duration-500"
+                                      style={{ width: `${candidate.parsingProgress || 0}%` }}
+                                    />
+                                  </div>
+                                </div>
                               )}
                             </div>
                           </div>

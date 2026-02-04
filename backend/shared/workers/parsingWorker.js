@@ -17,6 +17,8 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
         if (!currentCandidate) return;
 
         currentCandidate.parsingStatus = 'PROCESSING';
+        currentCandidate.parsingProgress = 10;
+        currentCandidate.parsingStatusMessage = 'Extracting text from file...';
         await currentCandidate.save();
 
         let normalizedPath = currentCandidate.resumeUrl;
@@ -29,9 +31,15 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
         if (!text) {
             console.warn(`⚠️ No text extracted for candidate ${candidateId}. Likely a scanned/image PDF.`);
             currentCandidate.parsingStatus = 'MANUAL_REVIEW';
+            currentCandidate.parsingStatusMessage = 'Scanning failed: Likely an image-based PDF. Please review manually.';
+            currentCandidate.parsingProgress = 0;
             await currentCandidate.save();
             return; // Stop processing further
         }
+
+        currentCandidate.parsingProgress = 40;
+        currentCandidate.parsingStatusMessage = 'AI analysis in progress...';
+        await currentCandidate.save();
 
         const jobContext = {
             title: currentCandidate.jobId.jobTitle,
@@ -40,6 +48,11 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
         };
 
         const parsedData = await extractResumeInfo(text, links, jobContext);
+
+        currentCandidate.parsingProgress = 80;
+        currentCandidate.parsingStatusMessage = 'Finalizing extraction...';
+        await currentCandidate.save();
+
         const extractedEmail = parsedData.basic_info.email?.toLowerCase();
 
         // Duplicate handling
@@ -100,6 +113,8 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
         targetCandidate.atsScore = parsedData.ai_assessment.overall_score;
         targetCandidate.isParsed = true;
         targetCandidate.parsingStatus = 'COMPLETED';
+        targetCandidate.parsingProgress = 100;
+        targetCandidate.parsingStatusMessage = 'Parsing completed successfully.';
 
         await targetCandidate.save();
         console.log(`✅ Record processed for ${targetCandidate.name}`);
@@ -108,7 +123,9 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
         console.error(`❌ Error processing candidate ${candidateId}:`, error.message);
         // Fallback to MANUAL_REVIEW on error (e.g., AI failed or file corrupted)
         await Candidate.findByIdAndUpdate(candidateId, {
-            parsingStatus: 'MANUAL_REVIEW'
+            parsingStatus: 'MANUAL_REVIEW',
+            parsingStatusMessage: `Error: ${error.message}. Please review manually.`,
+            parsingProgress: 0
         });
         throw error;
     }

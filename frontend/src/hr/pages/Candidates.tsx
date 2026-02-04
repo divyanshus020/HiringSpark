@@ -167,7 +167,8 @@ const Candidates = () => {
     setIsModalOpen(true);
   };
 
-  const getStatusBadge = (status: string = 'PENDING') => {
+  const getStatusBadge = (candidate: any) => {
+    const status = candidate?.parsingStatus || 'PENDING';
     switch (status) {
       case 'COMPLETED':
         return (
@@ -178,15 +179,35 @@ const Candidates = () => {
       case 'FAILED':
       case 'MANUAL_REVIEW':
         return (
-          <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 gap-1">
-            <AlertCircle className="w-3 h-3" /> Requires Manual Review
-          </Badge>
+          <div className="flex flex-col gap-1">
+            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 gap-1 w-fit">
+              <AlertCircle className="w-3 h-3" /> Requires Manual Review
+            </Badge>
+            {candidate.parsingStatusMessage && (
+              <span className="text-[10px] text-orange-600 font-medium whitespace-normal max-w-[200px]">
+                {candidate.parsingStatusMessage}
+              </span>
+            )}
+          </div>
         );
       default:
         return (
-          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 gap-1">
-            <Loader2 className="w-3 h-3 animate-spin" /> Processing
-          </Badge>
+          <div className="flex flex-col gap-1 min-w-[120px]">
+            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 gap-1 w-fit">
+              <Loader2 className="w-3 h-3 animate-spin" /> Processing {candidate.parsingProgress || 0}%
+            </Badge>
+            {candidate.parsingStatusMessage && (
+              <span className="text-[10px] text-yellow-600 font-medium italic animate-pulse whitespace-normal max-w-[200px]">
+                {candidate.parsingStatusMessage}
+              </span>
+            )}
+            <div className="h-1.5 w-full bg-yellow-100 rounded-full overflow-hidden mt-0.5">
+              <div
+                className="h-full bg-yellow-400 transition-all duration-500"
+                style={{ width: `${candidate.parsingProgress || 0}%` }}
+              />
+            </div>
+          </div>
         );
     }
   };
@@ -310,7 +331,10 @@ const Candidates = () => {
                           <td className="py-4 px-4 text-gray-600">{(currentPage - 1) * itemsPerPage + index + 1}</td>
                           <td className="py-4 px-4">
                             <div className="font-semibold text-gray-900">{candidate.basicInfo?.fullName || candidate.name}</div>
-                            <div className="text-[10px] text-gray-400 max-w-xs truncate">{candidate.executiveSummary}</div>
+                            <div className="mt-1">
+                              {getStatusBadge(candidate)}
+                            </div>
+                            <div className="text-[10px] text-gray-400 max-w-xs truncate mt-1">{candidate.executiveSummary}</div>
                           </td>
                           <td className="py-4 px-4">
                             <Badge className={`${(candidate.atsScore || 0) > 70 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
