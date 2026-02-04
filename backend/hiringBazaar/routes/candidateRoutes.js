@@ -24,6 +24,27 @@ router.get('/:id', protect, getCandidateById);
 router.put('/:id/feedback', protect, updateCandidateFeedback);
 
 router.delete('/:id', protect, isAdmin, deleteCandidate);
+router.post('/:id/reparse', protect, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { Candidate } = await import('../models/Candidate.js');
+    const { pdfQueue } = await import('../../shared/services/queueService.js');
+
+    const candidate = await Candidate.findById(id);
+    if (!candidate) return res.status(404).json({ success: false, message: 'Candidate not found' });
+
+    candidate.parsingStatus = 'PENDING';
+    candidate.parsingStatusMessage = 'Re-queued for parsing...';
+    candidate.parsingProgress = 0;
+    await candidate.save();
+
+    await pdfQueue.add('process-resume', { candidateId: id });
+
+    res.json({ success: true, message: 'Candidate re-queued for parsing' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 
 

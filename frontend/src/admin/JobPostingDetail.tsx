@@ -3,11 +3,11 @@ import { useEffect, useState } from "react";
 import { getJobPostingDetail, updateJobStatus, toggleJobContactVisibility } from "../api/admin/admin.api";
 import { Switch } from "@/components/ui/switch";
 
-import { getCandidatesByJob, addCandidate, updateCandidateStatus } from "../api/hr/candidates.api";
+import { getCandidatesByJob, addCandidate, updateCandidateStatus, reparseCandidate } from "../api/hr/candidates.api";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Calendar, Linkedin, ExternalLink, Check, X, Eye, Loader2, AlertCircle, CheckCircle2, SearchIcon, Users as UsersIcon } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, Linkedin, ExternalLink, Check, X, Eye, Loader2, AlertCircle, CheckCircle2, SearchIcon, Users as UsersIcon, RefreshCcw } from "lucide-react";
 
 import { CandidateDetailsModal } from "@/components/CandidateDetailsModal";
 import {
@@ -61,6 +61,31 @@ export default function JobPostingDetail() {
   });
 
   const [isVisibilityLoading, setIsVisibilityLoading] = useState(false);
+
+  const handleReparse = async (candidateId: string) => {
+    try {
+      await reparseCandidate(candidateId);
+      toast({
+        title: "Re-Queued",
+        description: "Candidate has been sent back for parsing.",
+      });
+      // Update local state
+      setCandidates(candidates.map(c =>
+        c._id === candidateId ? {
+          ...c,
+          parsingStatus: 'PENDING',
+          parsingStatusMessage: 'Waiting in queue...',
+          parsingProgress: 0
+        } : c
+      ));
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to trigger re-parse.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const fetchData = async () => {
 
@@ -736,6 +761,16 @@ export default function JobPostingDetail() {
                             <Eye className="h-3 w-3" />
                             View Details
                           </button>
+                          {(candidate.parsingStatus === 'FAILED' || candidate.parsingStatus === 'MANUAL_REVIEW' || (candidate.parsingStatus === 'PENDING' && new Date(candidate.createdAt).getTime() < Date.now() - 30000)) && (
+                            <button
+                              onClick={() => handleReparse(candidate._id)}
+                              className="flex items-center gap-1 text-xs font-medium text-orange-600 hover:text-orange-800 hover:underline cursor-pointer"
+                              title="Force Re-parse"
+                            >
+                              <RefreshCcw className="h-3 w-3" />
+                              Retry Parsing
+                            </button>
+                          )}
                         </div>
                       </div>
                       <div>

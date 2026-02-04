@@ -11,6 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const pdfWorker = new Worker('pdf-processing', async (job) => {
     const { candidateId } = job.data;
+    console.log(`🚀 [Worker] Starting processing for Candidate ID: ${candidateId}`);
 
     try {
         const currentCandidate = await Candidate.findById(candidateId).populate('jobId');

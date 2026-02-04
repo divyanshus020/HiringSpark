@@ -34,3 +34,6 @@ export const bulkUploadCandidates = (jobId: string, resumes: File[]) => {
     headers: { "Content-Type": "multipart/form-data" },
   });
 };
+
+export const reparseCandidate = (id: string) =>
+  api.post(`/candidates/${id}/reparse`);
