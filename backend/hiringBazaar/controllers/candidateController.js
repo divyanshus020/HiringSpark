@@ -91,6 +91,17 @@ export const addCandidate = async (req, res) => {
       // Don't fail the request if email fails
     }
 
+    // Add to parsing queue
+    try {
+      const { pdfQueue } = await import('../../shared/services/queueService.js');
+      await pdfQueue.add('process-resume', {
+        candidateId: candidate._id,
+      });
+    } catch (queueError) {
+      console.error('❌ Failed to add candidate to parsing queue:', queueError);
+      // Still return 201 because candidate is created
+    }
+
     res.status(201).json({
       success: true,
       candidate

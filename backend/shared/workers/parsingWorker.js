@@ -28,10 +28,10 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
         const absolutePath = path.join(process.cwd(), normalizedPath);
         const { text, links } = await extractTextFromFile(absolutePath);
 
-        if (!text) {
-            console.warn(`⚠️ No text extracted for candidate ${candidateId}. Likely a scanned/image PDF.`);
+        if (!text || text.trim().length < 150) {
+            console.warn(`⚠️ Low/No text extracted for candidate ${candidateId}. Likely a scanned/image PDF.`);
             currentCandidate.parsingStatus = 'MANUAL_REVIEW';
-            currentCandidate.parsingStatusMessage = 'Scanning failed: Likely an image-based PDF. Please review manually.';
+            currentCandidate.parsingStatusMessage = 'Picture-based Resume: Text could not be extracted (likely an image). Please review manually.';
             currentCandidate.parsingProgress = 0;
             await currentCandidate.save();
             return; // Stop processing further
