@@ -122,61 +122,52 @@ export const bulkUploadCandidates = async (req, res) => {
     const files = req.files;
 
     if (!files || files.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'No resumes uploaded'
-      });
+      return res.status(400).json({ success: false, message: 'No resumes uploaded' });
     }
 
     const job = await Job.findById(jobId);
     if (!job) {
-      return res.status(404).json({
-        success: false,
-        message: 'Job not found'
-      });
+      return res.status(404).json({ success: false, message: 'Job not found' });
     }
 
-    const results = [];
+    // 1. Prepare data for mass insertion
+    const candidatesData = files.map(file => ({
+      jobId,
+      addedBy: req.user.id,
+      name: file.originalname.split('.')[0],
+      email: 'pending@parsing.com',
+      resumeUrl: `/uploads/resumes/${file.filename}`,
+      source: source || 'BULK_UPLOAD',
+      uploadSource: req.user.role.toLowerCase(),
+      uploaderId: req.user.id,
+      uploaderModel: 'User',
+      uploaderDetails: {
+        name: req.user.fullName,
+        uploaderType: req.user.role.toLowerCase()
+      },
+      parsingStatus: 'PENDING'
+    }));
+
+    // 2. Multi-insert into DB
+    const createdCandidates = await Candidate.insertMany(candidatesData);
+
+    // 3. Add to queue in bulk
     const { pdfQueue } = await import('../../shared/services/queueService.js');
+    const jobs = createdCandidates.map(candidate => ({
+      name: 'process-resume',
+      data: { candidateId: candidate._id }
+    }));
 
-    for (const file of files) {
-      const resumeUrl = `/uploads/resumes/${file.filename}`;
-
-      const candidate = await Candidate.create({
-        jobId,
-        addedBy: req.user.id,
-        name: file.originalname.split('.')[0], // Placeholder name until parsed
-        email: 'pending@parsing.com', // Placeholder
-        resumeUrl,
-        source: source || 'BULK_UPLOAD',
-        uploadSource: req.user.role.toLowerCase(),
-        uploaderId: req.user.id,
-        uploaderModel: 'User',
-        uploaderDetails: {
-          name: req.user.fullName,
-          uploaderType: req.user.role.toLowerCase()
-        },
-        parsingStatus: 'PENDING'
-      });
-      // Add to queue
-      await pdfQueue.add('process-resume', {
-        candidateId: candidate._id,
-      });
-
-      results.push(candidate);
-    }
-    console.log(results);
+    await pdfQueue.addBulk(jobs);
 
     res.status(201).json({
       success: true,
-      message: `${files.length} candidates uploaded and queued for parsing`,
-      candidates: results
+      message: `${files.length} candidates queued for parallel parsing`,
+      candidates: createdCandidates
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    console.error('❌ Bulk Upload Error:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
