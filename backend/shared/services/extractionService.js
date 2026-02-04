@@ -1,100 +1,51 @@
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const execFilePromise = promisify(execFile);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PYTHON_SCRIPT = path.join(__dirname, '../scripts/resume_parser.py');
 
 export async function extractTextFromFile(filePath) {
-    const ext = path.extname(filePath).toLowerCase();
-
-    if (ext === '.pdf') {
-        return await extractPdfTextAndLinks(filePath);
-    } else if (ext === '.docx') {
-        return await extractDocxText(filePath);
-    } else if (ext === '.doc') {
-        // Basic fallback for old .doc if possible, or just error
-        throw new Error('Unsupported file format: .doc. Please use .docx or .pdf');
-    } else {
-        throw new Error(`Unsupported file format: ${ext}`);
-    }
-}
-
-async function extractPdfTextAndLinks(filePath) {
     try {
-        console.log(`📂 Attempting to extract text from: ${filePath}`);
+        console.log(`🐍 Triggering Python Parser for: ${filePath}`);
 
         if (!fs.existsSync(filePath)) {
-            console.error(`❌ File does not exist at path: ${filePath}`);
-            return { text: '', links: [] };
+            throw new Error('File not found at path');
         }
 
-        const dataBuffer = fs.readFileSync(filePath);
-        console.log(`📄 File read successful, buffer size: ${dataBuffer.length} bytes`);
+        // Call python script
+        const { stdout, stderr } = await execFilePromise('python', [PYTHON_SCRIPT, filePath]);
 
-        const data = new Uint8Array(dataBuffer);
-
-        const loadingTask = pdfjsLib.getDocument({
-            data,
-            useSystemFonts: true,
-            disableFontFace: true,
-        });
-        const pdf = await loadingTask.promise;
-        console.log(`📖 PDF loaded, total pages: ${pdf.numPages}`);
-
-        let fullText = '';
-        const links = new Set();
-
-        for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const textContent = await page.getTextContent();
-            const pageText = textContent.items
-                .map((item) => item.str)
-                .join(' ');
-            fullText += pageText + ' ';
-
-            const annotations = await page.getAnnotations();
-            annotations.forEach((anno) => {
-                if (anno.subtype === 'Link' && anno.url) {
-                    let cleanUrl = anno.url.trim();
-                    if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
-                        cleanUrl = 'https://' + cleanUrl;
-                    }
-                    try {
-                        new URL(cleanUrl);
-                        links.add(cleanUrl);
-                    } catch {
-                        // Invalid URL
-                    }
-                }
-            });
+        if (stderr && !stdout) {
+            console.error('Python Error:', stderr);
+            throw new Error(`Python extraction failed: ${stderr}`);
         }
 
-        const trimmedText = fullText.trim();
-        console.log(`✅ Extraction complete. Extracted text length: ${trimmedText.length}`);
+        const result = JSON.parse(stdout);
+
+        if (result.error) {
+            throw new Error(result.error);
+        }
+
+        // Combine links from PDF objects and regex in text
+        const extraLinks = result.text.match(/https?:\/\/[^\s<>"]+/g) || [];
+        const allLinks = Array.from(new Set([...(result.links || []), ...extraLinks]));
+
+        console.log(`✅ Python parsing complete. Length: ${result.text.length} chars. Links: ${allLinks.length}`);
 
         return {
-            text: trimmedText || '',
-            links: Array.from(links)
+            text: result.text || '',
+            links: allLinks,
+            emails: result.emails || [],
+            phones: result.phones || []
         };
-    } catch (error) {
-        console.error('❌ Error extracting PDF text:', error);
-        return { text: '', links: [] };
-    }
-}
 
-async function extractDocxText(filePath) {
-    try {
-        const mammoth = await import('mammoth');
-        const dataBuffer = fs.readFileSync(filePath);
-        const result = await mammoth.default.extractRawText({ buffer: dataBuffer });
-
-        return {
-            text: result.value || '',
-            links: []
-        };
     } catch (error) {
-        console.error('Error extracting DOCX text:', error);
-        if (error.code === 'ERR_MODULE_NOT_FOUND') {
-            throw new Error('Word (.docx) support library (mammoth) is missing. High-level PDF parsing will still work.');
-        }
+        console.error('❌ Extraction Service Error:', error);
+        // Fallback to minimal JS if python fails (empty result)
         return { text: '', links: [] };
     }
 }
