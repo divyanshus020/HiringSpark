@@ -1,6 +1,5 @@
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import fs from 'fs';
-import mammoth from 'mammoth';
 import path from 'path';
 
 export async function extractTextFromFile(filePath) {
@@ -70,17 +69,19 @@ async function extractPdfTextAndLinks(filePath) {
 
 async function extractDocxText(filePath) {
     try {
+        const mammoth = await import('mammoth');
         const dataBuffer = fs.readFileSync(filePath);
-        const result = await mammoth.extractRawText({ buffer: dataBuffer });
+        const result = await mammoth.default.extractRawText({ buffer: dataBuffer });
 
-        // Mammoth doesn't extract links in extractRawText mode easily.
-        // We can use transformDocument if needed, but raw text is usually enough for AI.
         return {
             text: result.value || '',
-            links: [] // Links are harder to extract from DOCX without complex parsing
+            links: []
         };
     } catch (error) {
         console.error('Error extracting DOCX text:', error);
+        if (error.code === 'ERR_MODULE_NOT_FOUND') {
+            throw new Error('Word (.docx) support library (mammoth) is missing. High-level PDF parsing will still work.');
+        }
         return { text: '', links: [] };
     }
 }
