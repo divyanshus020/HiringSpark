@@ -137,8 +137,8 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
     }
 }, {
     connection: redisConnection,
-    concurrency: 3,
-    lockDuration: 60000 // 60 seconds
+    concurrency: 10, // Process 10 resumes at a time
+    lockDuration: 60000
 });
 
 pdfWorker.on('completed', (job) => console.log(`Job ${job.id} completed!`));

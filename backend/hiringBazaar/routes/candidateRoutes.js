@@ -23,6 +23,18 @@ router.get('/job/:jobId', protect, getCandidatesByJob);
 router.get('/:id', protect, getCandidateById);
 router.put('/:id/feedback', protect, updateCandidateFeedback);
 
+router.get('/status/processing', protect, isAdmin, async (req, res) => {
+  try {
+    const { Candidate } = await import('../models/Candidate.js');
+    const candidates = await Candidate.find({
+      parsingStatus: { $in: ['PENDING', 'PROCESSING'] }
+    }).select('name parsingStatus parsingProgress parsingStatusMessage createdAt');
+    res.json({ success: true, candidates });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 router.delete('/:id', protect, isAdmin, deleteCandidate);
 router.post('/:id/reparse', protect, isAdmin, async (req, res) => {
   try {

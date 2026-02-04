@@ -37,3 +37,6 @@ export const bulkUploadCandidates = (jobId: string, resumes: File[]) => {
 
 export const reparseCandidate = (id: string) =>
   api.post(`/candidates/${id}/reparse`);
+
+export const getProcessingCandidates = () =>
+  api.get("/candidates/status/processing");

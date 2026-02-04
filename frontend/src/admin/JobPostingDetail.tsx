@@ -87,42 +87,50 @@ export default function JobPostingDetail() {
     }
   };
 
-  const fetchData = async () => {
-
+  const fetchData = async (silent = false) => {
     if (!id) return;
-    setIsLoading(true);
+    if (!silent) setIsLoading(true);
     try {
       const jobRes = await getJobPostingDetail(id);
-      // Access the job object correctly from the response
       setJob(jobRes.data.job || jobRes.data.data || jobRes.data);
 
       const candidatesRes = await getCandidatesByJob(id);
       setCandidates(candidatesRes.data.candidates || []);
     } catch (error) {
-      console.error("Error fetching job details:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load job details. Showing cached/mock data.",
-        variant: "destructive",
-      });
-      // Fallback to mock data since backend route might be missing
-      setJob({
-        _id: id,
-        jobTitle: "Senior Software Engineer",
-        salaryRange: "12-18 LPA",
-        planType: "Premium",
-        createdAt: new Date().toISOString(),
-      });
-      // Keep candidates empty or mock them if you want
-      setCandidates([]);
+      if (!silent) {
+        console.error("Error fetching job details:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load job details.",
+          variant: "destructive",
+        });
+      }
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchData();
   }, [id]);
+
+  // Live Auto-Sync for Parsing Status
+  useEffect(() => {
+    const hasActiveParsing = candidates.some(c =>
+      c.parsingStatus === 'PENDING' || c.parsingStatus === 'PROCESSING'
+    );
+
+    let interval: NodeJS.Timeout;
+    if (hasActiveParsing) {
+      interval = setInterval(() => {
+        fetchData(true); // Silent update every 3 seconds
+      }, 3000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [candidates, id]);
 
   useEffect(() => {
     setCurrentPage(1);

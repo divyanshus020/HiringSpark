@@ -48,22 +48,37 @@ export default function Candidates() {
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchCandidates = async () => {
-    setIsLoading(true);
+  const fetchCandidates = async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
       const res = await getAllCandidates();
       setCandidates(res.data.candidates || res.data.data || []);
     } catch (error) {
-      console.error(error);
-      toast.error("Failed to load candidates");
+      if (!silent) {
+        console.error(error);
+        toast.error("Failed to load candidates");
+      }
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchCandidates();
   }, []);
+
+  // Live updates for parsing status
+  useEffect(() => {
+    const isProcessing = candidates.some(c =>
+      c.parsingStatus === 'PENDING' || c.parsingStatus === 'PROCESSING'
+    );
+
+    let interval: any;
+    if (isProcessing) {
+      interval = setInterval(() => fetchCandidates(true), 3000);
+    }
+    return () => clearInterval(interval);
+  }, [candidates]);
 
   const handleStatusChange = async (candidateId: string, newStatus: string) => {
     try {
