@@ -20,6 +20,7 @@ const envSchema = z.object({
   // AI & Redis
   OPENROUTER_API_KEY: z.string().optional(),
   BYTEZ_API_KEY: z.string().optional(),
+  AI_PROVIDER: z.string().default('bytez'),
   REDIS_HOST: z.string().default('127.0.0.1'),
   REDIS_PORT: z.string().default('6379'),
 });
