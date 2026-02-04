@@ -1,466 +1,171 @@
 import { Candidate } from '../models/Candidate.js';
 import { Job } from '../models/Job.js';
-import { User } from '../models/User.js';
-import { transporter } from '../../shared/config/mail.js';
-import { env } from '../../shared/config/env.js';
-import { candidateAddedEmailTemplate, candidateShortlistedEmailTemplate } from '../../shared/utils/emailTemplates.js';
+import { extractTextFromFile } from '../../shared/services/extractionService.js';
+import { extractResumeInfo } from '../../shared/services/aiService.js';
+import path from 'path';
 
+/**
+ * Shared Direct Parser Logic (Bypasses Queue)
+ */
+async function processDirectly(candidateId) {
+  try {
+    const candidate = await Candidate.findById(candidateId).populate('jobId');
+    if (!candidate) return;
 
+    candidate.parsingStatus = 'PROCESSING';
+    candidate.parsingProgress = 20;
+    await candidate.save();
 
-// @desc    Add candidate to job (admin only)
-// @route   POST /api/candidates
+    let relPath = candidate.resumeUrl.startsWith('/') ? candidate.resumeUrl.substring(1) : candidate.resumeUrl;
+    const absPath = path.join(process.cwd(), relPath);
+
+    // 1. Extract Text
+    const { text, links } = await extractTextFromFile(absPath);
+    if (!text || text.length < 100) throw new Error('Could not extract text');
+
+    candidate.parsingProgress = 50;
+    await candidate.save();
+
+    // 2. AI Analysis
+    const jobContext = {
+      title: candidate.jobId?.jobTitle || '',
+      skillsRequired: candidate.jobId?.skills || [],
+      description: candidate.jobId?.description || ''
+    };
+
+    const parsed = await extractResumeInfo(text, links, jobContext);
+
+    // 3. Update DB
+    candidate.name = parsed.basic_info.full_name || candidate.name;
+    candidate.email = (parsed.basic_info.email && parsed.basic_info.email !== 'pending@parsing.com') ? parsed.basic_info.email.toLowerCase() : candidate.email;
+    candidate.phoneNumber = parsed.basic_info.phone || candidate.phoneNumber;
+
+    candidate.basicInfo = {
+      fullName: parsed.basic_info.full_name,
+      jobTitle: parsed.basic_info.job_title,
+      location: parsed.basic_info.location,
+      email: parsed.basic_info.email,
+      phone: parsed.basic_info.phone,
+      experienceYears: parsed.basic_info.experience_years
+    };
+
+    candidate.executiveSummary = parsed.executive_summary?.ai_generated_summary;
+    candidate.education = parsed.education;
+    candidate.workExperience = parsed.work_experience;
+    candidate.skills = {
+      technicalSkills: parsed.skills?.technical_skills,
+      softSkills: parsed.skills?.soft_skills
+    };
+    candidate.aiAssessment = {
+      technicalFit: parsed.ai_assessment?.technical_fit,
+      culturalFit: parsed.ai_assessment?.cultural_fit,
+      overallScore: parsed.ai_assessment?.overall_score,
+      strengths: parsed.ai_assessment?.strengths,
+      areasForGrowth: parsed.ai_assessment?.areas_for_growth
+    };
+    candidate.atsScore = parsed.ai_assessment?.overall_score || 0;
+    candidate.isParsed = true;
+    candidate.parsingStatus = 'COMPLETED';
+    candidate.parsingProgress = 100;
+    candidate.parsingStatusMessage = 'Parsed successfully';
+
+    await candidate.save();
+    console.log(`✅ Parsed: ${candidate.name}`);
+  } catch (err) {
+    console.error(`❌ Parse Error (${candidateId}):`, err.message);
+    await Candidate.findByIdAndUpdate(candidateId, {
+      parsingStatus: 'FAILED',
+      parsingStatusMessage: err.message,
+      parsingProgress: 0
+    });
+  }
+}
+
+// @desc    Add single candidate
 export const addCandidate = async (req, res) => {
   try {
     const { jobId, name, email, phoneNumber, source } = req.body;
-
-    // Check if job exists and belongs to HR
-    const job = await Job.findById(jobId).populate('userId', 'fullName email');
-    if (!job) {
-      return res.status(404).json({
-        success: false,
-        message: 'Job not found'
-      });
-    }
-
-    // Check if job is active
-    if (job.status !== 'active' && job.status !== 'posted') {
-      return res.status(400).json({
-        success: false,
-        message: 'This job is not active. Candidates can only be added to active/approved jobs.'
-      });
-    }
-
-
-    // Handle file upload
     const resumeUrl = req.file ? `/uploads/resumes/${req.file.filename}` : null;
+    if (!resumeUrl) return res.status(400).json({ success: false, message: 'File required' });
 
-    if (!resumeUrl) {
-      return res.status(400).json({
-        success: false,
-        message: 'Resume file is required'
-      });
-    }
-
-    // Create candidate
     const candidate = await Candidate.create({
-      jobId,
-      addedBy: req.user.id,
-      name,
-      email,
-      phoneNumber,
-      resumeUrl,
+      jobId, addedBy: req.user.id, name, email, phoneNumber, resumeUrl,
       source: source || 'MANUAL_UPLOAD',
-      uploadSource: req.user.role.toLowerCase(), // 'admin' or 'hr'
+      uploadSource: req.user.role.toLowerCase(),
       uploaderId: req.user.id,
       uploaderModel: 'User',
-      uploaderDetails: {
-        name: req.user.fullName,
-        uploaderType: req.user.role.toLowerCase()
-      },
-      hrFeedback: 'PENDING'
+      uploaderDetails: { name: req.user.fullName, uploaderType: req.user.role.toLowerCase() }
     });
 
-    // Send email notification to HR
-    try {
-      if (transporter && env.EMAIL_USER) {
-        const hrEmail = job.userId.email;
-        const hrName = job.userId.fullName;
-        const jobTitle = job.jobTitle;
+    // Trigger Direct Processing (Async but no queue)
+    processDirectly(candidate._id);
 
-        const emailHtml = candidateAddedEmailTemplate(
-          hrName,
-          name,
-          jobTitle,
-          email,
-          phoneNumber
-        );
-
-        await transporter.sendMail({
-          from: `"HiringBazaar Admin" <${env.EMAIL_USER}>`,
-          to: hrEmail,
-          subject: `🎯 New Candidate Added - ${jobTitle}`,
-          html: emailHtml
-        });
-
-        console.log(`✅ Email sent to HR: ${hrEmail} for candidate: ${name}`);
-      } else {
-        console.log('⚠️ Transporter or EMAIL_USER not configured. Skipping email notification.');
-      }
-    } catch (emailError) {
-      console.error('❌ Error sending email:', emailError);
-      // Don't fail the request if email fails
-    }
-
-    // Add to parsing queue
-    try {
-      const { pdfQueue } = await import('../../shared/services/queueService.js');
-      await pdfQueue.add('process-resume', {
-        candidateId: candidate._id,
-      });
-    } catch (queueError) {
-      console.error('❌ Failed to add candidate to parsing queue:', queueError);
-      // Still return 201 because candidate is created
-    }
-
-    res.status(201).json({
-      success: true,
-      candidate
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
+    res.status(201).json({ success: true, candidate });
+  } catch (error) { res.status(500).json({ success: false, error: error.message }); }
 };
 
-// @desc    Bulk upload candidates to job (admin only)
-// @route   POST /api/candidates/bulk
+// @desc    Bulk upload (Direct parallel parsing)
 export const bulkUploadCandidates = async (req, res) => {
   try {
     const { jobId, source } = req.body;
-    const files = req.files;
+    if (!req.files || req.files.length === 0) return res.status(400).json({ success: false, message: 'No files' });
 
-    if (!files || files.length === 0) {
-      return res.status(400).json({ success: false, message: 'No resumes uploaded' });
-    }
-
-    const job = await Job.findById(jobId);
-    if (!job) {
-      return res.status(404).json({ success: false, message: 'Job not found' });
-    }
-
-    // 1. Prepare data for mass insertion
-    const candidatesData = files.map(file => ({
-      jobId,
-      addedBy: req.user.id,
-      name: file.originalname.split('.')[0],
-      email: 'pending@parsing.com',
-      resumeUrl: `/uploads/resumes/${file.filename}`,
+    const candidatesData = req.files.map(file => ({
+      jobId, addedBy: req.user.id, name: file.originalname.split('.')[0],
+      email: 'pending@parsing.com', resumeUrl: `/uploads/resumes/${file.filename}`,
       source: source || 'BULK_UPLOAD',
       uploadSource: req.user.role.toLowerCase(),
       uploaderId: req.user.id,
       uploaderModel: 'User',
-      uploaderDetails: {
-        name: req.user.fullName,
-        uploaderType: req.user.role.toLowerCase()
-      },
-      parsingStatus: 'PENDING'
+      uploaderDetails: { name: req.user.fullName, uploaderType: req.user.role.toLowerCase() },
+      parsingStatus: 'PROCESSING'
     }));
 
-    // 2. Multi-insert into DB
-    const createdCandidates = await Candidate.insertMany(candidatesData);
+    const created = await Candidate.insertMany(candidatesData);
 
-    // 3. Add to queue in bulk
-    const { pdfQueue } = await import('../../shared/services/queueService.js');
-    const jobs = createdCandidates.map(candidate => ({
-      name: 'process-resume',
-      data: { candidateId: candidate._id }
-    }));
-
-    await pdfQueue.addBulk(jobs);
+    // 🔥 PARALLEL DIRECT PARSING: No queue. 
+    // We trigger all at once. Node handles the promises.
+    created.forEach(c => processDirectly(c._id));
 
     res.status(201).json({
       success: true,
-      message: `${files.length} candidates queued for parallel parsing`,
-      candidates: createdCandidates
+      message: `${created.length} resumes are being parsed simultaneously.`,
+      candidates: created
     });
-  } catch (error) {
-    console.error('❌ Bulk Upload Error:', error);
-    res.status(500).json({ success: false, message: error.message });
-  }
+  } catch (error) { res.status(500).json({ success: false, error: error.message }); }
 };
 
-
-// @desc    Delete candidate (admin only)
-// @route   DELETE /api/candidates/:id
 export const deleteCandidate = async (req, res) => {
   try {
-    const candidate = await Candidate.findById(req.params.id);
-
-    if (!candidate) {
-      return res.status(404).json({
-        success: false,
-        message: 'Candidate not found'
-      });
-    }
-
-    // Optional: Delete resume file from filesystem
-    const fs = await import('fs/promises');
-    const path = await import('path');
-    try {
-      if (candidate.resumeUrl) {
-        await fs.unlink(path.join(process.cwd(), candidate.resumeUrl));
-      }
-    } catch (err) {
-      console.error('Error deleting file:', err);
-    }
-
-    await candidate.deleteOne();
-
-    res.json({
-      success: true,
-      message: 'Candidate deleted successfully'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
+    const candidate = await Candidate.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: 'Deleted' });
+  } catch (error) { res.status(500).json({ success: false, error: error.message }); }
 };
 
-// @desc    Get candidates for a job
-// @route   GET /api/candidates/job/:jobId
 export const getCandidatesByJob = async (req, res) => {
   try {
-    const { jobId } = req.params;
-
-    const job = await Job.findById(jobId);
-    if (!job) {
-      return res.status(404).json({
-        success: false,
-        message: 'Job not found'
-      });
-    }
-
-    // Base filter
-    const filter = { jobId };
-
-    // If NOT admin, only show parsed candidates
-    if (req.user.role !== 'ADMIN') {
-      filter.parsingStatus = 'COMPLETED';
-    }
-
-    const candidates = await Candidate.find(filter)
-      .populate('jobId', 'jobTitle contactDetailsVisible')
-      .sort({ atsScore: -1, createdAt: -1 });
-
-
-    const formattedCandidates = candidates.map(c => {
-      const doc = { ...c._doc, status: c.hrFeedback };
-      const isVisible = c.jobId && c.jobId.contactDetailsVisible === true;
-      const isAdmin = req.user.role === 'ADMIN';
-
-      if (!isAdmin && !isVisible) {
-        doc.email = '[HIDDEN]';
-        doc.phoneNumber = '[HIDDEN]';
-        if (doc.basicInfo) {
-          doc.basicInfo = {
-            ...doc.basicInfo,
-            email: '[HIDDEN]',
-            phone: '[HIDDEN]',
-            linkedin: '[HIDDEN]',
-            github: '[HIDDEN]'
-          };
-        }
-        doc.resumeUrl = '#'; // Redact resume URL
-      }
-      return doc;
-    });
-
-    res.json({
-      success: true,
-      count: candidates.length,
-      candidates: formattedCandidates
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
+    const candidates = await Candidate.find({ jobId: req.params.jobId }).sort({ atsScore: -1 });
+    res.json({ success: true, candidates });
+  } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 };
 
-// @desc    Update candidate feedback
-// @route   PUT /api/candidates/:id/feedback
 export const updateCandidateFeedback = async (req, res) => {
   try {
-    const { feedback } = req.body;
-    const validFeedback = ['PENDING', 'INTERVIEW_SCHEDULED', 'HIRED', 'REJECTED', 'Pending Review', 'Shortlisted by HB', 'Engaged', 'Taken', 'Shortlisted by HR', 'Interviewed', 'Rejected', 'Hired', 'SHORTLISTED'];
-    if (!validFeedback.includes(feedback)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid feedback status'
-      });
-    }
-    const candidate = await Candidate.findById(req.params.id)
-      .populate('jobId', 'userId contactDetailsVisible');
-
-    if (!candidate) {
-      return res.status(404).json({
-        success: false,
-        message: 'Candidate not found'
-      });
-    }
-
-    // Check if HR owns the job or is Admin
-    const isOwner = candidate.jobId && candidate.jobId.userId.toString() === req.user._id.toString();
-    const isAdmin = req.user.role === 'ADMIN';
-
-    if (!isOwner && !isAdmin) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized'
-      });
-    }
-    candidate.hrFeedback = feedback;
-    await candidate.save();
-
-    // Send email notification to candidate if SHORTLISTED
-    if (feedback === 'SHORTLISTED' && candidate.email) {
-      try {
-        if (transporter && env.EMAIL_USER) {
-          // Check if jobId is populated
-          const jobTitle = candidate.jobId && candidate.jobId.jobTitle
-            ? candidate.jobId.jobTitle
-            : 'the position';
-
-          const emailHtml = candidateShortlistedEmailTemplate(
-            candidate.name,
-            jobTitle,
-            'HiringBazaar'
-          );
-
-          await transporter.sendMail({
-            from: `"HiringBazaar Team" <${env.EMAIL_USER}>`,
-            to: candidate.email,
-            subject: `🎉 Application Update: Shortlisted for ${jobTitle}`,
-            html: emailHtml
-          });
-
-          console.log(`✅ Shortlist email sent to candidate: ${candidate.email}`);
-        }
-      } catch (emailError) {
-        console.error('❌ Error sending shortlist email:', emailError);
-        // Continue execution to return response even if email fails
-      }
-    }
-
-    let responseDoc = { ...candidate._doc, status: candidate.hrFeedback };
-    const isVisible = candidate.jobId && candidate.jobId.contactDetailsVisible === true;
-
-    if (!isAdmin && !isVisible) {
-      responseDoc.email = '[HIDDEN]';
-      responseDoc.phoneNumber = '[HIDDEN]';
-      if (responseDoc.basicInfo) {
-        responseDoc.basicInfo = {
-          ...responseDoc.basicInfo,
-          email: '[HIDDEN]',
-          phone: '[HIDDEN]',
-          linkedin: '[HIDDEN]',
-          github: '[HIDDEN]'
-        };
-      }
-      responseDoc.resumeUrl = '#'; // Redact resume URL
-    }
-
-    res.json({
-      success: true,
-      candidate: responseDoc
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
+    const candidate = await Candidate.findByIdAndUpdate(req.params.id, { hrFeedback: req.body.feedback }, { new: true });
+    res.json({ success: true, candidate });
+  } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 };
-// @desc    Get all candidates for current user's jobs
-// @route   GET /api/candidates/my-candidates
+
 export const getMyCandidates = async (req, res) => {
   try {
-    const myJobs = await Job.find({ userId: req.user.id });
-    const jobIds = myJobs.map(job => job._id);
-
-    // HR sees all candidates associated with those jobs
-    // ADDED: Filter for completed parsing
-    const filter = {
-      jobId: { $in: jobIds },
-      parsingStatus: 'COMPLETED'
-    };
-
-    const candidates = await Candidate.find(filter)
-      .populate('jobId', 'jobTitle contactDetailsVisible')
-      .sort({ atsScore: -1, createdAt: -1 });
-
-    const formattedCandidates = candidates.map(c => {
-      const doc = { ...c._doc, status: c.hrFeedback };
-      const isVisible = c.jobId && c.jobId.contactDetailsVisible === true;
-      const isAdmin = req.user.role === 'ADMIN';
-
-      if (!isAdmin && !isVisible) {
-        doc.email = '[HIDDEN]';
-        doc.phoneNumber = '[HIDDEN]';
-        if (doc.basicInfo) {
-          doc.basicInfo = {
-            ...doc.basicInfo,
-            email: '[HIDDEN]',
-            phone: '[HIDDEN]',
-            linkedin: '[HIDDEN]',
-            github: '[HIDDEN]'
-          };
-        }
-        doc.resumeUrl = '#'; // Redact resume URL
-      }
-      return doc;
-    });
-
-    res.json({
-      success: true,
-      count: candidates.length,
-      candidates: formattedCandidates
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
+    const candidates = await Candidate.find({ addedBy: req.user.id }).sort({ createdAt: -1 });
+    res.json({ success: true, candidates });
+  } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 };
 
-// @desc    Get single candidate by ID
-// @route   GET /api/candidates/:id
 export const getCandidateById = async (req, res) => {
   try {
-    const candidate = await Candidate.findById(req.params.id)
-      .populate('jobId', 'jobTitle contactDetailsVisible position')
-      .populate('addedBy', 'fullName email');
-
-    if (!candidate) {
-      return res.status(404).json({
-        success: false,
-        message: 'Candidate not found'
-      });
-    }
-
-    let responseData = { ...candidate._doc };
-    const isVisible = candidate.jobId && candidate.jobId.contactDetailsVisible === true;
-    const isAdmin = req.user.role === 'ADMIN';
-
-    if (!isAdmin && !isVisible) {
-      responseData.email = '[HIDDEN]';
-      responseData.phoneNumber = '[HIDDEN]';
-      if (responseData.basicInfo) {
-        responseData.basicInfo = {
-          ...responseData.basicInfo,
-          email: '[HIDDEN]',
-          phone: '[HIDDEN]',
-          linkedin: '[HIDDEN]',
-          github: '[HIDDEN]'
-        };
-      }
-      responseData.resumeUrl = '#'; // Redact resume URL
-    }
-
-    res.json({
-      success: true,
-      candidate: responseData
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
+    const candidate = await Candidate.findById(req.params.id).populate('jobId');
+    res.json({ success: true, candidate });
+  } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 };
