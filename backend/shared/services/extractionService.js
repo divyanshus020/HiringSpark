@@ -20,23 +20,81 @@ export async function extractTextFromFile(filePath) {
 }
 
 async function extractPdfText(filePath) {
-    const dataBuffer = fs.readFileSync(filePath);
-    const data = new Uint8Array(dataBuffer);
-    const pdf = await pdfjsLib.getDocument({ data, useSystemFonts: true }).promise;
-    console.log(`[Extractor] 📄 PDF loaded. Pages: ${pdf.numPages}`);
+    try {
+        const dataBuffer = fs.readFileSync(filePath);
+        const data = new Uint8Array(dataBuffer);
 
-    let fullText = '';
-    for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        fullText += textContent.items.map(s => s.str).join(' ') + '\n';
+        const loadingTask = pdfjsLib.getDocument({
+            data,
+            useSystemFonts: true,
+            disableFontFace: true,
+        });
+        const pdf = await loadingTask.promise;
+
+        let fullText = '';
+        const links = new Set();
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items
+                .map((item) => item.str)
+                .join(' '); // Changed ' b' to ' ' for cleaner text
+            fullText += pageText + ' ';
+
+            const annotations = await page.getAnnotations();
+            annotations.forEach((anno) => {
+                if (anno.subtype === 'Link' && anno.url) {
+                    let cleanUrl = anno.url.trim();
+                    if (!cleanUrl.startsWith('http')) {
+                        cleanUrl = 'https://' + cleanUrl;
+                    }
+                    try {
+                        new URL(cleanUrl);
+                        links.add(cleanUrl);
+                    } catch {
+                        // Skip invalid URLs
+                    }
+                }
+            });
+        }
+        return {
+            text: fullText.trim(),
+            links: Array.from(links)
+        };
+    } catch (error) {
+        console.error('Error extracting PDF text:', error);
+        return { text: '', links: [] };
     }
-    console.log(`[Extractor] ✅ PDF Text extraction complete. Length: ${fullText.length}`);
-    return { text: fullText.trim(), links: [] };
 }
 
 async function extractDocxText(filePath) {
-    const mammoth = await import('mammoth');
-    const result = await mammoth.default.extractRawText({ path: filePath });
-    return { text: result.value, links: [] };
+    try {
+        const mammoth = await import('mammoth');
+
+        // Extract plain text
+        const { value: text } = await mammoth.default.extractRawText({ path: filePath });
+
+        // Extract HTML to find embedded links
+        const { value: html } = await mammoth.default.convertToHtml({ path: filePath });
+
+        const links = new Set();
+        // Extract links from HTML a tags
+        const linkMatches = html.matchAll(/href="([^"]+)"/g);
+        for (const match of linkMatches) {
+            let url = match[1];
+            if (url.startsWith('http')) {
+                links.add(url);
+            }
+        }
+
+        return {
+            text: text.trim(),
+            links: Array.from(links)
+        };
+    } catch (error) {
+        console.error('Error extracting DOCX text:', error);
+        return { text: '', links: [] };
+    }
 }

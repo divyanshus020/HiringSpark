@@ -28,6 +28,7 @@ export default function Auth() {
     try {
       if (isLogin) {
         // Login Logic
+        console.log(email, password);
         const response = await adminLoginAPI({ email, password });
 
         if (response.data && response.data.success) {
@@ -55,7 +56,7 @@ export default function Auth() {
       } else {
         // Register Logic
         const response = await adminRegisterAPI({ fullName, email, password });
-        
+
         if (response.data && response.data.success) {
           toast.success('Admin registered successfully! Please login.');
           setIsLogin(true); // Switch to login
@@ -159,8 +160,8 @@ export default function Auth() {
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-sm text-indigo-600 hover:text-indigo-800 font-medium hover:underline focus:outline-none"
               >
-                {isLogin 
-                  ? "Don't have an account? Sign Up" 
+                {isLogin
+                  ? "Don't have an account? Sign Up"
                   : "Already have an account? Sign In"}
               </button>
             </div>

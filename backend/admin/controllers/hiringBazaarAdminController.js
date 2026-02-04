@@ -282,47 +282,37 @@ export const updateJobStatus = async (req, res) => {
             });
         }
 
-        // Send email notification to HR when job is approved
+        // Send email notification to HR when job is approved via Queue
         if (status === 'active' || status === 'posted') {
             try {
-                const { transporter } = await import('../../shared/config/mail.js');
-                const { jobApprovedEmailTemplate } = await import('../../shared/utils/emailTemplates.js');
-                const { env } = await import('../../shared/config/env.js');
+                const { emailQueue } = await import('../../shared/services/queueService.js');
 
-                if (transporter && env.EMAIL_USER) {
-                    const hrEmail = job.userId.email;
-                    const hrName = job.userId.fullName;
-                    const jobTitle = job.jobTitle;
-                    const jobLocation = job.location;
-                    const jobType = job.jobType;
-                    const postedDate = new Date(job.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    });
+                const hrEmail = job.userId.email;
+                const hrName = job.userId.fullName;
+                const jobTitle = job.jobTitle;
+                const jobLocation = job.location;
+                const jobType = job.jobType;
+                const postedDate = new Date(job.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
 
-                    const emailHtml = jobApprovedEmailTemplate(
+                await emailQueue.add('job-approved', {
+                    type: 'job-approved',
+                    data: {
+                        hrEmail,
                         hrName,
                         jobTitle,
                         jobLocation,
                         jobType,
                         postedDate
-                    );
+                    }
+                });
 
-                    await transporter.sendMail({
-                        from: `"HireSpark Admin" <${env.EMAIL_USER}>`,
-                        to: hrEmail,
-                        subject: `✅ Job Approved - ${jobTitle}`,
-                        html: emailHtml
-                    });
-
-                    console.log(`✅ Job approval email sent to HR: ${hrEmail} for job: ${jobTitle}`);
-                } else {
-                    console.log('⚠️ Transporter or EMAIL_USER not configured. Skipping job approval email.');
-                }
-            } catch (emailError) {
-                console.error('❌ Error sending job approval email:', emailError);
-                // Don't fail the request if email fails
+                console.log(`[Queue] 📨 Job approval email queued for HR: ${hrEmail}`);
+            } catch (queueError) {
+                console.error('❌ Error queueing job approval email:', queueError);
             }
         }
 

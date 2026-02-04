@@ -44,6 +44,8 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
 
         const parsedData = await extractResumeInfo(text, links, jobContext);
 
+
+
         if (!parsedData || !parsedData.basic_info) {
             throw new Error('AI returned malformed or empty data.');
         }
@@ -69,6 +71,7 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
             phone: parsedData.basic_info.phone,
             linkedin: parsedData.basic_info.linkedin,
             github: parsedData.basic_info.github,
+            links: parsedData.basic_info.links || [],
             experienceYears: parsedData.basic_info.experience_years
         };
 
@@ -116,3 +119,4 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
 pdfWorker.on('completed', (job) => console.log(`[Worker] Job ${job.id} done.`));
 pdfWorker.on('failed', (job, err) => console.error(`[Worker] Job ${job.id} FAILED: ${err.message}`));
 pdfWorker.on('error', (err) => console.error(`[Worker] GLOBAL ERROR:`, err));
+

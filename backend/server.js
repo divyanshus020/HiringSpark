@@ -109,15 +109,19 @@ app.listen(PORT, async () => {
     await connectDB();
     console.log(`🚀 Server running on port ${PORT}`);
 
-    // Start background worker
+    // Start background workers
     try {
         const { pdfWorker } = await import('./shared/workers/parsingWorker.js');
-        const { pdfQueue } = await import('./shared/services/queueService.js');
+        const { emailWorker } = await import('./shared/workers/emailWorker.js');
+        const { pdfQueue, emailQueue } = await import('./shared/services/queueService.js');
+
         const waitingCount = await pdfQueue.getWaitingCount();
         const activeCount = await pdfQueue.getActiveCount();
-        console.log(`👷 Worker started. Queue Status: ${waitingCount} waiting, ${activeCount} active.`);
+        const emailWaitingCount = await emailQueue.getWaitingCount();
+
+        console.log(`👷 Workers started. PDF Queue: ${waitingCount} waiting, ${activeCount} active. Email Queue: ${emailWaitingCount} waiting.`);
     } catch (error) {
-        console.error('❌ Failed to start background worker:', error);
+        console.error('❌ Failed to start background workers:', error);
     }
 
     console.log(`📡 HiringBazaar API: http://localhost:${PORT}/api`);

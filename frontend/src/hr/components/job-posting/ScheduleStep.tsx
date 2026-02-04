@@ -30,6 +30,7 @@ const ScheduleStep = () => {
   const [formData, setFormData] = useState(state.schedule);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -164,9 +165,10 @@ const ScheduleStep = () => {
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Preferred Date *</Label>
-                <Popover>
+                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                   <PopoverTrigger asChild>
                     <Button
+                      type="button"
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal",
@@ -185,7 +187,10 @@ const ScheduleStep = () => {
                     <Calendar
                       mode="single"
                       selected={formData.preferredDate || undefined}
-                      onSelect={(date) => setFormData({ ...formData, preferredDate: date || null })}
+                      onSelect={(date) => {
+                        setFormData({ ...formData, preferredDate: date || null });
+                        setCalendarOpen(false);
+                      }}
                       disabled={(date) => date < new Date()}
                       initialFocus
                       className="pointer-events-auto"

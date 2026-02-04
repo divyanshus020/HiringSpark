@@ -51,18 +51,38 @@ async function callOpenRouter(payload) {
   }
 }
 
-const SYSTEM_INSTRUCTION = `You are an expert ATS (Applicant Tracking System). Analyze the resume text against the Job Description (JD).
-1. EXTRACT: Name, Email, Phone, Experience Years (ONLY professional), Skills, Education.
-2. ATS SCORE (0-100): 
-   - 40% Skills Match: Keywords from JD.
-   - 30% Experience Match: Relevant years and roles.
-   - 20% Education & Format.
-   - 10% Industry fit.
-BE STRICT. If 0% match, give 0. If perfect match, give 100.
-Strictly return ONLY JSON.`;
+const SYSTEM_INSTRUCTION = `You are a Senior Technical Recruiter. Extract candidate data into the specified JSON format.
+If a Job Description (JD) is provided, calculate scores based on the fit.
+
+CRITICAL INSTRUCTION:
+1. ONLY include professional work experience (jobs, internships) in "work_experience" and "experience_years".
+2. ABSOLUTELY DO NOT include personal projects, academic projects, or freelance projects in the "work_experience" list.
+3. Projects should be ignored for the "experience_years" calculation.
+4. Calculate "experience_years" by summing the duration of professional jobs and internships only.
+5. Identify LinkedIn, GitHub, and other professional links from the provided "EXTRACTED LINKS FROM CV". 
+   - Put LinkedIn in "linkedin" field.
+   - Put GitHub in "github" field.
+   - Put ALL other relevant links (Portfolio, Twitter, Behance, etc.) in the "links" array inside "basic_info".
+
+Assessment:
+- Technical Fit: 0-100 based on skills/JD matching and also match the required experience years.
+- Cultural Fit: 0-100 based on soft skills/leadership.
+- Overall Score: 70% Technical + 30% General potential.
+Provide a 2-3 sentence executive summary.
+Strictly return ONLY the JSON object.`;
 
 const JSON_SCHEMA = `{
-  "basic_info": { "full_name": "string", "job_title": "string", "location": "string", "email": "string", "phone": "string", "linkedin": "string", "github": "string", "experience_years": "number" },
+  "basic_info": { 
+    "full_name": "string", 
+    "job_title": "string", 
+    "location": "string", 
+    "email": "string", 
+    "phone": "string", 
+    "linkedin": "string", 
+    "github": "string", 
+    "links": ["string"],
+    "experience_years": "number" 
+  },
   "executive_summary": { "ai_generated_summary": "string" },
   "education": [{ "degree": "string", "institution": "string", "year": "number" }],
   "work_experience": [{ "role": "string", "company": "string", "start_date": "string", "end_date": "string", "responsibilities": ["string"] }],
@@ -73,7 +93,9 @@ const JSON_SCHEMA = `{
 export async function extractResumeInfo(text, allLinks, jobContext) {
   try {
     let jdContext = jobContext ? `JD: ${jobContext.title}. Skills: ${jobContext.skillsRequired.join(', ')}. Desc: ${jobContext.description}` : "No JD.";
-    const prompt = `${SYSTEM_INSTRUCTION}\n\nSchema:\n${JSON_SCHEMA}\n\nContext:\n${jdContext}\n\nResume Text:\n${text.substring(0, 15000)}\n\nOutput JSON:`;
+    const linksContext = allLinks?.length > 0 ? `\n\nEXTRACTED LINKS FROM CV: ${allLinks.join(', ')}` : "";
+
+    const prompt = `${SYSTEM_INSTRUCTION}\n\nSchema:\n${JSON_SCHEMA}\n\nContext:\n${jdContext}${linksContext}\n\nResume Text:\n${text.substring(0, 15000)}\n\nOutput JSON:`;
 
     const content = await callOpenRouter({
       model: DEFAULT_MODEL,
@@ -99,6 +121,93 @@ export async function extractResumeInfo(text, allLinks, jobContext) {
   }
 }
 
-export async function generateExecutiveSummary(text) { return "Summary unavailable"; }
-export async function chatWithDoc(msg, context, role) { return "Chat offline."; }
-export async function generateJobDescription(title, co, loc, type) { return { description: "", requirements: [], skills: [] }; }
+export async function generateExecutiveSummary(text) {
+  try {
+    const prompt = `Generate a professional 2-3 sentence executive summary for this resume. Focus on key strengths, experience level, and standout skills.\n\nResume:\n${text.substring(0, 5000)}\n\nExecutive Summary:`;
+
+    const content = await callOpenRouter({
+      model: DEFAULT_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    return content.trim();
+  } catch (error) {
+    console.error('❌ Executive Summary Error:', error.message);
+    return "Unable to generate summary at this time.";
+  }
+}
+
+export async function chatWithDoc(msg, context, role = 'user') {
+  try {
+    const systemPrompt = role === 'hr'
+      ? 'You are an HR assistant helping to evaluate candidates. Be professional and insightful.'
+      : 'You are a helpful AI assistant analyzing documents. Provide clear, concise answers.';
+
+    const contextText = typeof context === 'string'
+      ? context
+      : JSON.stringify(context).substring(0, 10000);
+
+    const prompt = `${systemPrompt}\n\nContext:\n${contextText}\n\nQuestion: ${msg}\n\nAnswer:`;
+
+    const content = await callOpenRouter({
+      model: DEFAULT_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    return content.trim();
+  } catch (error) {
+    console.error('❌ Chat Error:', error.message);
+    return "I'm unable to process your request at the moment. Please try again.";
+  }
+}
+
+export async function generateJobDescription(title, company, location, type) {
+  try {
+    const prompt = `Generate a comprehensive job description in JSON format for the following position:
+
+Job Title: ${title}
+Company: ${company || 'Our Company'}
+Location: ${location || 'Remote'}
+Employment Type: ${type || 'Full-time'}
+
+Return ONLY valid JSON with this structure:
+{
+  "description": "2-3 paragraph job description",
+  "responsibilities": ["responsibility 1", "responsibility 2", ...],
+  "requirements": ["requirement 1", "requirement 2", ...],
+  "skills": ["skill 1", "skill 2", ...],
+  "qualifications": ["qualification 1", "qualification 2", ...],
+  "benefits": ["benefit 1", "benefit 2", ...]
+}
+
+Make it professional, engaging, and industry-standard.`;
+
+    const content = await callOpenRouter({
+      model: DEFAULT_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      response_format: { type: 'json_object' }
+    });
+
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+
+    return {
+      description: parsed.description || "",
+      responsibilities: parsed.responsibilities || [],
+      requirements: parsed.requirements || [],
+      skills: parsed.skills || [],
+      qualifications: parsed.qualifications || [],
+      benefits: parsed.benefits || []
+    };
+  } catch (error) {
+    console.error('❌ Job Description Error:', error.message);
+    return {
+      description: `We are seeking a talented ${title} to join our team.`,
+      responsibilities: ["To be defined"],
+      requirements: ["To be defined"],
+      skills: [],
+      qualifications: [],
+      benefits: []
+    };
+  }
+}

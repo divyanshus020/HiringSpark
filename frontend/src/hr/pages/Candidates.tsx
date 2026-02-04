@@ -4,7 +4,7 @@ import Header from '../components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { Users as UsersIcon, FileText, Loader2, ExternalLink, Mail, Phone, Eye, AlertCircle, CheckCircle2, Search as SearchIcon, Lock } from 'lucide-react';
+import { Users as UsersIcon, FileText, FileX, Loader2, ExternalLink, Mail, Phone, Eye, AlertCircle, CheckCircle2, Search as SearchIcon, Lock } from 'lucide-react';
 
 
 import { CandidateDetailsModal } from '../../components/CandidateDetailsModal';
@@ -19,6 +19,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
+
+const ContactIcon = ({ icon: Icon, isLocked }: { icon: any, isLocked: boolean }) => (
+  <div className="relative inline-flex">
+    <Icon className={`h-4 w-4 ${isLocked ? 'text-gray-300' : 'text-indigo-500'} shrink-0`} />
+    {isLocked && (
+      <div className="absolute -top-1.5 -right-1.5 bg-white rounded-full p-0.5 shadow-sm border border-gray-200 ring-2 ring-white">
+        <Lock className="h-2 w-2 text-orange-500" />
+      </div>
+    )}
+  </div>
+);
 
 const Candidates = () => {
   const [searchParams] = useSearchParams();
@@ -370,27 +381,21 @@ const Candidates = () => {
                           </td>
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-2 text-gray-600">
-                              <Mail className="h-4 w-4" />
+                              <ContactIcon icon={Mail} isLocked={candidate.jobId?.contactDetailsVisible === false} />
                               <div className="relative">
-                                <span className={`text-sm ${(candidate.jobId?.contactDetailsVisible === false) ? 'blur-[4px] select-none opacity-40' : ''}`}>
+                                <span className={`text-sm ${(candidate.jobId?.contactDetailsVisible === false) ? 'blur-[6px] select-none opacity-25 italic text-gray-400' : ''}`}>
                                   {candidate.basicInfo?.email || candidate.email}
                                 </span>
-                                {(candidate.jobId?.contactDetailsVisible === false) && (
-                                  <Lock className="h-3 w-3 text-gray-400 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
-                                )}
                               </div>
                             </div>
                           </td>
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-2 text-gray-600 whitespace-nowrap">
-                              <Phone className="h-4 w-4" />
+                              <ContactIcon icon={Phone} isLocked={candidate.jobId?.contactDetailsVisible === false} />
                               <div className="relative">
-                                <span className={`text-sm ${(candidate.jobId?.contactDetailsVisible === false) ? 'blur-[4px] select-none opacity-40' : ''}`}>
+                                <span className={`text-sm ${(candidate.jobId?.contactDetailsVisible === false) ? 'blur-[4px] select-none opacity-40 italic' : ''}`}>
                                   {candidate.basicInfo?.phone || candidate.phoneNumber || 'N/A'}
                                 </span>
-                                {(candidate.jobId?.contactDetailsVisible === false) && (
-                                  <Lock className="h-3 w-3 text-gray-400 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
-                                )}
                               </div>
                             </div>
                           </td>
@@ -406,25 +411,37 @@ const Candidates = () => {
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
-                              {candidate.resumeUrl ? (
+                              {candidate.jobId?.contactDetailsVisible === false ? (
+                                <div className="relative group/resume">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-2 cursor-not-allowed grayscale bg-gray-50 border-gray-200"
+                                    disabled
+                                    title="Resume view restricted by admin"
+                                  >
+                                    <ContactIcon icon={FileText} isLocked={true} />
+                                    <span className="sr-only">Resume Locked</span>
+                                  </Button>
+                                </div>
+                              ) : candidate.resumeUrl ? (
                                 <div className="relative group/resume">
                                   <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleViewCV(candidate.resumeUrl)}
-                                    className={`gap-2 ${candidate.jobId?.contactDetailsVisible === false ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
-                                    disabled={candidate.jobId?.contactDetailsVisible === false}
-                                    title={candidate.jobId?.contactDetailsVisible === false ? "Resume view restricted by admin" : "View CV"}
+                                    className="gap-2 border-indigo-100 hover:border-indigo-200 hover:bg-indigo-50"
+                                    title="View CV"
                                   >
-                                    <FileText className="h-4 w-4" />
+                                    <ContactIcon icon={FileText} isLocked={false} />
                                     <span className="sr-only">View CV</span>
-                                    {candidate.jobId?.contactDetailsVisible === false && (
-                                      <Lock className="h-3 w-3 text-gray-500 absolute -top-1 -right-1 bg-white rounded-full border shadow-sm" />
-                                    )}
                                   </Button>
                                 </div>
                               ) : (
-                                <span className="text-sm text-gray-400">No CV</span>
+                                <div className="flex flex-col items-center opacity-40" title="No CV uploaded">
+                                  <FileX className="h-4 w-4 text-gray-400" />
+                                  <span className="text-[9px] font-bold uppercase tracking-tighter">No CV</span>
+                                </div>
                               )}
                             </div>
                           </td>

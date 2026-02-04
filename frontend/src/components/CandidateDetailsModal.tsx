@@ -22,7 +22,9 @@ import {
     AlertCircle,
     FileText,
     Target,
-    Lock
+    Lock,
+    Github,
+    Globe
 } from "lucide-react";
 
 
@@ -55,25 +57,36 @@ export const CandidateDetailsModal = ({
         certifications = [],
         parsingStatus,
         parsingStatusMessage,
-        jobId: jobInfo
+        jobId: jobInfo,
     } = candidate;
+
+    const allLinks = basicInfo?.links || [];
 
     // Determine visibility - only blur for HR if contactDetailsVisible is false
     // If showAllDetails is true (Admin), we don't blur.
     const isContactVisible = showAllDetails || jobInfo?.contactDetailsVisible !== false;
 
     const BlurredValue = ({ value, label }: { value: string; label: string }) => (
-
-        <div className="relative group">
-            <div className={`transition-all duration-300 ${!isContactVisible ? 'select-none blur-[4px] opacity-40' : ''}`}>
+        <div className="relative group overflow-hidden">
+            <div className={`transition-all duration-300 ${!isContactVisible ? 'select-none blur-[6px] opacity-25 italic text-gray-400' : ''}`}>
                 {value}
             </div>
             {!isContactVisible && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white/80 rounded border border-gray-200 shadow-sm">
-                        <Lock className="h-3 w-3 text-gray-500" />
-                        <span className="text-[10px] font-bold text-gray-500 tracking-tight">LOCKED</span>
-                    </div>
+                <div className="absolute inset-0 flex items-center justify-start pointer-events-none">
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-[0.2em] bg-gray-100/80 px-1.5 py-0.5 rounded-sm border border-gray-200">
+                        {label} Locked
+                    </span>
+                </div>
+            )}
+        </div>
+    );
+
+    const ContactIcon = ({ icon: Icon, isLocked }: { icon: any, isLocked: boolean }) => (
+        <div className="relative">
+            <Icon className={`h-4 w-4 ${isLocked ? 'text-gray-300' : 'text-indigo-500'} shrink-0`} />
+            {isLocked && (
+                <div className="absolute -top-1.5 -right-1.5 bg-white rounded-full p-0.5 shadow-sm border border-gray-200 ring-2 ring-white">
+                    <Lock className="h-2.5 w-2.5 text-orange-500" />
                 </div>
             )}
         </div>
@@ -134,27 +147,25 @@ export const CandidateDetailsModal = ({
                                 <div className="space-y-3">
                                     <div className="flex flex-col gap-1 text-sm bg-gray-50 p-2 rounded-md">
                                         <div className="flex items-center gap-2 text-gray-500 font-medium">
-                                            <Mail className="h-4 w-4 text-indigo-500 shrink-0" /> Email
+                                            <ContactIcon icon={Mail} isLocked={!isContactVisible} /> Email
                                         </div>
                                         <div className="text-gray-900 break-all pl-6">
                                             <BlurredValue value={basicInfo?.email || candidate.email || "N/A"} label="Email" />
                                         </div>
-
                                     </div>
 
                                     <div className="flex flex-col gap-1 text-sm bg-gray-50 p-2 rounded-md">
                                         <div className="flex items-center gap-2 text-gray-500 font-medium">
-                                            <Phone className="h-4 w-4 text-indigo-500 shrink-0" /> Phone
+                                            <ContactIcon icon={Phone} isLocked={!isContactVisible} /> Phone
                                         </div>
                                         <div className="text-gray-900 pl-6">
                                             <BlurredValue value={basicInfo?.phone || candidate.phoneNumber || "N/A"} label="Phone" />
                                         </div>
-
                                     </div>
 
                                     <div className="flex flex-col gap-1 text-sm bg-gray-50 p-2 rounded-md">
                                         <div className="flex items-center gap-2 text-gray-500 font-medium">
-                                            <Linkedin className="h-4 w-4 text-indigo-500 shrink-0" /> LinkedIn
+                                            <ContactIcon icon={Linkedin} isLocked={!isContactVisible} /> LinkedIn
                                         </div>
                                         <div className="text-gray-900 break-all pl-6">
                                             {isContactVisible ? (
@@ -172,12 +183,46 @@ export const CandidateDetailsModal = ({
 
                                     <div className="flex flex-col gap-1 text-sm bg-gray-50 p-2 rounded-md">
                                         <div className="flex items-center gap-2 text-gray-500 font-medium">
+                                            <ContactIcon icon={Github} isLocked={!isContactVisible} /> GitHub
+                                        </div>
+                                        <div className="text-gray-900 break-all pl-6">
+                                            {isContactVisible ? (
+                                                basicInfo?.github ? (
+                                                    <a href={basicInfo.github} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                                        {basicInfo.github}
+                                                    </a>
+                                                ) : "N/A"
+                                            ) : (
+                                                <BlurredValue value="https://github.com/..." label="GitHub" />
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-1 text-sm bg-gray-50 p-2 rounded-md">
+                                        <div className="flex items-center gap-2 text-gray-500 font-medium">
                                             <MapPin className="h-4 w-4 text-indigo-500 shrink-0" /> Location
                                         </div>
                                         <div className="text-gray-900 pl-6">
                                             {basicInfo?.location || "N/A"}
                                         </div>
                                     </div>
+
+                                    {/* Additional Links from basicInfo */}
+                                    {allLinks.length > 0 && (
+                                        <div className="pt-2 mt-2 border-t border-gray-200">
+                                            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Other Links</div>
+                                            <div className="space-y-2">
+                                                {allLinks.map((link: string, i: number) => (
+                                                    <div key={i} className="flex items-center gap-2 bg-gray-50 p-1.5 rounded border border-gray-100 overflow-hidden">
+                                                        <Globe className="h-3 w-3 text-indigo-400 shrink-0" />
+                                                        <a href={link} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-600 hover:underline break-all truncate">
+                                                            {link}
+                                                        </a>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -188,8 +233,8 @@ export const CandidateDetailsModal = ({
                                         <FileText className="h-4 w-4 text-indigo-500" /> Resume / CV
                                     </h3>
                                     <Button
-                                        variant={isContactVisible ? "default" : "outline"}
-                                        className={`w-full gap-2 ${!isContactVisible ? 'opacity-50 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+                                        variant={isContactVisible ? "default" : "secondary"}
+                                        className={`w-full gap-2 ${!isContactVisible ? 'cursor-not-allowed grayscale' : 'bg-indigo-600 hover:bg-indigo-700'}`}
                                         disabled={!isContactVisible}
                                         onClick={() => {
                                             const backendHost = import.meta.env.VITE_API_URL?.replace('/api', '') || window.location.origin;
@@ -203,13 +248,13 @@ export const CandidateDetailsModal = ({
                                             </>
                                         ) : (
                                             <>
-                                                <Lock className="h-4 w-4" /> Resume Locked
+                                                <Lock className="h-4 w-4 text-orange-500" /> Resume Locked
                                             </>
                                         )}
                                     </Button>
                                     {!isContactVisible && (
-                                        <p className="text-[10px] text-gray-500 text-center italic">
-                                            Enable contact visibility to view resume
+                                        <p className="text-[10px] text-gray-400 text-center italic font-medium">
+                                            Locked by HiringBazaar Admin
                                         </p>
                                     )}
                                 </div>

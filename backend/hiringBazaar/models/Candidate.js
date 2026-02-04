@@ -57,6 +57,7 @@ const candidateSchema = new mongoose.Schema({
     phone: String,
     linkedin: String,
     github: String,
+    links: [String],
     experienceYears: Number
   },
   executiveSummary: String,

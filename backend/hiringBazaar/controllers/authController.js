@@ -234,7 +234,7 @@ export const resetPassword = async (req, res) => {
 // @route   POST /api/auth/admin/register
 export const adminRegister = async (req, res) => {
   try {
-    const { fullName, email, password,phone } = req.body;
+    const { fullName, email, password, phone } = req.body;
 
     // Validation
     if (!fullName || !email || !password || !phone) {
@@ -300,6 +300,7 @@ export const adminRegister = async (req, res) => {
 export const adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log(email, password);
 
     // Validation
     if (!email || !password) {

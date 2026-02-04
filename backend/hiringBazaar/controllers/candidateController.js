@@ -3,6 +3,41 @@ import { Job } from '../models/Job.js';
 import { extractTextFromFile } from '../../shared/services/extractionService.js';
 import { extractResumeInfo } from '../../shared/services/aiService.js';
 import path from 'path';
+import { User } from '../models/User.js';
+
+/**
+ * Redacts sensitive candidate info if contact visibility is disabled for HR.
+ */
+function applyPrivacyFilters(candidate, user) {
+  if (!candidate) return null;
+
+  // Admins can see everything
+  if (user.role === 'ADMIN') return candidate;
+
+  const jobId = candidate.jobId;
+  const isVisible = jobId && jobId.contactDetailsVisible === true;
+
+  if (!isVisible) {
+    const candidateObj = candidate.toObject ? candidate.toObject() : { ...candidate };
+    const masked = {
+      ...candidateObj,
+      email: 'hidden@hiringspark.com',
+      phoneNumber: '+91-XXXXXXXXXX',
+      resumeUrl: '', // Hide resume URL
+      basicInfo: {
+        ...(candidateObj.basicInfo || {}),
+        email: 'hidden@hiringspark.com',
+        phone: '+91-XXXXXXXXXX',
+        linkedin: '',
+        github: '',
+        links: []
+      }
+    };
+    return masked;
+  }
+
+  return candidate;
+}
 
 /**
  * Shared Direct Parser Logic (Bypasses Queue)
@@ -45,6 +80,9 @@ async function processDirectly(candidateId) {
       location: parsed.basic_info.location,
       email: parsed.basic_info.email,
       phone: parsed.basic_info.phone,
+      linkedin: parsed.basic_info.linkedin,
+      github: parsed.basic_info.github,
+      links: parsed.basic_info.links || [],
       experienceYears: parsed.basic_info.experience_years
     };
 
@@ -143,28 +181,60 @@ export const deleteCandidate = async (req, res) => {
 
 export const getCandidatesByJob = async (req, res) => {
   try {
-    const candidates = await Candidate.find({ jobId: req.params.jobId }).sort({ atsScore: -1 });
-    res.json({ success: true, candidates });
+    const candidates = await Candidate.find({ jobId: req.params.jobId })
+      .populate('jobId')
+      .sort({ atsScore: -1 });
+
+    const filteredCandidates = candidates.map(c => applyPrivacyFilters(c, req.user));
+    res.json({ success: true, candidates: filteredCandidates });
   } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 };
 
 export const updateCandidateFeedback = async (req, res) => {
   try {
-    const candidate = await Candidate.findByIdAndUpdate(req.params.id, { hrFeedback: req.body.feedback }, { new: true });
+    const { feedback } = req.body;
+    const candidate = await Candidate.findByIdAndUpdate(req.params.id, { hrFeedback: feedback }, { new: true }).populate('jobId');
+
+    // Trigger Shortlist Email Notification
+    if (feedback === 'SHORTLISTED' || feedback === 'Shortlisted by HB') {
+      try {
+        const { emailQueue } = await import('../../shared/services/queueService.js');
+        await emailQueue.add('candidate-shortlisted', {
+          type: 'candidate-shortlisted',
+          data: {
+            candidateEmail: candidate.email || candidate.basicInfo?.email,
+            candidateName: candidate.name || candidate.basicInfo?.fullName,
+            jobTitle: candidate.jobId?.jobTitle || 'Job Position',
+            companyName: candidate.jobId?.companyName || ''
+          }
+        });
+        console.log(`[CandidateController] 📧 Shortlist email queued for: ${candidate.email}`);
+      } catch (queueErr) {
+        console.error('[CandidateController] ❌ Failed to queue shortlist email:', queueErr.message);
+      }
+    }
+
     res.json({ success: true, candidate });
   } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 };
 
 export const getMyCandidates = async (req, res) => {
   try {
-    const candidates = await Candidate.find({ addedBy: req.user.id }).sort({ createdAt: -1 });
-    res.json({ success: true, candidates });
+    const candidates = await Candidate.find({ addedBy: req.user.id })
+      .populate('jobId')
+      .sort({ createdAt: -1 });
+
+    const filteredCandidates = candidates.map(c => applyPrivacyFilters(c, req.user));
+    res.json({ success: true, candidates: filteredCandidates });
   } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 };
 
 export const getCandidateById = async (req, res) => {
   try {
     const candidate = await Candidate.findById(req.params.id).populate('jobId');
-    res.json({ success: true, candidate });
+    if (!candidate) return res.status(404).json({ success: false, message: 'Candidate not found' });
+
+    const filteredCandidate = applyPrivacyFilters(candidate, req.user);
+    res.json({ success: true, candidate: filteredCandidate });
   } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 };

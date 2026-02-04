@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
+import console from "console";
 
 export default function JobPostingDetail() {
   // All hooks must be called at the top before any conditional returns
@@ -150,6 +151,7 @@ export default function JobPostingDetail() {
     .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()); // Latest first
 
   const totalPages = Math.ceil(filteredCandidates.length / itemsPerPage);
+
   const paginatedCandidates = filteredCandidates.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
