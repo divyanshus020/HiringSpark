@@ -109,6 +109,18 @@ export const CandidateDetailsModal = ({
                 </DialogHeader>
 
                 <ScrollArea className="flex-1 bg-gray-50">
+                    {(parsingStatus === 'MANUAL_REVIEW' || parsingStatus === 'FAILED') && (
+                        <div className="m-6 mb-0 p-4 bg-orange-50 border border-orange-200 rounded-xl flex items-start gap-3">
+                            <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5" />
+                            <div>
+                                <h4 className="font-bold text-orange-900 text-sm">AI Parsing Incomplete</h4>
+                                <p className="text-xs text-orange-700 mt-1">
+                                    This resume could not be fully analyzed by AI (likely a scanned image or complex layout).
+                                    Please review the original resume file for complete information.
+                                </p>
+                            </div>
+                        </div>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 pb-20">
                         {/* Left Column: Contact & Summary */}
                         <div className="md:col-span-1 space-y-6">

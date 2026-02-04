@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { getAllCandidates, deleteCandidate } from "../api/admin/admin.api";
+import { Badge } from "@/components/ui/badge";
 import { updateCandidateStatus } from "../api/hr/candidates.api";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import {
@@ -216,7 +217,20 @@ export default function Candidates() {
                   ) : (
                     filteredCandidates.map((candidate) => (
                       <TableRow key={candidate._id} className="hover:bg-muted/50 transition-colors">
-                        <TableCell className="font-medium text-foreground">{candidate.name}</TableCell>
+                        <TableCell className="font-medium text-foreground">
+                          <div className="flex flex-col">
+                            <span>{candidate.name}</span>
+                            <div className="flex gap-1 mt-1">
+                              {candidate.parsingStatus === 'COMPLETED' ? (
+                                <Badge className="bg-green-100 text-green-700 hover:bg-green-100 text-[10px] h-4 px-1">Parsed</Badge>
+                              ) : candidate.parsingStatus === 'FAILED' || candidate.parsingStatus === 'MANUAL_REVIEW' ? (
+                                <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 text-[10px] h-4 px-1">Manual Review</Badge>
+                              ) : (
+                                <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 text-[10px] h-4 px-1 animate-pulse">Processing</Badge>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
                         <TableCell className="text-muted-foreground">{candidate.basicInfo?.email || candidate.email}</TableCell>
                         <TableCell className="text-muted-foreground">{candidate.jobId?.jobTitle || 'N/A'}</TableCell>
                         <TableCell>

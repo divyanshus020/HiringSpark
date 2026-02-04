@@ -393,15 +393,15 @@ export default function JobPostingDetail() {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Bulk Upload Resumes</DialogTitle>
-                  <DialogDescription>Select up to 100 PDF resumes to upload and parse.</DialogDescription>
+                  <DialogDescription>Select up to 100 resumes (PDF, DOC, DOCX) to upload and parse.</DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
-                    <Label>Select Files (PDF only)</Label>
+                    <Label>Select Files (PDF/Doc/Docx)</Label>
                     <Input
                       type="file"
                       multiple
-                      accept=".pdf"
+                      accept=".pdf,.doc,.docx"
                       onChange={async (e) => {
                         const files = Array.from(e.target.files || []);
                         if (files.length > 100) {
@@ -683,9 +683,9 @@ export default function JobPostingDetail() {
                             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[10px] px-1 py-0 h-5 gap-1">
                               <CheckCircle2 className="w-3 h-3" /> Parsed
                             </Badge>
-                          ) : candidate.parsingStatus === 'FAILED' ? (
-                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-[10px] px-1 py-0 h-5 gap-1">
-                              <AlertCircle className="w-3 h-3" /> Failed
+                          ) : candidate.parsingStatus === 'FAILED' || candidate.parsingStatus === 'MANUAL_REVIEW' ? (
+                            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-[10px] px-1 py-0 h-5 gap-1">
+                              <AlertCircle className="w-3 h-3" /> Manual Review
                             </Badge>
                           ) : (
                             <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-[10px] px-1 py-0 h-5 gap-1">
@@ -717,8 +717,8 @@ export default function JobPostingDetail() {
                               setSelectedCandidate(candidate);
                               setIsDetailsModalOpen(true);
                             }}
-                            disabled={candidate.parsingStatus !== 'COMPLETED'}
-                            className={`flex items-center gap-1 text-xs font-medium ${candidate.parsingStatus === 'COMPLETED' ? 'text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`}
+                            disabled={candidate.parsingStatus === 'PROCESSING' || candidate.parsingStatus === 'PENDING'}
+                            className={`flex items-center gap-1 text-xs font-medium ${candidate.parsingStatus !== 'PROCESSING' && candidate.parsingStatus !== 'PENDING' ? 'text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`}
                           >
                             <Eye className="h-3 w-3" />
                             View Details

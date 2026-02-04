@@ -26,7 +26,12 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
         const absolutePath = path.join(process.cwd(), normalizedPath);
         const { text, links } = await extractTextFromFile(absolutePath);
 
-        if (!text) throw new Error('Could not extract text from file');
+        if (!text) {
+            console.warn(`⚠️ No text extracted for candidate ${candidateId}. Likely a scanned/image PDF.`);
+            currentCandidate.parsingStatus = 'MANUAL_REVIEW';
+            await currentCandidate.save();
+            return; // Stop processing further
+        }
 
         const jobContext = {
             title: currentCandidate.jobId.jobTitle,
@@ -101,9 +106,9 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
 
     } catch (error) {
         console.error(`❌ Error processing candidate ${candidateId}:`, error.message);
-        // Fallback to safe enum values on error
+        // Fallback to MANUAL_REVIEW on error (e.g., AI failed or file corrupted)
         await Candidate.findByIdAndUpdate(candidateId, {
-            parsingStatus: 'FAILED'
+            parsingStatus: 'MANUAL_REVIEW'
         });
         throw error;
     }

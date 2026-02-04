@@ -176,9 +176,10 @@ const Candidates = () => {
           </Badge>
         );
       case 'FAILED':
+      case 'MANUAL_REVIEW':
         return (
-          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 gap-1">
-            <AlertCircle className="w-3 h-3" /> Failed
+          <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 gap-1">
+            <AlertCircle className="w-3 h-3" /> Requires Manual Review
           </Badge>
         );
       default:
@@ -323,7 +324,7 @@ const Candidates = () => {
                             <Select
                               value={candidate.hrFeedback || "PENDING"}
                               onValueChange={(value) => handleStatusChange(candidate._id, value)}
-                              disabled={candidate.parsingStatus !== 'COMPLETED'}
+                              disabled={candidate.parsingStatus === 'PROCESSING' || candidate.parsingStatus === 'PENDING'}
                             >
                               <SelectTrigger className="w-[140px] h-8 text-xs bg-white">
                                 <SelectValue placeholder="Status" />
@@ -377,7 +378,7 @@ const Candidates = () => {
                                 size="sm"
                                 className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50"
                                 onClick={() => openCandidateModal(candidate)}
-                                disabled={candidate.parsingStatus !== 'COMPLETED'}
+                                disabled={candidate.parsingStatus === 'PROCESSING' || candidate.parsingStatus === 'PENDING'}
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
