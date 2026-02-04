@@ -19,6 +19,9 @@ const envSchema = z.object({
 
   // AI & Redis
   OPENROUTER_API_KEY: z.string().optional(),
+  OPENROUTER_KEY_1: z.string().optional(),
+  OPENROUTER_KEY_2: z.string().optional(),
+  OPENROUTER_KEY_3: z.string().optional(),
   BYTEZ_API_KEY: z.string().optional(),
   AI_PROVIDER: z.string().default('bytez'),
   REDIS_HOST: z.string().default('127.0.0.1'),

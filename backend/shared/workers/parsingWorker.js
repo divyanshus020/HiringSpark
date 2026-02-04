@@ -50,6 +50,10 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
 
         const parsedData = await extractResumeInfo(text, links, jobContext);
 
+        if (!parsedData || !parsedData.basic_info) {
+            throw new Error('AI analysis failed to provide basic profile information.');
+        }
+
         currentCandidate.parsingProgress = 80;
         currentCandidate.parsingStatusMessage = 'Finalizing extraction...';
         await currentCandidate.save();
