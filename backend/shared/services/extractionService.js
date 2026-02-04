@@ -16,8 +16,16 @@ export async function extractTextFromFile(filePath) {
             throw new Error('File not found at path');
         }
 
+        // Try 'python3' first as it's standard on Linux, fallback to 'python'
+        let pythonCmd = 'python3';
+        try {
+            await execFilePromise('python3', ['--version']);
+        } catch (e) {
+            pythonCmd = 'python';
+        }
+
         // Call python script
-        const { stdout, stderr } = await execFilePromise('python', [PYTHON_SCRIPT, filePath]);
+        const { stdout, stderr } = await execFilePromise(pythonCmd, [PYTHON_SCRIPT, filePath]);
 
         if (stderr && !stdout) {
             console.error('Python Error:', stderr);
