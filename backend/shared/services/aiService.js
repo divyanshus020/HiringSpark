@@ -79,9 +79,11 @@ export async function extractResumeInfo(
 ) {
   try {
     let jdContext = jobContext ? `\nJD: ${jobContext.title}. Requirements: ${jobContext.skillsRequired.join(', ')}. Desc: ${jobContext.description}` : "No specific JD.";
-    console.log(jdContext);
 
-    const prompt = `${SYSTEM_INSTRUCTION}\n\nSchema:\n${JSON_SCHEMA}\n\nContext:\n${jdContext}\nLinks: ${allLinks.join(', ')}\n\nResume Text:\n${text.substring(0, 12000)}`;
+    // Clean text to remove non-printable characters that can break JSON
+    const cleanedText = text.replace(/[\0-\x1F\x7F-\x9F]/g, "").substring(0, 12000);
+
+    const prompt = `${SYSTEM_INSTRUCTION}\n\nSchema:\n${JSON_SCHEMA}\n\nContext:\n${jdContext}\nLinks: ${allLinks.join(', ')}\n\nResume Text:\n${cleanedText}`;
 
     const completion = await openRouter.chat.send({
       model: DEFAULT_MODEL,
@@ -92,6 +94,7 @@ export async function extractResumeInfo(
         },
       ],
       stream: false,
+      response_format: { type: 'json_object' }
     });
 
     const choice = completion.choices[0];
@@ -99,14 +102,21 @@ export async function extractResumeInfo(
       throw new Error('AI returned an empty response');
     }
 
-    const content = choice.message.content;
-    const jsonString = (typeof content === 'string' ? content : '').trim();
-    // Sometimes AI wraps JSON in backticks
-    const cleanedJson = jsonString.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+    const content = choice.message.content.trim();
 
-    console.log('AI Response:', cleanedJson);
+    // Extract JSON block using standard markers or first/last braces
+    let jsonString = content;
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      jsonString = jsonMatch[0];
+    }
 
-    return JSON.parse(cleanedJson);
+    try {
+      return JSON.parse(jsonString);
+    } catch (parseError) {
+      console.error('❌ AI JSON Parse Error. Raw content:', content);
+      throw new Error(`AI response truncated or malformed: ${parseError.message}`);
+    }
   } catch (error) {
     console.error('AI optimization extraction error:', error);
     throw new Error(`AI extraction failed: ${error.message}`);

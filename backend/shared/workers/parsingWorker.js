@@ -121,10 +121,15 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
 
     } catch (error) {
         console.error(`❌ Error processing candidate ${candidateId}:`, error.message);
+
+        let errorMessage = error.message;
+        if (errorMessage.includes('ENOENT')) errorMessage = 'File not found on server.';
+        if (errorMessage.includes('truncated')) errorMessage = 'AI extraction failed due to document complexity. Please review manually.';
+
         // Fallback to MANUAL_REVIEW on error (e.g., AI failed or file corrupted)
         await Candidate.findByIdAndUpdate(candidateId, {
             parsingStatus: 'MANUAL_REVIEW',
-            parsingStatusMessage: `Error: ${error.message}. Please review manually.`,
+            parsingStatusMessage: `Parsing stopped: ${errorMessage}`,
             parsingProgress: 0
         });
         throw error;
