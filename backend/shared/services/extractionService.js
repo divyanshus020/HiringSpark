@@ -4,6 +4,7 @@ import path from 'path';
 
 export async function extractTextFromFile(filePath) {
     const ext = path.extname(filePath).toLowerCase();
+    console.log(`[Extractor] 📂 Processing ${ext} file: ${path.basename(filePath)}`);
     try {
         if (ext === '.pdf') {
             return await extractPdfText(filePath);
@@ -13,7 +14,7 @@ export async function extractTextFromFile(filePath) {
             throw new Error(`Unsupported format: ${ext}`);
         }
     } catch (error) {
-        console.error('❌ Extraction Error:', error);
+        console.error('❌ [Extractor] Error:', error.message);
         return { text: '', links: [] };
     }
 }
@@ -22,6 +23,7 @@ async function extractPdfText(filePath) {
     const dataBuffer = fs.readFileSync(filePath);
     const data = new Uint8Array(dataBuffer);
     const pdf = await pdfjsLib.getDocument({ data, useSystemFonts: true }).promise;
+    console.log(`[Extractor] 📄 PDF loaded. Pages: ${pdf.numPages}`);
 
     let fullText = '';
     for (let i = 1; i <= pdf.numPages; i++) {
@@ -29,6 +31,7 @@ async function extractPdfText(filePath) {
         const textContent = await page.getTextContent();
         fullText += textContent.items.map(s => s.str).join(' ') + '\n';
     }
+    console.log(`[Extractor] ✅ PDF Text extraction complete. Length: ${fullText.length}`);
     return { text: fullText.trim(), links: [] };
 }
 

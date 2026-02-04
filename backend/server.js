@@ -112,7 +112,10 @@ app.listen(PORT, async () => {
     // Start background worker
     try {
         const { pdfWorker } = await import('./shared/workers/parsingWorker.js');
-        console.log('👷 Background worker started');
+        const { pdfQueue } = await import('./shared/services/queueService.js');
+        const waitingCount = await pdfQueue.getWaitingCount();
+        const activeCount = await pdfQueue.getActiveCount();
+        console.log(`👷 Worker started. Queue Status: ${waitingCount} waiting, ${activeCount} active.`);
     } catch (error) {
         console.error('❌ Failed to start background worker:', error);
     }

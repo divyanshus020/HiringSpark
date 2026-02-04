@@ -1,94 +1,76 @@
 import { Worker } from 'bullmq';
 import { redisConnection } from '../config/redis.js';
 import { Candidate } from '../../hiringBazaar/models/Candidate.js';
-import { Job } from '../../hiringBazaar/models/Job.js';
 import { extractTextFromFile } from '../services/extractionService.js';
 import { extractResumeInfo } from '../services/aiService.js';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const pdfWorker = new Worker('pdf-processing', async (job) => {
     const { candidateId } = job.data;
-    console.log(`🚀 [Worker] Starting processing for Candidate ID: ${candidateId}`);
+    console.log(`[Worker] ⚡ Job ${job.id} Received for Candidate: ${candidateId}`);
 
     try {
         const currentCandidate = await Candidate.findById(candidateId).populate('jobId');
-        if (!currentCandidate) return;
+
+        if (!currentCandidate) {
+            console.error(`[Worker] ❌ Candidate ${candidateId} not found in DB.`);
+            return;
+        }
+
+        console.log(`[Worker] 🏃 Processing: ${currentCandidate.name} (${currentCandidate.resumeUrl})`);
 
         currentCandidate.parsingStatus = 'PROCESSING';
         currentCandidate.parsingProgress = 10;
-        currentCandidate.parsingStatusMessage = 'Extracting text from file...';
+        currentCandidate.parsingStatusMessage = 'Extracting text...';
         await currentCandidate.save();
 
         let normalizedPath = currentCandidate.resumeUrl;
-        if (normalizedPath.startsWith('/')) {
-            normalizedPath = normalizedPath.substring(1);
-        }
+        if (normalizedPath.startsWith('/')) normalizedPath = normalizedPath.substring(1);
         const absolutePath = path.join(process.cwd(), normalizedPath);
+
+        console.log(`[Worker] 📄 Extracting from: ${absolutePath}`);
         const { text, links } = await extractTextFromFile(absolutePath);
 
         if (!text || text.trim().length < 150) {
-            console.warn(`⚠️ Low/No text extracted for candidate ${candidateId}. Likely a scanned/image PDF.`);
+            console.warn(`[Worker] ⚠️ Low text in ${candidateId}. Marking for manual review.`);
             currentCandidate.parsingStatus = 'MANUAL_REVIEW';
-            currentCandidate.parsingStatusMessage = 'Picture-based Resume: Text could not be extracted (likely an image). Please review manually.';
+            currentCandidate.parsingStatusMessage = 'Could not extract enough text. Manual review required.';
             currentCandidate.parsingProgress = 0;
             await currentCandidate.save();
-            return; // Stop processing further
+            return;
         }
 
+        console.log(`[Worker] 🤖 Sending to AI (OpenRouter)...`);
         currentCandidate.parsingProgress = 40;
         currentCandidate.parsingStatusMessage = 'AI analysis in progress...';
         await currentCandidate.save();
 
         const jobContext = {
-            title: currentCandidate.jobId.jobTitle,
-            skillsRequired: currentCandidate.jobId.skills || [],
-            description: currentCandidate.jobId.description || ''
+            title: currentCandidate.jobId?.jobTitle || 'General Position',
+            skillsRequired: currentCandidate.jobId?.skills || [],
+            description: currentCandidate.jobId?.description || ''
         };
 
         const parsedData = await extractResumeInfo(text, links, jobContext);
 
         if (!parsedData || !parsedData.basic_info) {
-            throw new Error('AI analysis failed to provide basic profile information.');
+            throw new Error('AI returned malformed or empty data.');
         }
 
+        console.log(`[Worker] ✅ AI Extraction Successful for ${parsedData.basic_info.full_name}`);
+
         currentCandidate.parsingProgress = 80;
-        currentCandidate.parsingStatusMessage = 'Finalizing extraction...';
+        currentCandidate.parsingStatusMessage = 'Finalizing...';
         await currentCandidate.save();
 
         const extractedEmail = parsedData.basic_info.email?.toLowerCase();
 
-        // Duplicate handling
-        let targetCandidate = currentCandidate;
-        if (extractedEmail) {
-            const existingCandidate = await Candidate.findOne({
-                jobId: currentCandidate.jobId._id,
-                email: extractedEmail,
-                _id: { $ne: candidateId }
-            });
+        // Update fields
+        currentCandidate.email = extractedEmail || currentCandidate.email;
+        currentCandidate.name = parsedData.basic_info.full_name || currentCandidate.name;
+        currentCandidate.phoneNumber = parsedData.basic_info.phone || currentCandidate.phoneNumber;
 
-            if (existingCandidate) {
-                console.log(`🔗 Duplicate found for ${extractedEmail}. Merging into original.`);
-
-                // Update file reference on the old record
-                existingCandidate.resumeUrl = currentCandidate.resumeUrl;
-
-                // Switch target to original record
-                targetCandidate = existingCandidate;
-
-                // Remove the extra placeholder record
-                await Candidate.findByIdAndDelete(candidateId);
-            }
-        }
-
-        // Update the candidate (New or Original) with fresh AI data
-        targetCandidate.email = extractedEmail || targetCandidate.email;
-        targetCandidate.name = parsedData.basic_info.full_name || targetCandidate.name;
-        targetCandidate.phoneNumber = parsedData.basic_info.phone || targetCandidate.phoneNumber;
-
-        targetCandidate.basicInfo = {
+        currentCandidate.basicInfo = {
             fullName: parsedData.basic_info.full_name,
             jobTitle: parsedData.basic_info.job_title,
             location: parsedData.basic_info.location,
@@ -99,51 +81,47 @@ export const pdfWorker = new Worker('pdf-processing', async (job) => {
             experienceYears: parsedData.basic_info.experience_years
         };
 
-        targetCandidate.executiveSummary = parsedData.executive_summary.ai_generated_summary;
-        targetCandidate.education = parsedData.education;
-        targetCandidate.workExperience = parsedData.work_experience;
-        targetCandidate.skills = {
-            technicalSkills: parsedData.skills.technical_skills,
-            softSkills: parsedData.skills.soft_skills
+        currentCandidate.executiveSummary = parsedData.executive_summary?.ai_generated_summary || "";
+        currentCandidate.education = parsedData.education || [];
+        currentCandidate.workExperience = parsedData.work_experience || [];
+        currentCandidate.skills = {
+            technicalSkills: parsedData.skills?.technical_skills || { advanced: [], intermediate: [], beginner: [] },
+            softSkills: parsedData.skills?.soft_skills || []
         };
 
-        targetCandidate.aiAssessment = {
-            technicalFit: parsedData.ai_assessment.technical_fit,
-            culturalFit: parsedData.ai_assessment.cultural_fit,
-            overallScore: parsedData.ai_assessment.overall_score,
-            strengths: parsedData.ai_assessment.strengths,
-            areasForGrowth: parsedData.ai_assessment.areas_for_growth
+        currentCandidate.aiAssessment = {
+            technicalFit: parsedData.ai_assessment?.technical_fit || 0,
+            culturalFit: parsedData.ai_assessment?.cultural_fit || 0,
+            overallScore: parsedData.ai_assessment?.overall_score || 0,
+            strengths: parsedData.ai_assessment?.strengths || [],
+            areasForGrowth: parsedData.ai_assessment?.areas_for_growth || []
         };
 
-        targetCandidate.atsScore = parsedData.ai_assessment.overall_score;
-        targetCandidate.isParsed = true;
-        targetCandidate.parsingStatus = 'COMPLETED';
-        targetCandidate.parsingProgress = 100;
-        targetCandidate.parsingStatusMessage = 'Parsing completed successfully.';
+        currentCandidate.atsScore = parsedData.ai_assessment?.overall_score || 0;
+        currentCandidate.isParsed = true;
+        currentCandidate.parsingStatus = 'COMPLETED';
+        currentCandidate.parsingProgress = 100;
+        currentCandidate.parsingStatusMessage = 'Success.';
 
-        await targetCandidate.save();
-        console.log(`✅ Record processed for ${targetCandidate.name}`);
+        await currentCandidate.save();
+        console.log(`[Worker] ⭐ Done: ${currentCandidate.name}`);
 
     } catch (error) {
-        console.error(`❌ Error processing candidate ${candidateId}:`, error.message);
+        console.error(`[Worker] 💥 Error on candidate ${candidateId}:`, error.message);
 
-        let errorMessage = error.message;
-        if (errorMessage.includes('ENOENT')) errorMessage = 'File not found on server.';
-        if (errorMessage.includes('truncated')) errorMessage = 'AI extraction failed due to document complexity. Please review manually.';
-
-        // Fallback to MANUAL_REVIEW on error (e.g., AI failed or file corrupted)
         await Candidate.findByIdAndUpdate(candidateId, {
-            parsingStatus: 'MANUAL_REVIEW',
-            parsingStatusMessage: `Parsing stopped: ${errorMessage}`,
+            parsingStatus: 'FAILED',
+            parsingStatusMessage: `Error: ${error.message}`,
             parsingProgress: 0
         });
         throw error;
     }
 }, {
     connection: redisConnection,
-    concurrency: 10, // Process 10 resumes at a time
+    concurrency: 20, // High concurrency for bulk
     lockDuration: 60000
 });
 
-pdfWorker.on('completed', (job) => console.log(`Job ${job.id} completed!`));
-pdfWorker.on('failed', (job, err) => console.log(`Job ${job.id} failed: ${err.message}`));
+pdfWorker.on('completed', (job) => console.log(`[Worker] Job ${job.id} done.`));
+pdfWorker.on('failed', (job, err) => console.error(`[Worker] Job ${job.id} FAILED: ${err.message}`));
+pdfWorker.on('error', (err) => console.error(`[Worker] GLOBAL ERROR:`, err));
