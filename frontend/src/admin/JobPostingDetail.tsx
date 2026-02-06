@@ -31,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import console from "console";
+import { getFileUrl } from "@/lib/utils";
 
 export default function JobPostingDetail() {
   // All hooks must be called at the top before any conditional returns
@@ -187,9 +188,7 @@ export default function JobPostingDetail() {
       return;
     }
     try {
-      const isFullUrl = /^https?:\/\//i.test(cvUrl);
-      const backendHost = import.meta.env.VITE_API_URL?.replace('/api', '') || window.location.origin;
-      const openUrl = isFullUrl ? cvUrl : `${backendHost}${cvUrl}`;
+      const openUrl = getFileUrl(cvUrl);
       window.open(openUrl, '_blank');
     } catch (err) {
       console.error('Failed to open CV:', err);

@@ -26,6 +26,7 @@ import {
     Github,
     Globe
 } from "lucide-react";
+import { getFileUrl } from "@/lib/utils";
 
 
 
@@ -237,8 +238,7 @@ export const CandidateDetailsModal = ({
                                         className={`w-full gap-2 ${!isContactVisible ? 'cursor-not-allowed grayscale' : 'bg-indigo-600 hover:bg-indigo-700'}`}
                                         disabled={!isContactVisible}
                                         onClick={() => {
-                                            const backendHost = import.meta.env.VITE_API_URL?.replace('/api', '') || window.location.origin;
-                                            const openUrl = candidate.resumeUrl.startsWith('http') ? candidate.resumeUrl : `${backendHost}${candidate.resumeUrl}`;
+                                            const openUrl = getFileUrl(candidate.resumeUrl);
                                             window.open(openUrl, '_blank');
                                         }}
                                     >

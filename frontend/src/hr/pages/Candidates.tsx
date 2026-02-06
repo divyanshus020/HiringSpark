@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
+import { getFileUrl } from "@/lib/utils";
 
 const ContactIcon = ({ icon: Icon, isLocked }: { icon: any, isLocked: boolean }) => (
   <div className="relative inline-flex">
@@ -160,12 +161,8 @@ const Candidates = () => {
       return;
     }
 
-    // If backend returned a relative path (e.g. /uploads/resumes/...),
-    // open it from the backend host so the browser can fetch the file.
     try {
-      const isFullUrl = /^https?:\/\//i.test(cvUrl);
-      const backendHost = import.meta.env.VITE_API_URL?.replace('/api', '') || window.location.origin;
-      const openUrl = isFullUrl ? cvUrl : `${backendHost}${cvUrl}`;
+      const openUrl = getFileUrl(cvUrl);
       window.open(openUrl, '_blank');
     } catch (err) {
       console.error('Failed to open CV:', err);

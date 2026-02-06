@@ -111,7 +111,17 @@ export default function Candidates() {
     }
     try {
       const isFullUrl = /^https?:\/\//i.test(cvUrl);
-      const backendHost = import.meta.env.VITE_API_URL?.replace('/api', '') || window.location.origin;
+
+      // Determine backend host
+      let backendHost: string;
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        // Development: use VITE_API_URL or fallback to localhost
+        backendHost = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+      } else {
+        // Production: use current domain
+        backendHost = window.location.origin;
+      }
+
       const openUrl = isFullUrl ? cvUrl : `${backendHost}${cvUrl}`;
       window.open(openUrl, '_blank');
     } catch (err) {

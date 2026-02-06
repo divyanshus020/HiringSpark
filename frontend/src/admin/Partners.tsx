@@ -39,6 +39,7 @@ import {
     TabsTrigger
 } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
+import { getFileUrl } from "@/lib/utils";
 
 export default function Partners() {
     const [partners, setPartners] = useState<any[]>([]);
@@ -212,8 +213,7 @@ export default function Partners() {
                                                             size="sm"
                                                             className="h-8 gap-1.5 hidden md:flex"
                                                             onClick={() => {
-                                                                const backendHost = import.meta.env.VITE_API_URL?.replace('/api', '') || window.location.origin;
-                                                                window.open(`${backendHost}${partner.resumeUrl}`, '_blank');
+                                                                window.open(getFileUrl(partner.resumeUrl), '_blank');
                                                             }}
                                                         >
                                                             <FileText className="h-3.5 w-3.5" />
@@ -232,8 +232,7 @@ export default function Partners() {
                                                             <DropdownMenuSeparator />
 
                                                             <DropdownMenuItem onClick={() => {
-                                                                const backendHost = import.meta.env.VITE_API_URL?.replace('/api', '') || window.location.origin;
-                                                                window.open(`${backendHost}${partner.resumeUrl}`, '_blank');
+                                                                window.open(getFileUrl(partner.resumeUrl), '_blank');
                                                             }}>
                                                                 <Eye className="mr-2 h-4 w-4 text-blue-500" /> View Resume
                                                             </DropdownMenuItem>
